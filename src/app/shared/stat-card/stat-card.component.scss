@@ -13,28 +13,11 @@
 	transition: transform 0.25s ease, box-shadow 0.25s ease;
 
 	&::before {
-		content: '';
-		position: absolute;
-		top: -40px;
-		right: -40px;
-		width: 200px;
-		height: 200px;
-		border-radius: 50%;
-		background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 70%);
-		filter: blur(2px);
-		pointer-events: none;
+		display: none;
 	}
 
 	&::after {
-		content: '';
-		position: absolute;
-		top: -30px;
-		right: -30px;
-		width: 120px;
-		height: 120px;
-		background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 60%);
-		pointer-events: none;
-		filter: blur(0.5px);
+		display: none;
 	}
 
 	&:hover {

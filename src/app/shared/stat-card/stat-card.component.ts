@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 export type StatVariant = 'default' | 'red' | 'amber' | 'blue' | 'green' | 'purple';
 
@@ -16,6 +17,13 @@ export class StatCardComponent {
   @Input() subtitle = '';
   @Input() trendLabel = '';
   @Input() trendDirection: 'up' | 'down' | '' = '';
-  @Input() iconSvg = '';
+  @Input() set iconSvg(value: string) {
+    this._iconSvg = value;
+    this.iconSvgSafe = value ? this.sanitizer.bypassSecurityTrustHtml(value) : '';
+  }
   @Input() variant: StatVariant = 'default';
+
+  iconSvgSafe: SafeHtml | '' = '';
+  private _iconSvg = '';
+  constructor(private sanitizer: DomSanitizer) {}
 }

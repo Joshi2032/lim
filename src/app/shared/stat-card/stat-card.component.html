@@ -1,8 +1,8 @@
-<div class="stat-card" [class]="'variant-' + variant">
+<div class="stat-card" [ngClass]="'variant-' + variant">
 	<div class="stat-header">
 		<div class="stat-title">{{ title }}</div>
-		@if (iconSvg) {
-			<div class="stat-icon" [innerHTML]="iconSvg"></div>
+		@if (iconSvgSafe) {
+			<div class="stat-icon" [innerHTML]="iconSvgSafe"></div>
 		}
 	</div>
 	<div class="stat-value">{{ value }}</div>

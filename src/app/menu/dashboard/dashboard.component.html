@@ -32,8 +32,8 @@
 				<div class="section-header">
 					<h2>Ingresos de la Semana</h2>
 				</div>
-				<div class="chart-container">
-					<svg viewBox="0 0 600 300" class="chart-svg">
+				<div class="chart-container" (mouseleave)="onChartLeave()">
+					<svg viewBox="0 0 600 300" class="chart-svg" (mousemove)="onChartMove($event)">
 						<!-- Grid lines -->
 						<line x1="50" y1="50" x2="50" y2="250" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
 						<line x1="50" y1="250" x2="580" y2="250" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
@@ -60,6 +60,15 @@
 						<path d="M 70 180 Q 130 140, 190 160 T 310 100 T 430 120 T 550 80 L 550 250 L 70 250 Z" fill="url(#areaGradient)"/>
 						<polyline points="70,180 130,140 190,160 250,110 310,100 370,130 430,120 490,100 550,80" stroke="#dc2626" stroke-width="2" fill="none"/>
 
+						<!-- Interactive points -->
+						<circle cx="70" cy="180" r="5" fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Lun', 35000)" (mousemove)="onChartHover($event, 'Lun', 35000)" style="cursor: pointer;"/>
+						<circle cx="130" cy="140" r="5" fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Mar', 32000)" (mousemove)="onChartHover($event, 'Mar', 32000)" style="cursor: pointer;"/>
+						<circle cx="190" cy="160" r="5" fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Mié', 38000)" (mousemove)="onChartHover($event, 'Mié', 38000)" style="cursor: pointer;"/>
+						<circle cx="250" cy="110" r="5" fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Jue', 28000)" (mousemove)="onChartHover($event, 'Jue', 28000)" style="cursor: pointer;"/>
+						<circle cx="310" cy="100" r="5" fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Vie', 45000)" (mousemove)="onChartHover($event, 'Vie', 45000)" style="cursor: pointer;"/>
+						<circle cx="370" cy="130" r="5" fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Sáb', 52000)" (mousemove)="onChartHover($event, 'Sáb', 52000)" style="cursor: pointer;"/>
+						<circle cx="430" cy="120" r="5" fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Dom', 48000)" (mousemove)="onChartHover($event, 'Dom', 48000)" style="cursor: pointer;"/>
+
 						<!-- X-axis labels -->
 						<text x="70" y="275" font-size="12" fill="#6b7280" text-anchor="middle">Lun</text>
 						<text x="130" y="275" font-size="12" fill="#6b7280" text-anchor="middle">Mar</text>
@@ -69,6 +78,12 @@
 						<text x="370" y="275" font-size="12" fill="#6b7280" text-anchor="middle">Sáb</text>
 						<text x="430" y="275" font-size="12" fill="#6b7280" text-anchor="middle">Dom</text>
 					</svg>
+					@if (tooltipVisible) {
+						<div class="chart-tooltip" [style.left.px]="tooltipX" [style.top.px]="tooltipY">
+							<div class="tooltip-day">{{ tooltipDay }}</div>
+							<div class="tooltip-value">{{ tooltipValue }}</div>
+						</div>
+					}
 				</div>
 			</div>
 

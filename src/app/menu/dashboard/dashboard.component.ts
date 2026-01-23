@@ -20,6 +20,12 @@ export interface Order {
 	statusLabel: string;
 }
 
+export interface ChartData {
+	day: string;
+	value: number;
+	label: string;
+}
+
 interface StatCardData {
   title: string;
   value: string | number;
@@ -41,6 +47,13 @@ export class DashboardComponent implements OnInit {
   statCards: StatCardData[] = [];
   topProducts: Product[] = [];
   recentOrders: Order[] = [];
+  chartData: ChartData[] = [];
+  tooltipVisible = false;
+  tooltipX = 0;
+  tooltipY = 0;
+  tooltipValue = '';
+  tooltipDay = '';
+  chartContainerRef: any;
 
   currentUser: User = {
     name: 'Josue',
@@ -63,7 +76,17 @@ export class DashboardComponent implements OnInit {
   }
 
   loadData() {
-  this.statCards = [
+    this.chartData = [
+      { day: 'Lun', value: 35000, label: 'Lunes' },
+      { day: 'Mar', value: 32000, label: 'Martes' },
+      { day: 'Mié', value: 38000, label: 'Miércoles' },
+      { day: 'Jue', value: 28000, label: 'Jueves' },
+      { day: 'Vie', value: 45000, label: 'Viernes' },
+      { day: 'Sáb', value: 52000, label: 'Sábado' },
+      { day: 'Dom', value: 48000, label: 'Domingo' }
+    ];
+
+    this.statCards = [
     {
       title: 'Ingresos del Día',
       value: '$28,450',
@@ -129,5 +152,48 @@ export class DashboardComponent implements OnInit {
         statusLabel: 'Pendiente'
       }
     ];
+  }
+
+  onChartHover(event: MouseEvent, day: string, value: number) {
+    const svg = event.currentTarget as SVGElement;
+    const rect = svg.getBoundingClientRect();
+    const containerRect = svg.parentElement?.getBoundingClientRect();
+
+    // Posición relativa al contenedor
+    const x = event.clientX - (containerRect?.left || 0);
+    const y = event.clientY - (containerRect?.top || 0);
+
+    // Limitar a los márgenes del gráfico (50px margen izq, 580px derecha)
+    const minX = 50;
+    const maxX = 530;
+    const constrainedX = Math.max(minX, Math.min(maxX, x));
+
+    this.tooltipX = constrainedX;
+    this.tooltipY = y - 50; // Posicionar 50px arriba del cursor
+    this.tooltipValue = '$' + value.toLocaleString();
+    this.tooltipDay = day;
+    this.tooltipVisible = true;
+  }
+
+  onChartMove(event: MouseEvent) {
+    if (this.tooltipVisible) {
+      const svg = event.currentTarget as SVGElement;
+      const containerRect = svg.parentElement?.getBoundingClientRect();
+
+      const x = event.clientX - (containerRect?.left || 0);
+      const y = event.clientY - (containerRect?.top || 0);
+
+      // Limitar a los márgenes
+      const minX = 50;
+      const maxX = 530;
+      const constrainedX = Math.max(minX, Math.min(maxX, x));
+
+      this.tooltipX = constrainedX;
+      this.tooltipY = y - 50;
+    }
+  }
+
+  onChartLeave() {
+    this.tooltipVisible = false;
   }
 }

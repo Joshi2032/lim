@@ -53,7 +53,7 @@
 	justify-content: center;
 	color: #fff;
 	position: relative;
-	overflow: hidden;
+	overflow: visible;
 	box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
 
 	&::before {
@@ -67,7 +67,7 @@
 
 		svg {
 			position: relative;
-			z-index: 2;
+			z-index: 3;
 			width: 22px;
 			height: 22px;
 			opacity: 0.95;

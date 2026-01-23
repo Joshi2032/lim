@@ -77,13 +77,13 @@ export class DashboardComponent implements OnInit {
 
   loadData() {
     this.chartData = [
-      { day: 'Lun', value: 35000, label: 'Lunes' },
-      { day: 'Mar', value: 32000, label: 'Martes' },
-      { day: 'Mié', value: 38000, label: 'Miércoles' },
-      { day: 'Jue', value: 28000, label: 'Jueves' },
-      { day: 'Vie', value: 45000, label: 'Viernes' },
-      { day: 'Sáb', value: 52000, label: 'Sábado' },
-      { day: 'Dom', value: 48000, label: 'Domingo' }
+      { day: 'Lun', value: 18000, label: 'Lunes' },
+      { day: 'Mar', value: 25000, label: 'Martes' },
+      { day: 'Mié', value: 32000, label: 'Miércoles' },
+      { day: 'Jue', value: 38000, label: 'Jueves' },
+      { day: 'Vie', value: 52000, label: 'Viernes' },
+      { day: 'Sáb', value: 45000, label: 'Sábado' },
+      { day: 'Dom', value: 41000, label: 'Domingo' }
     ];
 
     this.statCards = [
@@ -176,20 +176,36 @@ export class DashboardComponent implements OnInit {
   }
 
   onChartMove(event: MouseEvent) {
-    if (this.tooltipVisible) {
-      const svg = event.currentTarget as SVGElement;
-      const containerRect = svg.parentElement?.getBoundingClientRect();
+    const svg = event.currentTarget as SVGElement;
+    const containerRect = svg.parentElement?.getBoundingClientRect();
 
-      const x = event.clientX - (containerRect?.left || 0);
-      const y = event.clientY - (containerRect?.top || 0);
+    const x = event.clientX - (containerRect?.left || 0);
+    const y = event.clientY - (containerRect?.top || 0);
 
-      // Limitar a los márgenes
-      const minX = 50;
-      const maxX = 530;
-      const constrainedX = Math.max(minX, Math.min(maxX, x));
+    // Limitar a los márgenes
+    const minX = 50;
+    const maxX = 530;
+    const constrainedX = Math.max(minX, Math.min(maxX, x));
 
-      this.tooltipX = constrainedX;
+    // Determinar el día basado en la posición X
+    const dayZones = [
+      { range: [50, 100], day: 'Lun', value: 18000, pointX: 70 },
+      { range: [100, 160], day: 'Mar', value: 25000, pointX: 130 },
+      { range: [160, 220], day: 'Mié', value: 32000, pointX: 190 },
+      { range: [220, 280], day: 'Jue', value: 38000, pointX: 250 },
+      { range: [280, 340], day: 'Vie', value: 52000, pointX: 310 },
+      { range: [340, 400], day: 'Sáb', value: 45000, pointX: 370 },
+      { range: [400, 460], day: 'Dom', value: 41000, pointX: 430 }
+    ];
+
+    const zone = dayZones.find(z => x >= z.range[0] && x < z.range[1]);
+
+    if (zone) {
+      this.tooltipX = zone.pointX;
       this.tooltipY = y - 50;
+      this.tooltipValue = '$' + zone.value.toLocaleString();
+      this.tooltipDay = zone.day;
+      this.tooltipVisible = true;
     }
   }
 

@@ -33,22 +33,22 @@
 					<h2>Ingresos de la Semana</h2>
 				</div>
 				<div class="chart-container" (mouseleave)="onChartLeave()">
-					<svg viewBox="0 0 600 300" class="chart-svg" (mousemove)="onChartMove($event)">
+					<svg viewBox="0 0 850 265" class="chart-svg" (mousemove)="onChartMove($event)">
 						<!-- Grid lines -->
-						<line x1="50" y1="50" x2="50" y2="250" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-						<line x1="50" y1="250" x2="580" y2="250" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+						<line x1="50" y1="30" x2="50" y2="230" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+						<line x1="50" y1="230" x2="820" y2="230" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
 
 						<!-- Horizontal grid -->
-						<line x1="50" y1="200" x2="580" y2="200" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-						<line x1="50" y1="150" x2="580" y2="150" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-						<line x1="50" y1="100" x2="580" y2="100" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+						<line x1="50" y1="180" x2="820" y2="180" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+						<line x1="50" y1="130" x2="820" y2="130" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+						<line x1="50" y1="80" x2="820" y2="80" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
 
 						<!-- Y-axis labels -->
-						<text x="35" y="255" font-size="12" fill="#6b7280" text-anchor="end">$0k</text>
-						<text x="35" y="205" font-size="12" fill="#6b7280" text-anchor="end">$15k</text>
-						<text x="35" y="155" font-size="12" fill="#6b7280" text-anchor="end">$30k</text>
-						<text x="35" y="105" font-size="12" fill="#6b7280" text-anchor="end">$45k</text>
-						<text x="35" y="55" font-size="12" fill="#6b7280" text-anchor="end">$60k</text>
+						<text x="35" y="235" font-size="12" fill="#6b7280" text-anchor="end">$0k</text>
+						<text x="35" y="185" font-size="12" fill="#6b7280" text-anchor="end">$15k</text>
+						<text x="35" y="135" font-size="12" fill="#6b7280" text-anchor="end">$30k</text>
+						<text x="35" y="85" font-size="12" fill="#6b7280" text-anchor="end">$45k</text>
+						<text x="35" y="35" font-size="12" fill="#6b7280" text-anchor="end">$60k</text>
 
 						<!-- Area -->
 						<defs>
@@ -57,26 +57,26 @@
 								<stop offset="100%" style="stop-color:#dc2626;stop-opacity:0" />
 							</linearGradient>
 						</defs>
-						<path d="M 70 180 Q 130 140, 190 160 T 310 100 T 430 120 T 550 80 L 550 250 L 70 250 Z" fill="url(#areaGradient)"/>
-						<polyline points="70,180 130,140 190,160 250,110 310,100 370,130 430,120 490,100 550,80" stroke="#dc2626" stroke-width="2" fill="none"/>
+						<path d="M 80 185 C 140 175, 200 165, 320 155 C 440 145, 560 140, 680 135 C 750 130, 775 122, 800 115 L 800 230 L 80 230 Z" fill="url(#areaGradient)"/>
+						<path d="M 80 185 C 140 175, 200 165, 320 155 C 440 145, 560 140, 680 135 C 750 130, 775 122, 800 115" stroke="#dc2626" stroke-width="2.5" fill="none"/>
 
 						<!-- Interactive points -->
-						<circle cx="70" cy="180" r="5" fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Lun', 35000)" (mousemove)="onChartHover($event, 'Lun', 35000)" style="cursor: pointer;"/>
-						<circle cx="130" cy="140" r="5" fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Mar', 32000)" (mousemove)="onChartHover($event, 'Mar', 32000)" style="cursor: pointer;"/>
-						<circle cx="190" cy="160" r="5" fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Mié', 38000)" (mousemove)="onChartHover($event, 'Mié', 38000)" style="cursor: pointer;"/>
-						<circle cx="250" cy="110" r="5" fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Jue', 28000)" (mousemove)="onChartHover($event, 'Jue', 28000)" style="cursor: pointer;"/>
-						<circle cx="310" cy="100" r="5" fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Vie', 45000)" (mousemove)="onChartHover($event, 'Vie', 45000)" style="cursor: pointer;"/>
-						<circle cx="370" cy="130" r="5" fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Sáb', 52000)" (mousemove)="onChartHover($event, 'Sáb', 52000)" style="cursor: pointer;"/>
-						<circle cx="430" cy="120" r="5" fill="rgba(220, 38, 38, 0.2)" stroke="#dc2626" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Dom', 48000)" (mousemove)="onChartHover($event, 'Dom', 48000)" style="cursor: pointer;"/>
+						<circle cx="80" cy="185" r="6" fill="#dc2626" stroke="#fff" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Lun', 18000)" (mousemove)="onChartHover($event, 'Lun', 18000)" style="cursor: pointer;"/>
+						<circle cx="200" cy="165" r="6" fill="#dc2626" stroke="#fff" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Mar', 25000)" (mousemove)="onChartHover($event, 'Mar', 25000)" style="cursor: pointer;"/>
+						<circle cx="320" cy="155" r="6" fill="#dc2626" stroke="#fff" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Mié', 32000)" (mousemove)="onChartHover($event, 'Mié', 32000)" style="cursor: pointer;"/>
+						<circle cx="440" cy="145" r="6" fill="#dc2626" stroke="#fff" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Jue', 38000)" (mousemove)="onChartHover($event, 'Jue', 38000)" style="cursor: pointer;"/>
+						<circle cx="560" cy="130" r="6" fill="#dc2626" stroke="#fff" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Vie', 52000)" (mousemove)="onChartHover($event, 'Vie', 52000)" style="cursor: pointer;"/>
+						<circle cx="680" cy="95" r="6" fill="#dc2626" stroke="#fff" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Sáb', 45000)" (mousemove)="onChartHover($event, 'Sáb', 45000)" style="cursor: pointer;"/>
+						<circle cx="800" cy="115" r="6" fill="#dc2626" stroke="#fff" stroke-width="2" class="chart-point" (mouseenter)="onChartHover($event, 'Dom', 41000)" (mousemove)="onChartHover($event, 'Dom', 41000)" style="cursor: pointer;"/>
 
 						<!-- X-axis labels -->
-						<text x="70" y="275" font-size="12" fill="#6b7280" text-anchor="middle">Lun</text>
-						<text x="130" y="275" font-size="12" fill="#6b7280" text-anchor="middle">Mar</text>
-						<text x="190" y="275" font-size="12" fill="#6b7280" text-anchor="middle">Mié</text>
-						<text x="250" y="275" font-size="12" fill="#6b7280" text-anchor="middle">Jue</text>
-						<text x="310" y="275" font-size="12" fill="#6b7280" text-anchor="middle">Vie</text>
-						<text x="370" y="275" font-size="12" fill="#6b7280" text-anchor="middle">Sáb</text>
-						<text x="430" y="275" font-size="12" fill="#6b7280" text-anchor="middle">Dom</text>
+						<text x="80" y="250" font-size="12" fill="#6b7280" text-anchor="middle">Lun</text>
+						<text x="200" y="250" font-size="12" fill="#6b7280" text-anchor="middle">Mar</text>
+						<text x="320" y="250" font-size="12" fill="#6b7280" text-anchor="middle">Mié</text>
+						<text x="440" y="250" font-size="12" fill="#6b7280" text-anchor="middle">Jue</text>
+						<text x="560" y="250" font-size="12" fill="#6b7280" text-anchor="middle">Vie</text>
+						<text x="680" y="250" font-size="12" fill="#6b7280" text-anchor="middle">Sáb</text>
+						<text x="800" y="250" font-size="12" fill="#6b7280" text-anchor="middle">Dom</text>
 					</svg>
 					@if (tooltipVisible) {
 						<div class="chart-tooltip" [style.left.px]="tooltipX" [style.top.px]="tooltipY">

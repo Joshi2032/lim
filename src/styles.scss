@@ -50,16 +50,23 @@ html, body {
 .header-title h1 {
   font-size: 32px;
   font-weight: 700;
-  color: #fff;
   margin: 0 0 8px 0;
   display: flex;
   align-items: center;
   gap: 12px;
+  color: #fff;
 }
 
-.header-title .japanese-text {
+.header-title .japanese-text,
+.header-title .title-japanese {
   font-size: 24px;
-  opacity: 0.7;
+  opacity: 0.95;
+  display: inline-block;
+  background: linear-gradient(90deg, #ff4d4f 0%, #f59e0b 50%, #ffd166 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
 }
 
 .header-subtitle {

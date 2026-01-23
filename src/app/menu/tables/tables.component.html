@@ -1,0 +1,59 @@
+<div class="tables-page">
+	<app-sidebar
+		[menuItems]="sidebarItems"
+		[currentUser]="currentUser"
+		[cartCount]="cartCount"
+		(logout)="handleLogout()"
+	/>
+
+	<main class="tables-content">
+		<header class="tables-header">
+			<div class="header-title">
+				<h1>Mesas <span class="title-japanese">テーブル</span></h1>
+				<p class="header-subtitle">Gestión de mesas del restaurante</p>
+			</div>
+		</header>
+
+		<div class="tables-stats">
+			<div class="stat-card">
+				<span class="stat-number">{{ getCountByStatus('disponible') }}</span>
+				<span class="stat-label">Disponibles</span>
+			</div>
+			<div class="stat-card ocupada">
+				<span class="stat-number">{{ getCountByStatus('ocupada') }}</span>
+				<span class="stat-label">Ocupadas</span>
+			</div>
+			<div class="stat-card reservada">
+				<span class="stat-number">{{ getCountByStatus('reservada') }}</span>
+				<span class="stat-label">Reservadas</span>
+			</div>
+		</div>
+
+		<div class="tables-filters">
+			@for (filter of filters; track filter.id) {
+				<button
+					type="button"
+					class="filter-btn"
+					[class.active]="selectedFilter === filter.id"
+					(click)="onFilterChange(filter.id)"
+				>
+					@if (filter.icon) {
+						<span class="filter-icon">{{ filter.icon }}</span>
+					}
+					{{ filter.label }}
+				</button>
+			}
+		</div>
+
+		<div class="tables-grid">
+			@for (table of filteredTables; track table.id) {
+				<app-table-card
+					[id]="table.id"
+					[name]="table.name"
+					[capacity]="table.capacity"
+					[status]="table.status"
+				/>
+			}
+		</div>
+	</main>
+</div>

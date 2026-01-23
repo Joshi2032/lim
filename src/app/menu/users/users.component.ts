@@ -1,0 +1,111 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
+
+export type UserRole = 'duena' | 'encargado' | 'chef' | 'mesero' | 'cajero' | 'repartidor';
+
+export interface UserEmployee {
+	id: string;
+	name: string;
+	email: string;
+	phone?: string;
+	roleId: UserRole;
+	initials: string;
+	status: 'activo' | 'inactivo';
+}
+
+export interface RoleStat {
+	id: UserRole;
+	label: string;
+	icon: string;
+	count: number;
+}
+
+@Component({
+  selector: 'app-users',
+  imports: [CommonModule, SidebarComponent],
+  templateUrl: './users.component.html',
+  styleUrl: './users.component.scss'
+})
+export class UsersComponent implements OnInit {
+  users: UserEmployee[] = [];
+  cartCount: number = 0;
+
+  currentUser: User = {
+    name: 'Josue',
+    role: 'Dueña',
+    initials: 'J'
+  };
+
+  sidebarItems: SidebarMenuItem[] = [
+    { id: 'menu', label: 'Menú', icon: '🍜', route: '/menu' },
+    { id: 'mesas', label: 'Mesas', icon: '🪑', route: '/mesas' },
+    { id: 'cocina', label: 'Cocina', icon: '🍳', route: '/cocina' },
+    { id: 'clientes', label: 'Clientes', icon: '👥', route: '/clientes' },
+    { id: 'entregas', label: 'Entregas', icon: '🚚', route: '/entregas' },
+    { id: 'dashboard', label: 'Dashboard', icon: '📊', route: '/dashboard' },
+    { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios', active: true }
+  ];
+
+  roleStats: RoleStat[] = [
+    { id: 'duena', label: 'Dueña', icon: '👑', count: 0 },
+    { id: 'encargado', label: 'Encargado', icon: '🛡️', count: 0 },
+    { id: 'chef', label: 'Chef', icon: '👨‍🍳', count: 0 },
+    { id: 'mesero', label: 'Mesero', icon: '🔧', count: 0 },
+    { id: 'cajero', label: 'Cajero', icon: '💼', count: 0 },
+    { id: 'repartidor', label: 'Repartidor', icon: '🚚', count: 0 }
+  ];
+
+  ngOnInit() {
+    this.loadUsers();
+    this.updateRoleStats();
+  }
+
+  loadUsers() {
+    // Mock data - En producción vendrá del backend
+    this.users = [
+      {
+        id: '1',
+        name: 'Josue',
+        email: 'joshi.c2032@gmail.com',
+        phone: '55 1234 5678',
+        roleId: 'duena',
+        initials: 'J',
+        status: 'activo'
+      }
+    ];
+  }
+
+  updateRoleStats() {
+    // Reinicializar contadores
+    this.roleStats.forEach(role => role.count = 0);
+
+    // Contar usuarios por rol
+    this.users.forEach(user => {
+      const role = this.roleStats.find(r => r.id === user.roleId);
+      if (role) {
+        role.count++;
+      }
+    });
+  }
+
+  getRoleLabel(roleId: UserRole): string {
+    const role = this.roleStats.find(r => r.id === roleId);
+    return role ? role.label : '';
+  }
+
+  openNewUserModal() {
+    console.log('Abrir modal para nuevo usuario');
+    // TODO: Implementar modal
+  }
+
+  editUser(user: UserEmployee) {
+    console.log('Editar usuario:', user);
+    // TODO: Implementar modal de edición
+  }
+
+  deleteUser(userId: string) {
+    this.users = this.users.filter(u => u.id !== userId);
+    this.updateRoleStats();
+  }
+}

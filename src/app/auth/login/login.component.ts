@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -9,4 +9,13 @@ import { RouterLink } from '@angular/router';
 })
 export class LoginComponent {
   showPassword = false;
+
+  constructor(private router: Router) {}
+
+  onLogin(event: Event) {
+    event.preventDefault();
+    // Aquí puedes agregar validación de credenciales
+    // Por ahora solo navegamos al menú
+    this.router.navigate(['/menu']);
+  }
 }

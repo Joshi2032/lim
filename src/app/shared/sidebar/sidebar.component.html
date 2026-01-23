@@ -1,0 +1,54 @@
+<aside class="sidebar">
+	<div class="sidebar-header">
+		<img src="/assets/sakura-icon.svg" alt="Sakura Logo" class="logo" />
+		<div class="brand-info">
+			<h1>Sakura</h1>
+			<span class="brand-subtitle">寿司レストラン</span>
+		</div>
+	</div>
+
+	<nav class="sidebar-nav">
+		@for (item of menuItems; track item.id) {
+			<a
+				[routerLink]="item.route"
+				routerLinkActive="active"
+				class="nav-item"
+				[class.active]="item.active"
+			>
+				<span class="nav-icon" [innerHTML]="item.icon"></span>
+				<span class="nav-label">{{ item.label }}</span>
+			</a>
+		}
+	</nav>
+
+	<div class="sidebar-footer">
+		@if (cartCount > 0) {
+			<button class="cart-button" type="button">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.70711 15.2929C4.07714 15.9229 4.52331 17 5.41421 17H17M17 17C15.8954 17 15 17.8954 15 19C15 20.1046 15.8954 21 17 21C18.1046 21 19 20.1046 19 19C19 17.8954 18.1046 17 17 17ZM9 19C9 20.1046 8.10457 21 7 21C5.89543 21 5 20.1046 5 19C5 17.8954 5.89543 17 7 17C8.10457 17 9 17.8954 9 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+				</svg>
+				<span>Carrito</span>
+				<span class="cart-badge">{{ cartCount }}</span>
+			</button>
+		}
+
+		@if (currentUser) {
+			<div class="user-info">
+				<div class="user-avatar">
+					<span>{{ currentUser.initials }}</span>
+				</div>
+				<div class="user-details">
+					<span class="user-name">{{ currentUser.name }}</span>
+					<span class="user-role">{{ currentUser.role }}</span>
+				</div>
+			</div>
+		}
+
+		<button class="logout-button" type="button" (click)="onLogout()">
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+				<path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9M16 17L21 12M21 12L16 7M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+			</svg>
+			<span>Cerrar Sesión</span>
+		</button>
+	</div>
+</aside>

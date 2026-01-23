@@ -1,0 +1,74 @@
+<div class="users-container">
+	<app-sidebar
+		[menuItems]="sidebarItems"
+		[currentUser]="currentUser"
+		[cartCount]="cartCount">
+	</app-sidebar>
+
+	<div class="users-content">
+		<div class="users-header">
+			<div class="header-title">
+				<h1>Usuarios <span class="japanese-text">ユーザー</span></h1>
+				<p class="header-subtitle">Gestión de empleados y sus roles</p>
+			</div>
+			<button class="new-user-btn" type="button" (click)="openNewUserModal()">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+				</svg>
+				Nuevo Usuario
+			</button>
+		</div>
+
+		<div class="roles-stats">
+			@for (role of roleStats; track role.id) {
+				<div class="role-card" [class]="'role-' + role.id">
+					<div class="role-icon" [innerHTML]="role.icon"></div>
+					<div class="role-value">{{ role.count }}</div>
+					<div class="role-label">{{ role.label }}</div>
+				</div>
+			}
+		</div>
+
+		<div class="users-grid">
+			@if (users.length > 0) {
+				@for (user of users; track user.id) {
+					<div class="user-card" [class]="'role-' + user.roleId">
+						<div class="user-card-header">
+							<div class="user-avatar">
+								<span>{{ user.initials }}</span>
+							</div>
+							<div class="user-actions">
+								<button class="icon-btn" type="button" (click)="editUser(user)" title="Editar">
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+										<path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13M18.5 2.5C18.8978 2.1022 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.1022 21.5 2.5C21.8978 2.8978 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.1022 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+									</svg>
+								</button>
+								<button class="icon-btn delete" type="button" (click)="deleteUser(user.id)" title="Eliminar">
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+										<path d="M3 6H5H21M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+									</svg>
+								</button>
+							</div>
+						</div>
+
+						<div class="user-info">
+							<h3>{{ user.name }}</h3>
+							<p class="user-email">{{ user.email }}</p>
+							<div class="user-role-badge" [class]="'badge-' + user.roleId">
+								{{ getRoleLabel(user.roleId) }}
+							</div>
+						</div>
+					</div>
+				}
+			} @else {
+				<div class="empty-state">
+					<svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+					<h3>No hay usuarios</h3>
+					<p>Agrega el primer usuario del sistema</p>
+				</div>
+			}
+		</div>
+	</div>
+</div>

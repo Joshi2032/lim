@@ -1,0 +1,105 @@
+<div class="kitchen-container">
+	<app-sidebar
+		[menuItems]="sidebarItems"
+		[currentUser]="currentUser"
+		[cartCount]="cartCount">
+	</app-sidebar>
+
+	<div class="kitchen-content">
+		<div class="kitchen-header">
+			<div class="header-title">
+				<h1>Cocina <span class="japanese-text">厨房</span></h1>
+				<p class="header-subtitle">Gestión de órdenes en tiempo real</p>
+			</div>
+		</div>
+
+		<div class="kitchen-stats">
+			<div class="stat-card pendiente">
+				<div class="stat-value">{{ getOrdersByStatus('pendiente').length }}</div>
+				<div class="stat-label">Pendientes</div>
+			</div>
+			<div class="stat-card preparando">
+				<div class="stat-value">{{ getOrdersByStatus('preparando').length }}</div>
+				<div class="stat-label">Preparando</div>
+			</div>
+			<div class="stat-card listo">
+				<div class="stat-value">{{ getOrdersByStatus('listo').length }}</div>
+				<div class="stat-label">Listos</div>
+			</div>
+		</div>
+
+		<div class="kitchen-filters">
+			<button
+				[class.active]="selectedStatus === 'all'"
+				(click)="selectedStatus = 'all'"
+				class="filter-btn">
+				Todos
+			</button>
+			<button
+				[class.active]="selectedStatus === 'pendiente'"
+				(click)="selectedStatus = 'pendiente'"
+				class="filter-btn">
+				Pendientes
+			</button>
+			<button
+				[class.active]="selectedStatus === 'preparando'"
+				(click)="selectedStatus = 'preparando'"
+				class="filter-btn">
+				Preparando
+			</button>
+			<button
+				[class.active]="selectedStatus === 'listo'"
+				(click)="selectedStatus = 'listo'"
+				class="filter-btn">
+				Listos
+			</button>
+		</div>
+
+		<div class="orders-grid">
+			@if (getFilteredOrders().length > 0) {
+				@for (order of getFilteredOrders(); track order.id) {
+					<app-kitchen-order
+						[id]="order.id"
+						[tableNumber]="order.tableNumber"
+						[tableName]="order.tableName"
+						[items]="order.items"
+						[status]="order.status"
+						[startTime]="order.startTime"
+						[notes]="order.notes"
+						(statusChange)="onOrderStatusChange(order.id, $event)">
+					</app-kitchen-order>
+				}
+			} @else {
+				<div class="empty-state">
+					<svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22S22 17.52 22 12S17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12S7.59 4 12 4S20 7.59 20 12S16.41 20 12 20ZM9 11H15V13H9Z" fill="currentColor"/>
+					</svg>
+					<h3>No hay órdenes</h3>
+					<p>Nada que preparar en este momento</p>
+				</div>
+			}
+		</div>
+
+		<div class="kitchen-legend">
+			<div class="legend-title">Estados de Órdenes:</div>
+			<div class="legend-items">
+				<div class="legend-item pendiente">
+					<span class="legend-dot"></span>
+					<span class="legend-text">Pendiente</span>
+				</div>
+				<div class="legend-item preparando">
+					<span class="legend-dot"></span>
+					<span class="legend-text">Preparando</span>
+				</div>
+				<div class="legend-item listo">
+					<span class="legend-dot"></span>
+					<span class="legend-text">Listo</span>
+				</div>
+				<div class="legend-item urgente">
+					<span class="legend-dot"></span>
+					<span class="legend-text">+20 min (Urgente)</span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

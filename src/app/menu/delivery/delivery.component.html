@@ -81,58 +81,11 @@
 		<div class="deliveries-list">
 			@if (getFilteredDeliveries().length > 0) {
 				@for (delivery of getFilteredDeliveries(); track delivery.id) {
-					<div class="delivery-card" [class]="'delivery-' + delivery.status">
-						<div class="delivery-header-card">
-							<div class="delivery-info">
-								<h3>{{ delivery.customerName }}</h3>
-								<p class="delivery-address">{{ delivery.address }}</p>
-							</div>
-							<div class="delivery-status-badge" [class]="'status-' + delivery.status">
-								{{ getStatusLabel(delivery.status) }}
-							</div>
-						</div>
-
-						<div class="delivery-details">
-							<div class="detail-item">
-								<span class="detail-label">Teléfono:</span>
-								<span class="detail-value">{{ delivery.phone }}</span>
-							</div>
-							<div class="detail-item">
-								<span class="detail-label">Pedido:</span>
-								<span class="detail-value">{{ delivery.orderNumber }}</span>
-							</div>
-							<div class="detail-item">
-								<span class="detail-label">Total:</span>
-								<span class="detail-value">{{ delivery.total | currency }}</span>
-							</div>
-							@if (delivery.notes) {
-								<div class="detail-item notes">
-									<span class="detail-label">Nota:</span>
-									<span class="detail-value">{{ delivery.notes }}</span>
-								</div>
-							}
-						</div>
-
-						@if (delivery.status === 'pendiente') {
-							<div class="delivery-actions">
-								<button class="action-btn send" type="button" (click)="updateDeliveryStatus(delivery.id, 'enCurso')">
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-										<path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-									</svg>
-									Enviar
-								</button>
-							</div>
-						} @else if (delivery.status === 'enCurso') {
-							<div class="delivery-actions">
-								<button class="action-btn delivered" type="button" (click)="updateDeliveryStatus(delivery.id, 'entregada')">
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-										<path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-									</svg>
-									Marcar Entregada
-								</button>
-							</div>
-						}
-					</div>
+					<app-delivery-card
+						[delivery]="delivery"
+						[statusLabel]="getStatusLabel(delivery.status)"
+						(statusChange)="updateDeliveryStatus(delivery.id, $event)">
+					</app-delivery-card>
 				}
 			} @else {
 				<div class="empty-state">

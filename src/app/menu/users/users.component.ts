@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
+import { UserCardComponent } from '../../shared/user-card/user-card.component';
 
 export type UserRole = 'duena' | 'encargado' | 'chef' | 'mesero' | 'cajero' | 'repartidor';
 
@@ -23,7 +24,7 @@ export interface RoleStat {
 
 @Component({
   selector: 'app-users',
-  imports: [CommonModule, SidebarComponent],
+  imports: [CommonModule, SidebarComponent, UserCardComponent],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss'
 })

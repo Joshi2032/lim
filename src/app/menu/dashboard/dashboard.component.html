@@ -14,67 +14,17 @@
 		</div>
 
 		<div class="dashboard-stats">
-			<div class="stat-card ingresos">
-				<div class="stat-header">
-					<h3>Ingresos del Día</h3>
-					<div class="stat-icon">
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M12 1V23M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
-					</div>
-				</div>
-				<div class="stat-value">$28,450</div>
-				<div class="stat-change positive">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M5 15L12 8L19 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-					12% vs ayer
-				</div>
-			</div>
-
-			<div class="stat-card ordenes">
-				<div class="stat-header">
-					<h3>Órdenes Hoy</h3>
-					<div class="stat-icon">
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M9 11L12 14L22 4M11 20H7C5.89543 20 5 19.1046 5 18V4C5 2.89543 5.89543 2 7 2H17C18.1046 2 19 2.89543 19 4V12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
-					</div>
-				</div>
-				<div class="stat-value">47</div>
-				<div class="stat-subtitle">2 activas</div>
-			</div>
-
-			<div class="stat-card ticket">
-				<div class="stat-header">
-					<h3>Ticket Promedio</h3>
-					<div class="stat-icon">
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M6 9H18M6 13H18M6 5H18C19.1046 5 20 5.89543 20 7V19C20 20.1046 19.1046 21 18 21H6C4.89543 21 4 20.1046 4 19V7C4 5.89543 4.89543 5 6 5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
-					</div>
-				</div>
-				<div class="stat-value">$605</div>
-				<div class="stat-change positive">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M5 15L12 8L19 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-					15% vs ayer
-				</div>
-			</div>
-
-			<div class="stat-card cocina">
-				<div class="stat-header">
-					<h3>En Cocina</h3>
-					<div class="stat-icon">
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M18 5V9C18 12.866 14.866 16 11 16C7.13401 16 4 12.866 4 9V5M6 2H16C17.1046 2 18 2.89543 18 4V5H4V4C4 2.89543 4.89543 2 6 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
-					</div>
-				</div>
-				<div class="stat-value">2</div>
-				<div class="stat-subtitle">órdenes activas</div>
-			</div>
+			@for (stat of statCards; track stat.title) {
+				<app-stat-card
+					[title]="stat.title"
+					[value]="stat.value"
+					[subtitle]="stat.subtitle ?? ''"
+					[trendLabel]="stat.trendLabel ?? ''"
+					[trendDirection]="stat.trendDirection ?? ''"
+					[iconSvg]="stat.iconSvg"
+					[variant]="stat.variant">
+				</app-stat-card>
+			}
 		</div>
 
 		<div class="dashboard-grid">

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
+import { DeliveryCardComponent } from '../../shared/delivery-card/delivery-card.component';
 
 export type DeliveryStatus = 'pendiente' | 'enCurso' | 'entregada';
 
@@ -17,7 +18,7 @@ export interface Delivery {
 
 @Component({
   selector: 'app-delivery',
-  imports: [CommonModule, SidebarComponent],
+  imports: [CommonModule, SidebarComponent, DeliveryCardComponent],
   templateUrl: './delivery.component.html',
   styleUrl: './delivery.component.scss'
 })

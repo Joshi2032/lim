@@ -1,0 +1,20 @@
+<div class="stat-card" [class]="'variant-' + variant">
+	<div class="stat-header">
+		<div class="stat-title">{{ title }}</div>
+		@if (iconSvg) {
+			<div class="stat-icon" [innerHTML]="iconSvg"></div>
+		}
+	</div>
+	<div class="stat-value">{{ value }}</div>
+	@if (subtitle) {
+		<div class="stat-subtitle">{{ subtitle }}</div>
+	}
+	@if (trendLabel) {
+		<div class="stat-trend" [class.up]="trendDirection === 'up'" [class.down]="trendDirection === 'down'">
+			@if (trendDirection) {
+				<span class="trend-arrow">{{ trendDirection === 'up' ? '▲' : '▼' }}</span>
+			}
+			<span>{{ trendLabel }}</span>
+		</div>
+	}
+</div>

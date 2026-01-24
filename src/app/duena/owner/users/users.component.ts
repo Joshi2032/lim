@@ -1,8 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../../shared/sidebar/sidebar.component';
 import { UserCardComponent } from '../../../shared/user-card/user-card.component';
+import { UserFormComponent } from './user-form/user-form.component';
 
 export type UserRole = 'duena' | 'encargado' | 'chef' | 'mesero' | 'cajero' | 'repartidor';
 
@@ -26,7 +26,7 @@ export interface RoleStat {
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, UserCardComponent, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, SidebarComponent, UserCardComponent, UserFormComponent],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss'
 })
@@ -34,8 +34,8 @@ export class UsersComponent implements OnInit {
   @Input() embedded: boolean = false;
   users: UserEmployee[] = [];
   cartCount: number = 0;
-  showNewUserModal: boolean = false;
-  newUserForm!: FormGroup;
+  showUserFormModal: boolean = false;
+  userBeingEdited: UserEmployee | null = null;
 
   currentUser: User = {
     name: 'Josue',
@@ -66,16 +66,6 @@ export class UsersComponent implements OnInit {
   ngOnInit() {
     this.loadUsers();
     this.updateRoleStats();
-    this.initializeForm();
-  }
-
-  initializeForm() {
-    this.newUserForm = new FormBuilder().group({
-      name: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      roleId: ['', [Validators.required]]
-    });
   }
 
   loadUsers() {
@@ -111,37 +101,44 @@ export class UsersComponent implements OnInit {
     return role ? role.label : '';
   }
 
-  openNewUserModal() {
-    this.showNewUserModal = true;
-    this.newUserForm.reset();
+  openUserForm(user: UserEmployee | null = null) {
+    this.userBeingEdited = user;
+    this.showUserFormModal = true;
   }
 
-  closeNewUserModal() {
-    this.showNewUserModal = false;
-    this.newUserForm.reset();
+  closeUserForm() {
+    this.showUserFormModal = false;
+    this.userBeingEdited = null;
   }
 
-  createUser() {
-    if (this.newUserForm.invalid) return;
+  saveUser(formData: { name: string; email: string; password: string; roleId: string }) {
+    if (this.userBeingEdited) {
+      // Modo edición
+      const userIndex = this.users.findIndex(u => u.id === this.userBeingEdited!.id);
+      if (userIndex !== -1) {
+        this.users[userIndex] = {
+          ...this.users[userIndex],
+          name: formData.name,
+          email: formData.email,
+          roleId: formData.roleId as UserRole,
+          initials: formData.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
+        };
+      }
+    } else {
+      // Modo creación
+      const newUser: UserEmployee = {
+        id: Date.now().toString(),
+        name: formData.name,
+        email: formData.email,
+        roleId: formData.roleId as UserRole,
+        initials: formData.name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+        status: 'activo'
+      };
+      this.users.push(newUser);
+    }
 
-    const formValue = this.newUserForm.value;
-    const newUser: UserEmployee = {
-      id: Date.now().toString(),
-      name: formValue.name,
-      email: formValue.email,
-      roleId: formValue.roleId,
-      initials: formValue.name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
-      status: 'activo'
-    };
-
-    this.users.push(newUser);
     this.updateRoleStats();
-    this.closeNewUserModal();
-  }
-
-  editUser(user: UserEmployee) {
-    console.log('Editar usuario:', user);
-    // TODO: Implementar modal de edición
+    this.closeUserForm();
   }
 
   deleteUser(userId: string) {

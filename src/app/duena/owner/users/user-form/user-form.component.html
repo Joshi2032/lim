@@ -1,0 +1,58 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="onClose()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ getTitle() }}</h2>
+      <button class="close-btn" (click)="onClose()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <form [formGroup]="userForm" (ngSubmit)="onSave()">
+      <div class="form-group">
+        <label>Nombre Completo</label>
+        <input
+          type="text"
+          formControlName="name"
+          placeholder="Nombre del empleado"
+          class="form-input">
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input
+          type="email"
+          formControlName="email"
+          placeholder="empleado@sakura.com"
+          class="form-input">
+      </div>
+
+      <div class="form-group">
+        <label>{{ getPasswordLabel() }}</label>
+        <input
+          type="password"
+          formControlName="password"
+          [placeholder]="getPasswordPlaceholder()"
+          class="form-input">
+      </div>
+
+      <div class="form-group">
+        <label>Rol</label>
+        <select formControlName="roleId" class="form-select">
+          <option value="">Selecciona un rol</option>
+          <option *ngFor="let role of roleStats" [value]="role.id">
+            {{ role.label }}
+          </option>
+        </select>
+      </div>
+
+      <button
+        type="submit"
+        class="submit-btn"
+        [disabled]="userForm.invalid">
+        {{ getButtonText() }}
+      </button>
+    </form>
+  </div>
+</div>

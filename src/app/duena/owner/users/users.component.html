@@ -13,7 +13,7 @@
 				<h1>Usuarios <span class="japanese-text">ユーザー</span></h1>
 				<p class="header-subtitle">Gestión de empleados y sus roles</p>
 			</div>
-			<button class="new-user-btn" type="button" (click)="openNewUserModal()">
+			<button class="new-user-btn" type="button" (click)="openUserForm()">
 				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 					<path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 				</svg>
@@ -41,7 +41,7 @@
 						[roleId]="user.roleId"
 						[initials]="user.initials"
 						[status]="user.status"
-						(edit)="editUser(user)"
+						(edit)="openUserForm(user)"
 						(delete)="deleteUser(user.id)">
 					</app-user-card>
 				}
@@ -57,65 +57,11 @@
 		</div>
 	</div>
 </div>
-
-<!-- Modal para crear nuevo usuario -->
-@if (showNewUserModal) {
-	<div class="modal-overlay" (click)="closeNewUserModal()">
-		<div class="modal-content" (click)="$event.stopPropagation()">
-			<div class="modal-header">
-				<h2>Crear Nuevo Usuario</h2>
-				<button class="close-btn" (click)="closeNewUserModal()">
-					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-				</button>
-			</div>
-
-			<form [formGroup]="newUserForm" (ngSubmit)="createUser()">
-				<div class="form-group">
-					<label>Nombre Completo</label>
-					<input
-						type="text"
-						formControlName="name"
-						placeholder="Nombre del empleado"
-						class="form-input">
-				</div>
-
-				<div class="form-group">
-					<label>Email</label>
-					<input
-						type="email"
-						formControlName="email"
-						placeholder="empleado@sakura.com"
-						class="form-input">
-				</div>
-
-				<div class="form-group">
-					<label>Contraseña</label>
-					<input
-						type="password"
-						formControlName="password"
-						placeholder="Mínimo 6 caracteres"
-						class="form-input">
-				</div>
-
-				<div class="form-group">
-					<label>Rol</label>
-					<select formControlName="roleId" class="form-select">
-						<option value="">Selecciona un rol</option>
-						@for (role of roleStats; track role.id) {
-							<option [value]="role.id">{{ role.label }}</option>
-						}
-					</select>
-				</div>
-
-				<button
-					type="submit"
-					class="submit-btn"
-					[disabled]="newUserForm.invalid">
-					Crear Usuario
-				</button>
-			</form>
-		</div>
-	</div>
-}
+<!-- User Form Modal -->
+<app-user-form
+	[isOpen]="showUserFormModal"
+	[user]="userBeingEdited"
+	[roleStats]="roleStats"
+	(close)="closeUserForm()"
+	(save)="saveUser($event)">
+</app-user-form>

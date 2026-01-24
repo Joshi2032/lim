@@ -1,0 +1,43 @@
+<div class="panel-container">
+	<app-sidebar
+		[menuItems]="sidebarItems"
+		[currentUser]="currentUser"
+		[cartCount]="cartCount">
+	</app-sidebar>
+
+	<div class="panel-content">
+		<div class="panel-header">
+			<div class="header-title">
+				<h1>Panel de Control <span class="japanese-text">管理</span></h1>
+			</div>
+		</div>
+
+		<div class="panel-tabs">
+			@for (tab of tabs; track tab.id) {
+				<button
+					class="tab-button"
+					[class.active]="activeTab === tab.id"
+					(click)="setActiveTab(tab.id)">
+					<span class="tab-icon">{{ tab.icon }}</span>
+					<span>{{ tab.label }}</span>
+				</button>
+			}
+		</div>
+
+		@if (activeTab === 'resumen') {
+			<app-dashboard [embedded]="true"></app-dashboard>
+		}
+
+		@if (activeTab === 'movimientos') {
+			<div class="tab-content">
+				<p class="coming-soon">Contenido de Movimientos próximamente...</p>
+			</div>
+		}
+
+		@if (activeTab === 'usuarios') {
+			<div class="tab-content">
+				<p class="coming-soon">Contenido de Usuarios próximamente...</p>
+			</div>
+		}
+	</div>
+</div>

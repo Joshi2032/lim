@@ -9,6 +9,7 @@ export const routes: Routes = [
 	{ path: 'clientes', loadComponent: () => import('./menu/customers/customers.component').then(m => m.CustomersComponent) },
 	{ path: 'entregas', loadComponent: () => import('./menu/delivery/delivery.component').then(m => m.DeliveryComponent) },
 	{ path: 'dashboard', loadComponent: () => import('./menu/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+	{ path: 'panel-control', loadComponent: () => import('./owner/owner.component').then(m => m.OwnerComponent) },
 	{ path: 'usuarios', loadComponent: () => import('./menu/users/users.component').then(m => m.UsersComponent) },
 	{ path: '', redirectTo: 'login', pathMatch: 'full' },
 	{ path: '**', redirectTo: 'login' }

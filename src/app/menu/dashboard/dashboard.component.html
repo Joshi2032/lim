@@ -1,31 +1,41 @@
-<div class="dashboard-container">
-	<app-sidebar
-		[menuItems]="sidebarItems"
-		[currentUser]="currentUser"
-		[cartCount]="cartCount">
-	</app-sidebar>
+<div class="dashboard-container" [class.embedded]="embedded">
+	@if (!embedded) {
+		<app-sidebar
+			[menuItems]="sidebarItems"
+			[currentUser]="currentUser"
+			[cartCount]="cartCount">
+		</app-sidebar>
+	}
 
-	<div class="dashboard-content">
-		<div class="dashboard-header">
-			<div class="header-title">
-				<h1>Dashboard <span class="japanese-text">ダッシュボード</span></h1>
-				<p class="header-subtitle">Resumen de operaciones del día</p>
+	<div class="dashboard-content" [class.embedded]="embedded">
+		@if (!embedded) {
+			<div class="dashboard-tabs">
+				@for (tab of tabs; track tab.id) {
+					<button
+						class="tab-button"
+						[class.active]="activeTab === tab.id"
+						(click)="setActiveTab(tab.id)">
+						<span class="tab-icon">{{ tab.icon }}</span>
+						<span>{{ tab.label }}</span>
+					</button>
+				}
 			</div>
-		</div>
+		}
 
-		<div class="dashboard-stats">
-			@for (stat of statCards; track stat.title) {
-				<app-stat-card
-					[title]="stat.title"
-					[value]="stat.value"
-					[subtitle]="stat.subtitle ?? ''"
-					[trendLabel]="stat.trendLabel ?? ''"
-					[trendDirection]="stat.trendDirection ?? ''"
-					[iconSvg]="stat.iconSvg"
-					[variant]="stat.variant">
-				</app-stat-card>
-			}
-		</div>
+		@if (activeTab === 'resumen') {
+			<div class="dashboard-stats">
+				@for (stat of statCards; track stat.title) {
+					<app-stat-card
+						[title]="stat.title"
+						[value]="stat.value"
+						[subtitle]="stat.subtitle ?? ''"
+						[trendLabel]="stat.trendLabel ?? ''"
+						[trendDirection]="stat.trendDirection ?? ''"
+						[iconSvg]="stat.iconSvg"
+						[variant]="stat.variant">
+					</app-stat-card>
+				}
+			</div>
 
 		<div class="dashboard-grid">
 			<div class="chart-section">
@@ -105,7 +115,21 @@
 				</div>
 			</div>
 		</div>
+		}
 
+		@if (activeTab === 'movimientos') {
+			<div class="tab-content">
+				<p class="coming-soon">Contenido de Movimientos próximamente...</p>
+			</div>
+		}
+
+		@if (activeTab === 'usuarios') {
+			<div class="tab-content">
+				<p class="coming-soon">Contenido de Usuarios próximamente...</p>
+			</div>
+		}
+
+		@if (activeTab === 'resumen') {
 		<div class="recent-orders-section">
 			<div class="section-header">
 				<h2>Órdenes Recientes</h2>
@@ -128,5 +152,6 @@
 				}
 			</div>
 		</div>
+		}
 	</div>
 </div>

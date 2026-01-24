@@ -32,6 +32,7 @@ export class TablesComponent {
     { id: 'clientes', label: 'Clientes', icon: '👥', route: '/clientes' },
     { id: 'entregas', label: 'Entregas', icon: '🚚', route: '/entregas' },
     { id: 'dashboard', label: 'Dashboard', icon: '📊', route: '/dashboard' },
+    { id: 'panel', label: 'Panel de Control', icon: '📈', route: '/panel-control' },
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
 

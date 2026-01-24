@@ -23,6 +23,9 @@
 					<div class="cart-item">
 						<div class="item-info">
 							<h4>{{ item.name }}</h4>
+							@if (item.variant) {
+								<p class="item-variant">{{ item.variant.name }}</p>
+							}
 							<p class="item-price">${{ item.price }}</p>
 						</div>
 						<div class="item-quantity">

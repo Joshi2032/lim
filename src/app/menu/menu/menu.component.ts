@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { MenuItemCardComponent, MenuItem } from '../menu-item-card/menu-item-card.component';
 import { CartComponent, CartItem } from '../../shared/cart/cart.component';
 import { BadgeComponent } from '../../shared/badge/badge.component';
+import { VariantSelectorComponent } from '../variant-selector/variant-selector.component';
 
 interface Filter {
 	id: string;
@@ -30,7 +32,7 @@ interface Combo {
 
 @Component({
   selector: 'app-menu',
-  imports: [SidebarComponent, MenuItemCardComponent, FormsModule, CartComponent, BadgeComponent],
+  imports: [CommonModule, SidebarComponent, MenuItemCardComponent, FormsModule, CartComponent, BadgeComponent, VariantSelectorComponent],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'
 })
@@ -40,6 +42,8 @@ export class MenuComponent {
   cartCount: number = 0;
   isCartOpen: boolean = false;
   cartItems: CartItem[] = [];
+  isVariantSelectorOpen: boolean = false;
+  selectedComboForVariants: { comboId: string; itemId: string; quantity: number } | null = null;
 
   currentUser: User = {
     name: 'Josue',
@@ -86,7 +90,12 @@ export class MenuComponent {
       description: 'Sake tradicional japonés servido caliente',
       price: 89,
       image: '/assets/placeholder.png',
-      category: 'bebidas'
+      category: 'bebidas',
+      variants: [
+        { id: 'v1', name: 'Sake Junmai' },
+        { id: 'v2', name: 'Sake Ginjo' },
+        { id: 'v3', name: 'Sake Daiginjo' }
+      ]
     },
     {
       id: '3',
@@ -96,7 +105,12 @@ export class MenuComponent {
       price: 149,
       image: '/assets/placeholder.png',
       badge: { text: 'Popular', type: 'popular' },
-      category: 'bebidas'
+      category: 'bebidas',
+      variants: [
+        { id: 'v1', name: 'Copa pequeña' },
+        { id: 'v2', name: 'Copa estándar' },
+        { id: 'v3', name: 'Botella (750ml)' }
+      ]
     },
     {
       id: '4',
@@ -114,7 +128,12 @@ export class MenuComponent {
       description: 'Selección especial del chef (10 piezas)',
       price: 459,
       image: '/assets/placeholder.png',
-      category: 'especiales'
+      category: 'especiales',
+      variants: [
+        { id: 'v1', name: 'Selección Pescados' },
+        { id: 'v2', name: 'Selección Mariscos' },
+        { id: 'v3', name: 'Selección Mixta' }
+      ]
     },
     {
       id: '6',
@@ -124,7 +143,12 @@ export class MenuComponent {
       price: 349,
       image: '/assets/placeholder.png',
       badge: { text: 'Popular', type: 'popular' },
-      category: 'especiales'
+      category: 'especiales',
+      variants: [
+        { id: 'v1', name: 'Con Sashimi' },
+        { id: 'v2', name: 'Con Tempura' },
+        { id: 'v3', name: 'Mixto (Recomendado)' }
+      ]
     },
     {
       id: '7',
@@ -134,7 +158,12 @@ export class MenuComponent {
       price: 259,
       image: '/assets/placeholder.png',
       badge: { text: 'Nuevo', type: 'nuevo' },
-      category: 'especiales'
+      category: 'especiales',
+      variants: [
+        { id: 'v1', name: 'Maguro (Atún)' },
+        { id: 'v2', name: 'Sake (Salmón)' },
+        { id: 'v3', name: 'Mixto' }
+      ]
     },
     {
       id: '8',
@@ -279,21 +308,70 @@ export class MenuComponent {
   handleAddComboToCart(comboId: string) {
     const combo = this.combos.find(c => c.id === comboId);
     if (combo) {
-      const existingItem = this.cartItems.find(c => c.id === comboId);
-      if (existingItem) {
-        existingItem.quantity++;
+      // Revisar si algún item tiene variantes
+      const itemsWithVariants = combo.items.filter(comboItem => {
+        const menuItem = this.getMenuItemById(comboItem.itemId);
+        return menuItem && menuItem.variants && menuItem.variants.length > 0;
+      });
+
+      if (itemsWithVariants.length > 0) {
+        // Mostrar selector de variantes para el primer item con variantes
+        const firstItemWithVariants = itemsWithVariants[0];
+        this.selectedComboForVariants = {
+          comboId,
+          itemId: firstItemWithVariants.itemId,
+          quantity: firstItemWithVariants.quantity
+        };
+        this.isVariantSelectorOpen = true;
       } else {
-        this.cartItems.push({
-          id: combo.id,
-          name: combo.name,
-          price: combo.price,
-          quantity: 1
-        });
+        // Agregar directamente si no tiene variantes
+        this.addComboToCartDirect(combo);
       }
-      this.cartCount++;
-      this.isCartOpen = true;
     }
-    console.log('Added combo to cart:', comboId);
+    console.log('Attempting to add combo to cart:', comboId);
+  }
+
+  onVariantConfirm(event: { item: MenuItem; variant: any; quantity: number }) {
+    if (this.selectedComboForVariants) {
+      const combo = this.combos.find(c => c.id === this.selectedComboForVariants!.comboId);
+      if (combo) {
+        // Crear item del combo con variante
+        const cartItemId = `${combo.id}-${event.item.id}-${event.variant.id}`;
+        const existingItem = this.cartItems.find(c => c.id === cartItemId);
+
+        if (existingItem) {
+          existingItem.quantity += event.quantity;
+        } else {
+          this.cartItems.push({
+            id: cartItemId,
+            name: `${combo.name} - ${event.item.name}`,
+            price: combo.price / combo.items.length, // Prorratear precio del combo
+            quantity: event.quantity,
+            variant: { id: event.variant.id, name: event.variant.name }
+          });
+        }
+        this.cartCount += event.quantity;
+        this.isCartOpen = true;
+      }
+    }
+    this.isVariantSelectorOpen = false;
+    this.selectedComboForVariants = null;
+  }
+
+  addComboToCartDirect(combo: Combo) {
+    const existingItem = this.cartItems.find(c => c.id === combo.id);
+    if (existingItem) {
+      existingItem.quantity++;
+    } else {
+      this.cartItems.push({
+        id: combo.id,
+        name: combo.name,
+        price: combo.price,
+        quantity: 1
+      });
+    }
+    this.cartCount++;
+    this.isCartOpen = true;
   }
 
   toggleCart() {

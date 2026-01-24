@@ -1,0 +1,45 @@
+<div class="variant-selector-overlay" *ngIf="isOpen" (click)="onClose()">
+  <div class="variant-selector-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Selecciona la preparación</h2>
+      <button class="close-btn" (click)="onClose()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-content">
+      <div class="item-info">
+        <h3>{{ item?.name }}</h3>
+        <p class="item-description">{{ item?.description }}</p>
+      </div>
+
+      <div class="variants-list">
+        <p class="variants-label">Elige una preparación:</p>
+        <div class="variants-grid">
+          <button
+            *ngFor="let variant of item?.variants"
+            class="variant-option"
+            [class.selected]="selectedVariant?.id === variant.id"
+            (click)="selectVariant(variant)"
+          >
+            <span class="variant-name">{{ variant.name }}</span>
+            <span *ngIf="variant.price" class="variant-price">+${{ variant.price }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="onClose()">Cancelar</button>
+      <button
+        class="btn-confirm"
+        [disabled]="!selectedVariant"
+        (click)="onConfirm()"
+      >
+        Agregar al carrito
+      </button>
+    </div>
+  </div>
+</div>

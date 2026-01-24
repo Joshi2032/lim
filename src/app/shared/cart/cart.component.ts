@@ -6,6 +6,7 @@ export interface CartItem {
 	name: string;
 	price: number;
 	quantity: number;
+	variant?: { id: string; name: string; price?: number }; // Variante seleccionada
 }
 
 @Component({

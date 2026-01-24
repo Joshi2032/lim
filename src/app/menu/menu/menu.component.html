@@ -132,4 +132,12 @@
 		(close)="isCartOpen = false"
 		(itemsChange)="cartItems = $event"
 	/>
+
+	<app-variant-selector
+		[isOpen]="isVariantSelectorOpen"
+		[item]="selectedComboForVariants ? (getMenuItemById(selectedComboForVariants.itemId) || null) : null"
+		[quantity]="selectedComboForVariants?.quantity ?? 1"
+		(close)="isVariantSelectorOpen = false"
+		(confirm)="onVariantConfirm($event)"
+	/>
 </div>

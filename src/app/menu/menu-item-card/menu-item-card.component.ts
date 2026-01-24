@@ -1,6 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { BadgeComponent } from '../../shared/badge/badge.component';
 
+export interface ItemVariant {
+	id: string;
+	name: string;
+	price?: number; // Precio adicional si es diferente
+}
+
 export interface MenuItem {
 	id: string;
 	name: string;
@@ -9,6 +15,8 @@ export interface MenuItem {
 	price: number;
 	image: string;
 	badge?: { text: string; type: 'popular' | 'nuevo' | 'oferta' };
+	variants?: ItemVariant[]; // Diferentes formas de preparación
+	category?: string;
 }
 
 @Component({

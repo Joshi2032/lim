@@ -4,6 +4,7 @@ import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../share
 import { StatVariant } from '../../shared/stat-card/stat-card.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { UsersComponent } from './users/users.component';
+import { MovementsComponent } from './movements/movements.component';
 
 export interface Product {
   id: string;
@@ -41,7 +42,7 @@ interface StatCardData {
 @Component({
   selector: 'app-owner',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, DashboardComponent, UsersComponent],
+  imports: [CommonModule, SidebarComponent, DashboardComponent, UsersComponent, MovementsComponent],
   templateUrl: './owner.component.html',
   styleUrl: './owner.component.scss'
 })

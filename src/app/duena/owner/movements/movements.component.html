@@ -1,0 +1,37 @@
+<div class="movements">
+  <div class="movements-header">
+    <div>
+      <h2>Movimientos recientes</h2>
+      <p class="subtitle">Bitácora en tiempo real de acciones en el sistema</p>
+    </div>
+    <div class="filter-chips">
+      <button class="chip" [class.active]="activeSection === 'all'" (click)="setSectionFilter('all')">Todos</button>
+      <button class="chip" [class.active]="activeSection === 'menu'" (click)="setSectionFilter('menu')">Menú</button>
+      <button class="chip" [class.active]="activeSection === 'mesas'" (click)="setSectionFilter('mesas')">Mesas</button>
+      <button class="chip" [class.active]="activeSection === 'cocina'" (click)="setSectionFilter('cocina')">Cocina</button>
+      <button class="chip" [class.active]="activeSection === 'clientes'" (click)="setSectionFilter('clientes')">Clientes</button>
+      <button class="chip" [class.active]="activeSection === 'entregas'" (click)="setSectionFilter('entregas')">Entregas</button>
+      <button class="chip" [class.active]="activeSection === 'usuarios'" (click)="setSectionFilter('usuarios')">Usuarios</button>
+    </div>
+  </div>
+
+  <div class="movements-list">
+    @for (item of filteredActivityLog; track item.id) {
+      <div class="movement-card" [class]="item.status">
+        <div class="movement-main">
+          <div class="movement-title">{{ item.title }}</div>
+          <div class="movement-description">{{ item.description }}</div>
+        </div>
+        <div class="movement-meta">
+          <span class="badge" [class]="item.section">{{ item.section }}</span>
+          <span class="actor">{{ item.actor }} · {{ item.role }}</span>
+          <span class="time">{{ item.time }}</span>
+        </div>
+      </div>
+    } @empty {
+      <div class="empty-movements">
+        <p>Sin movimientos para esta categoría</p>
+      </div>
+    }
+  </div>
+</div>

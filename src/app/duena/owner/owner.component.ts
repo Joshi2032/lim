@@ -1,30 +1,30 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../shared/sidebar/sidebar.component';
-import { StatVariant } from '../shared/stat-card/stat-card.component';
-import { DashboardComponent } from '../menu/dashboard/dashboard.component';
+import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
+import { StatVariant } from '../../shared/stat-card/stat-card.component';
+import { DashboardComponent } from './dashboard';
 
 export interface Product {
-	id: string;
-	name: string;
-	quantity: number;
-	rank: number;
+  id: string;
+  name: string;
+  quantity: number;
+  rank: number;
 }
 
 export interface Order {
-	id: string;
-	tableNumber: number;
-	customerName: string;
-	itemsCount: number;
-	total: number;
-	status: 'preparando' | 'pendiente' | 'listo';
-	statusLabel: string;
+  id: string;
+  tableNumber: number;
+  customerName: string;
+  itemsCount: number;
+  total: number;
+  status: 'preparando' | 'pendiente' | 'listo';
+  statusLabel: string;
 }
 
 export interface ChartData {
-	day: string;
-	value: number;
-	label: string;
+  day: string;
+  value: number;
+  label: string;
 }
 
 interface StatCardData {

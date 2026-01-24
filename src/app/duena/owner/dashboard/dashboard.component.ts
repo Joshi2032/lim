@@ -1,29 +1,29 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
-import { StatCardComponent, StatVariant } from '../../shared/stat-card/stat-card.component';
+import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../../shared/sidebar/sidebar.component';
+import { StatCardComponent, StatVariant } from '../../../shared/stat-card/stat-card.component';
 
 export interface Product {
-	id: string;
-	name: string;
-	quantity: number;
-	rank: number;
+  id: string;
+  name: string;
+  quantity: number;
+  rank: number;
 }
 
 export interface Order {
-	id: string;
-	tableNumber: number;
-	customerName: string;
-	itemsCount: number;
-	total: number;
-	status: 'preparando' | 'pendiente' | 'listo';
-	statusLabel: string;
+  id: string;
+  tableNumber: number;
+  customerName: string;
+  itemsCount: number;
+  total: number;
+  status: 'preparando' | 'pendiente' | 'listo';
+  statusLabel: string;
 }
 
 export interface ChartData {
-	day: string;
-	value: number;
-	label: string;
+  day: string;
+  value: number;
+  label: string;
 }
 
 interface StatCardData {
@@ -38,6 +38,7 @@ interface StatCardData {
 
 @Component({
   selector: 'app-dashboard',
+  standalone: true,
   imports: [CommonModule, SidebarComponent, CurrencyPipe, StatCardComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -161,7 +162,6 @@ export class DashboardComponent implements OnInit {
     }
   ];
 
-    // Mock data - En producción vendrá del backend
     this.topProducts = [
       { id: '1', name: 'Dragon Roll', quantity: 34, rank: 1 },
       { id: '2', name: 'Bento Box Deluxe', quantity: 28, rank: 2 },
@@ -194,20 +194,17 @@ export class DashboardComponent implements OnInit {
 
   onChartHover(event: MouseEvent, day: string, value: number) {
     const svg = event.currentTarget as SVGElement;
-    const rect = svg.getBoundingClientRect();
     const containerRect = svg.parentElement?.getBoundingClientRect();
 
-    // Posición relativa al contenedor
     const x = event.clientX - (containerRect?.left || 0);
     const y = event.clientY - (containerRect?.top || 0);
 
-    // Limitar a los márgenes del gráfico (50px margen izq, 580px derecha)
     const minX = 50;
     const maxX = 530;
     const constrainedX = Math.max(minX, Math.min(maxX, x));
 
     this.tooltipX = constrainedX;
-    this.tooltipY = y - 50; // Posicionar 50px arriba del cursor
+    this.tooltipY = y - 50;
     this.tooltipValue = '$' + value.toLocaleString();
     this.tooltipDay = day;
     this.tooltipVisible = true;
@@ -220,12 +217,10 @@ export class DashboardComponent implements OnInit {
     const x = event.clientX - (containerRect?.left || 0);
     const y = event.clientY - (containerRect?.top || 0);
 
-    // Limitar a los márgenes
     const minX = 50;
     const maxX = 530;
     const constrainedX = Math.max(minX, Math.min(maxX, x));
 
-    // Determinar el día basado en la posición X
     const dayZones = [
       { range: [50, 100], day: 'Lun', value: 18000, pointX: 70 },
       { range: [100, 160], day: 'Mar', value: 25000, pointX: 130 },

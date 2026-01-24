@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { UserCardComponent } from '../../shared/user-card/user-card.component';
 
@@ -24,13 +25,15 @@ export interface RoleStat {
 
 @Component({
   selector: 'app-users',
-  imports: [CommonModule, SidebarComponent, UserCardComponent],
+  imports: [CommonModule, SidebarComponent, UserCardComponent, FormsModule, ReactiveFormsModule],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss'
 })
 export class UsersComponent implements OnInit {
   users: UserEmployee[] = [];
   cartCount: number = 0;
+  showNewUserModal: boolean = false;
+  newUserForm!: FormGroup;
 
   currentUser: User = {
     name: 'Josue',
@@ -60,6 +63,16 @@ export class UsersComponent implements OnInit {
   ngOnInit() {
     this.loadUsers();
     this.updateRoleStats();
+    this.initializeForm();
+  }
+
+  initializeForm() {
+    this.newUserForm = new FormBuilder().group({
+      name: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      roleId: ['', [Validators.required]]
+    });
   }
 
   loadUsers() {
@@ -96,8 +109,31 @@ export class UsersComponent implements OnInit {
   }
 
   openNewUserModal() {
-    console.log('Abrir modal para nuevo usuario');
-    // TODO: Implementar modal
+    this.showNewUserModal = true;
+    this.newUserForm.reset();
+  }
+
+  closeNewUserModal() {
+    this.showNewUserModal = false;
+    this.newUserForm.reset();
+  }
+
+  createUser() {
+    if (this.newUserForm.invalid) return;
+
+    const formValue = this.newUserForm.value;
+    const newUser: UserEmployee = {
+      id: Date.now().toString(),
+      name: formValue.name,
+      email: formValue.email,
+      roleId: formValue.roleId,
+      initials: formValue.name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+      status: 'activo'
+    };
+
+    this.users.push(newUser);
+    this.updateRoleStats();
+    this.closeNewUserModal();
   }
 
   editUser(user: UserEmployee) {

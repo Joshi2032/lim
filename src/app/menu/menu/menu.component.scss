@@ -156,9 +156,204 @@
 
 .menu-grid {
 	display: grid;
+	gap: 2rem;
+	margin-top: 2rem;
+}
+
+.combos-section,
+.items-section {
+	display: contents;
+}
+
+.section-title {
+	grid-column: 1 / -1;
+	margin-bottom: 1rem;
+
+	h2 {
+		font-size: 1.8rem;
+		font-weight: 700;
+		color: #fff;
+		margin: 0 0 0.5rem 0;
+	}
+}
+
+.section-subtitle {
+	font-size: 0.95rem;
+	color: #999;
+	margin: 0;
+}
+
+.combos-grid {
+	display: grid;
+	grid-column: 1 / -1;
+	grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+	gap: 1.5rem;
+	margin-bottom: 2rem;
+	padding-bottom: 2rem;
+	border-bottom: 1px solid #222;
+}
+
+.combo-card {
+	background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+	border: 1px solid #dc2626;
+	border-radius: 0.75rem;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 20px rgba(220, 38, 38, 0.1);
+
+	&:hover {
+		transform: translateY(-4px);
+		box-shadow: 0 8px 30px rgba(220, 38, 38, 0.2);
+		border-color: #ef4444;
+	}
+}
+
+.combo-header {
+	position: relative;
+	height: 200px;
+	overflow: hidden;
+	background: #000;
+}
+
+.combo-image-wrapper {
+	position: relative;
+	width: 100%;
+	height: 100%;
+
+	.combo-image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		opacity: 0.8;
+		transition: opacity 0.3s ease;
+	}
+
+	&:hover .combo-image {
+		opacity: 1;
+	}
+
+	app-badge {
+		position: absolute;
+		top: 0.75rem;
+		right: 0.75rem;
+	}
+}
+
+.combo-content {
+	padding: 1.25rem;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+}
+
+.combo-title {
+	margin-bottom: 0.75rem;
+
+	h3 {
+		font-size: 1.2rem;
+		font-weight: 700;
+		color: #fff;
+		margin: 0;
+	}
+}
+
+.combo-japanese {
+	font-size: 0.85rem;
+	color: #999;
+	font-style: italic;
+	margin-left: 0.5rem;
+}
+
+.combo-description {
+	font-size: 0.9rem;
+	color: #ccc;
+	margin: 0 0 1rem 0;
+	line-height: 1.4;
+}
+
+.combo-includes {
+	margin-bottom: 1rem;
+	padding: 0.75rem;
+	background: rgba(220, 38, 38, 0.05);
+	border-left: 3px solid #dc2626;
+	border-radius: 0.25rem;
+
+	.includes-label {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: #dc2626;
+		display: block;
+		margin-bottom: 0.5rem;
+	}
+
+	.includes-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+
+		li {
+			font-size: 0.85rem;
+			color: #bbb;
+			padding: 0.25rem 0;
+			margin-left: 0;
+
+			&:before {
+				content: '• ';
+				color: #dc2626;
+				font-weight: bold;
+				margin-right: 0.5rem;
+			}
+		}
+	}
+}
+
+.combo-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-top: auto;
+	padding-top: 1rem;
+	border-top: 1px solid #333;
+}
+
+.combo-price {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: #dc2626;
+}
+
+.combo-add-btn {
+	background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+	color: white;
+	border: none;
+	padding: 0.6rem 1.2rem;
+	border-radius: 0.5rem;
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 0.9rem;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	transition: all 0.2s ease;
+
+	&:hover {
+		transform: scale(1.05);
+		box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+	}
+
+	&:active {
+		transform: scale(0.98);
+	}
+}
+
+.items-grid {
+	display: grid;
+	grid-column: 1 / -1;
 	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 	gap: 1.5rem;
-	margin-top: 2rem;
 }
 
 @media (max-width: 768px) {
@@ -175,7 +370,11 @@
 		min-width: 100%;
 	}
 
-	.menu-grid {
+	.combos-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.items-grid {
 		grid-template-columns: 1fr;
 	}
 }

@@ -46,17 +46,82 @@
 		</header>
 
 		<div class="menu-grid">
-			@for (item of filteredItems; track item.id) {
-				<app-menu-item-card
-					[id]="item.id"
-					[name]="item.name"
-					[japaneseName]="item.japaneseName"
-					[description]="item.description"
-					[price]="item.price"
-					[image]="item.image"
-					[badge]="item.badge"
-					(add)="handleAddToCart($event)"
-				/>
+			<!-- Sección de Combos -->
+			@if (filteredCombos.length > 0) {
+				<div class="combos-section">
+					<div class="section-title">
+						<h2>✨ Combos Especiales</h2>
+						<p class="section-subtitle">Ofertas combinadas con los mejores platillos</p>
+					</div>
+					<div class="combos-grid">
+						@for (combo of filteredCombos; track combo.id) {
+							<div class="combo-card">
+								<div class="combo-header">
+									<div class="combo-image-wrapper">
+										<img [src]="combo.image" [alt]="combo.name" class="combo-image" />
+										@if (combo.badge) {
+											<app-badge [text]="combo.badge.text" [type]="combo.badge.type" />
+										}
+									</div>
+								</div>
+								<div class="combo-content">
+									<div class="combo-title">
+										<h3>{{ combo.name }}</h3>
+										@if (combo.japaneseName) {
+											<span class="combo-japanese">{{ combo.japaneseName }}</span>
+										}
+									</div>
+									<p class="combo-description">{{ combo.description }}</p>
+									<div class="combo-includes">
+										<span class="includes-label">Incluye:</span>
+										<ul class="includes-list">
+											@for (item of combo.items; track item.itemId) {
+												@let comboItem = getMenuItemById(item.itemId);
+												@if (comboItem) {
+													<li>
+														{{ item.quantity }}x {{ comboItem.name }}
+													</li>
+												}
+											}
+										</ul>
+									</div>
+									<div class="combo-footer">
+										<div class="combo-price">${{ combo.price }}</div>
+										<button class="combo-add-btn" (click)="handleAddComboToCart(combo.id)">
+											<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+												<path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+											</svg>
+											Añadir
+										</button>
+									</div>
+								</div>
+							</div>
+						}
+					</div>
+				</div>
+			}
+
+			<!-- Sección de Items individuales -->
+			@if (filteredItems.length > 0) {
+				<div class="items-section">
+					<div class="section-title">
+						<h2>Platillos</h2>
+					</div>
+					<div class="items-grid">
+						@for (item of filteredItems; track item.id) {
+							<app-menu-item-card
+								[id]="item.id"
+								[name]="item.name"
+								[japaneseName]="item.japaneseName"
+								[description]="item.description"
+								[price]="item.price"
+								[image]="item.image"
+								[badge]="item.badge"
+								(add)="handleAddToCart($event)"
+							/>
+						}
+					</div>
+				</div>
 			}
 		</div>
 	</main>

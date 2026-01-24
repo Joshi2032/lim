@@ -2,7 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../../shared/sidebar/sidebar.component';
 import { StatCardComponent, StatVariant } from '../../../shared/stat-card/stat-card.component';
-import { PageHeaderComponent } from '../../../shared/page-header/page-header.component';
+import { SectionHeaderComponent } from '../../../shared/section-header/section-header.component';
 
 export interface Product {
   id: string;
@@ -40,7 +40,7 @@ interface StatCardData {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, CurrencyPipe, StatCardComponent],
+  imports: [CommonModule, SidebarComponent, CurrencyPipe, StatCardComponent, SectionHeaderComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })

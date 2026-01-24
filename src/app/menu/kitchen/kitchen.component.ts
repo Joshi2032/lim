@@ -49,6 +49,8 @@ export class KitchenComponent implements OnInit {
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
 
+  constructor(private movements: MovementsService) {}
+
   ngOnInit() {
     this.loadOrders();
   }

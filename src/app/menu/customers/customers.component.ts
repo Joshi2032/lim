@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
+import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
+import { SectionHeaderComponent } from '../../shared/section-header/section-header.component';
+import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 
 export interface Address {
 	id: string;
@@ -26,11 +29,12 @@ export interface Customer {
 
 @Component({
   selector: 'app-customers',
-  imports: [CommonModule, SidebarComponent, FormsModule],
+  imports: [CommonModule, SidebarComponent, FormsModule, PageHeaderComponent, SectionHeaderComponent, EmptyStateComponent],
   templateUrl: './customers.component.html',
   styleUrl: './customers.component.scss'
 })
 export class CustomersComponent implements OnInit {
+  headerAction: PageAction = { label: 'Nuevo Cliente', icon: '+' };
   searchQuery: string = '';
   selectedCustomer: Customer | null = null;
   customers: Customer[] = [];

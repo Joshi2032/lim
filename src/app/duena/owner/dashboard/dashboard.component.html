@@ -55,14 +55,13 @@
 
 		<div class="dashboard-grid">
 			<div class="chart-section">
-				<div class="section-header">
-					<h2>Ingresos</h2>
+				<app-section-header title="Ingresos">
 					<select class="time-filter-select">
 						<option>Esta Semana</option>
 						<option>Mes Actual</option>
 						<option>Último Mes</option>
 					</select>
-				</div>
+				</app-section-header>
 				<div class="chart-container" (mouseleave)="onChartLeave()">
 					<svg viewBox="0 0 1100 350" preserveAspectRatio="xMidYMid meet" class="chart-svg" (mousemove)="onChartMove($event)">
 						<!-- Grid lines verticales -->
@@ -152,9 +151,7 @@
 			</div>
 
 			<div class="top-products-section">
-				<div class="section-header">
-					<h2>Más Vendidos Hoy</h2>
-				</div>
+				<app-section-header title="Más Vendidos Hoy"></app-section-header>
 				<div class="products-list">
 					@for (product of topProducts; track product.id) {
 						<div class="product-row" [class]="'rank-' + product.rank">
@@ -185,9 +182,7 @@
 
 		@if (activeTab === 'resumen') {
 		<div class="recent-orders-section">
-			<div class="section-header">
-				<h2>Órdenes Recientes</h2>
-			</div>
+			<app-section-header title="Órdenes Recientes"></app-section-header>
 			<div class="orders-table">
 				@for (order of recentOrders; track order.id) {
 					<div class="order-row" [class]="'status-' + order.status">

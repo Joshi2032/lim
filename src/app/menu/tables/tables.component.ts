@@ -105,9 +105,4 @@ export class TablesComponent {
   handleLogout() {
     console.log('Logout');
   }
-  }
-
-  handleLogout() {
-    console.log('Logout');
-  }
 }

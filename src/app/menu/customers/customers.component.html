@@ -6,27 +6,16 @@
 	</app-sidebar>
 
 	<div class="customers-content">
-		<div class="customers-header">
-			<div class="header-title">
-				<h1>Clientes</h1>
-				<p class="header-subtitle">Gestiona clientes y sus direcciones de entrega</p>
-			</div>
-			<button class="new-customer-btn" type="button" (click)="openNewCustomerModal()">
-				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-				</svg>
-				Nuevo Cliente
-			</button>
-		</div>
+		<app-page-header
+			title="Clientes"
+			subtitle="Gestiona clientes y sus direcciones de entrega"
+			[action]="headerAction"
+			(actionClick)="openNewCustomerModal()">
+		</app-page-header>
 
 		<div class="customers-grid">
 			<div class="customers-list-section">
-				<div class="section-header">
-					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-					<h2>Lista de Clientes</h2>
-				</div>
+				<app-section-header title="Lista de Clientes"></app-section-header>
 
 				<div class="search-box">
 					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -59,23 +48,13 @@
 							</div>
 						}
 					} @else {
-						<div class="empty-state">
-							<svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-								<path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-							</svg>
-							<h3>No hay clientes registrados</h3>
-						</div>
+						<app-empty-state icon="user" title="No hay clientes registrados" description="Agrega el primer cliente"></app-empty-state>
 					}
 				</div>
 			</div>
 
 			<div class="addresses-section">
-				<div class="section-header">
-					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						<path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-					<h2>Direcciones</h2>
+				<app-section-header title="Direcciones">
 					@if (selectedCustomer) {
 						<button class="icon-btn" type="button" (click)="openEditCustomerModal()" title="Editar cliente">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -94,7 +73,7 @@
 							Agregar
 						</button>
 					}
-				</div>
+				</app-section-header>
 
 				<div class="addresses-list">
 					@if (selectedCustomer) {
@@ -142,23 +121,10 @@
 								</div>
 							}
 						} @else {
-							<div class="empty-state">
-								<svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-									<path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-								</svg>
-								<h3>No hay direcciones</h3>
-								<p>Agrega una dirección de entrega</p>
-							</div>
+							<app-empty-state icon="inbox" title="No hay direcciones" description="Agrega una dirección de entrega"></app-empty-state>
 						}
 					} @else {
-						<div class="empty-state">
-							<svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-								<path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-								<path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-							</svg>
-							<h3>Selecciona un cliente para ver sus direcciones</h3>
-						</div>
+						<app-empty-state icon="inbox" title="Selecciona un cliente" description="Elige un cliente para ver sus direcciones"></app-empty-state>
 					}
 				</div>
 			</div>

@@ -5,6 +5,7 @@ import { StatVariant } from '../../shared/stat-card/stat-card.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { UsersComponent } from './users/users.component';
 import { MovementsComponent } from './movements/movements.component';
+import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 
 export interface Product {
   id: string;
@@ -42,7 +43,7 @@ interface StatCardData {
 @Component({
   selector: 'app-owner',
   standalone: true,
-    imports: [CommonModule, SidebarComponent, DashboardComponent, UsersComponent, MovementsComponent],
+    imports: [CommonModule, SidebarComponent, DashboardComponent, UsersComponent, MovementsComponent, PageHeaderComponent],
   templateUrl: './owner.component.html',
   styleUrl: './owner.component.scss'
 })

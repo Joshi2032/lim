@@ -6,11 +6,7 @@
 	</app-sidebar>
 
 	<div class="panel-content">
-		<div class="panel-header">
-			<div class="header-title">
-				<h1>Panel de Control <span class="japanese-text">管理</span></h1>
-			</div>
-		</div>
+		<app-page-header title="Panel de Control" japaneseName="管理"></app-page-header>
 
 		<div class="panel-tabs">
 			@for (tab of tabs; track tab.id) {

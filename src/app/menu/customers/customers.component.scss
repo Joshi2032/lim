@@ -14,52 +14,6 @@
 	gap: 24px;
 }
 
-.customers-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: flex-start;
-	padding-bottom: 24px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.header-title h1 {
-	font-size: 32px;
-	font-weight: 700;
-	color: #fff;
-	margin: 0 0 8px 0;
-}
-
-.header-subtitle {
-	font-size: 14px;
-	color: #9ca3af;
-	margin: 0;
-	font-weight: 500;
-}
-
-.new-customer-btn {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 12px 24px;
-	background: #dc2626;
-	border: none;
-	border-radius: 8px;
-	color: #fff;
-	font-size: 14px;
-	font-weight: 600;
-	cursor: pointer;
-	transition: all 0.2s ease;
-
-	&:hover {
-		background: #b91c1c;
-		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
-	}
-
-	&:active {
-		transform: translateY(0);
-	}
-}
 
 .customers-grid {
 	display: grid;
@@ -80,25 +34,6 @@
 	overflow: hidden;
 }
 
-.section-header {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	padding-bottom: 16px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-
-	svg {
-		color: #dc2626;
-	}
-
-	h2 {
-		font-size: 18px;
-		font-weight: 700;
-		color: #fff;
-		margin: 0;
-		flex: 1;
-	}
-}
 
 .add-address-btn {
 	display: flex;
@@ -396,32 +331,6 @@
 	}
 }
 
-.empty-state {
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 16px;
-	padding: 60px 20px;
-	color: #6b7280;
-
-	svg {
-		opacity: 0.5;
-	}
-
-	h3 {
-		font-size: 16px;
-		font-weight: 600;
-		margin: 0;
-		color: #9ca3af;
-	}
-
-	p {
-		font-size: 14px;
-		margin: 0;
-	}
-}
 
 @media (max-width: 1024px) {
 	.customers-grid {
@@ -440,20 +349,7 @@
 		padding: 20px 16px;
 	}
 
-	.customers-header {
-		flex-direction: column;
-		gap: 16px;
-		align-items: stretch;
-	}
-
-	.customers-header h1 {
-		font-size: 24px;
-	}
-
-	.new-customer-btn {
-		width: 100%;
-		justify-content: center;
-	}
+	/* Removed obsolete responsive rules tied to local header/button */
 }
 
 /* Modal Styles */

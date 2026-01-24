@@ -2,7 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../../shared/sidebar/sidebar.component';
 import { UserCardComponent } from '../../../shared/user-card/user-card.component';
-import { UserFormComponent } from './user-form/user-form.component';
+import { UserFormComponent, UserFormData, RoleOption } from '../../../shared/user-form/user-form.component';
 
 export type UserRole = 'duena' | 'encargado' | 'chef' | 'mesero' | 'cajero' | 'repartidor';
 
@@ -16,10 +16,7 @@ export interface UserEmployee {
 	status: 'activo' | 'inactivo';
 }
 
-export interface RoleStat {
-	id: UserRole;
-	label: string;
-	icon: string;
+export interface RoleStat extends RoleOption {
 	count: number;
 }
 
@@ -111,7 +108,7 @@ export class UsersComponent implements OnInit {
     this.userBeingEdited = null;
   }
 
-  saveUser(formData: { name: string; email: string; password: string; roleId: string }) {
+  saveUser(formData: UserFormData) {
     if (this.userBeingEdited) {
       // Modo edición
       const userIndex = this.users.findIndex(u => u.id === this.userBeingEdited!.id);
@@ -121,7 +118,7 @@ export class UsersComponent implements OnInit {
           name: formData.name,
           email: formData.email,
           roleId: formData.roleId as UserRole,
-          initials: formData.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
+          initials: this.generateInitials(formData.name)
         };
       }
     } else {
@@ -131,7 +128,7 @@ export class UsersComponent implements OnInit {
         name: formData.name,
         email: formData.email,
         roleId: formData.roleId as UserRole,
-        initials: formData.name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+        initials: this.generateInitials(formData.name),
         status: 'activo'
       };
       this.users.push(newUser);
@@ -139,6 +136,15 @@ export class UsersComponent implements OnInit {
 
     this.updateRoleStats();
     this.closeUserForm();
+  }
+
+  private generateInitials(name: string): string {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   }
 
   deleteUser(userId: string) {

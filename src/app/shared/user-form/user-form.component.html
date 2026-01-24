@@ -2,7 +2,7 @@
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>{{ getTitle() }}</h2>
-      <button class="close-btn" (click)="onClose()">
+      <button type="button" class="close-btn" (click)="onClose()" aria-label="Cerrar">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
@@ -11,8 +11,9 @@
 
     <form [formGroup]="userForm" (ngSubmit)="onSave()">
       <div class="form-group">
-        <label>Nombre Completo</label>
+        <label for="user-name">Nombre Completo</label>
         <input
+          id="user-name"
           type="text"
           formControlName="name"
           placeholder="Nombre del empleado"
@@ -20,8 +21,9 @@
       </div>
 
       <div class="form-group">
-        <label>Email</label>
+        <label for="user-email">Email</label>
         <input
+          id="user-email"
           type="email"
           formControlName="email"
           placeholder="empleado@sakura.com"
@@ -29,8 +31,9 @@
       </div>
 
       <div class="form-group">
-        <label>{{ getPasswordLabel() }}</label>
+        <label for="user-password">{{ getPasswordLabel() }}</label>
         <input
+          id="user-password"
           type="password"
           formControlName="password"
           [placeholder]="getPasswordPlaceholder()"
@@ -38,10 +41,10 @@
       </div>
 
       <div class="form-group">
-        <label>Rol</label>
-        <select formControlName="roleId" class="form-select">
+        <label for="user-role">Rol</label>
+        <select id="user-role" formControlName="roleId" class="form-select">
           <option value="">Selecciona un rol</option>
-          <option *ngFor="let role of roleStats" [value]="role.id">
+          <option *ngFor="let role of roleOptions" [value]="role.id">
             {{ role.label }}
           </option>
         </select>

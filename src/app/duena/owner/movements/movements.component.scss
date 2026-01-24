@@ -27,14 +27,13 @@
 .controls {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  align-items: flex-end;
-  min-width: 280px;
+  gap: 12px;
+  align-items: stretch;
 }
 
 .search-input {
   width: 100%;
-  min-width: 260px;
+  min-width: 280px;
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -51,14 +50,30 @@
   }
 }
 
+.chip-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .filter-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
 }
 
 .filter-chips.status {
-	justify-content: flex-end;
+  justify-content: flex-start;
+}
+
+.chip-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-right: 6px;
 }
 
 .chip {

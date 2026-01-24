@@ -5,27 +5,33 @@
       <p class="subtitle">Bitácora en tiempo real de acciones en el sistema</p>
     </div>
     <div class="controls">
-      <input
-        type="search"
-        class="search-input"
-        placeholder="Buscar por título, actor o rol"
-        (input)="onSearch($any($event.target).value)" />
-
-      <div class="filter-chips">
-        <button class="chip" [class.active]="activeSection === 'all'" (click)="setSectionFilter('all')">Todos</button>
-        <button class="chip" [class.active]="activeSection === 'menu'" (click)="setSectionFilter('menu')">Menú</button>
-        <button class="chip" [class.active]="activeSection === 'mesas'" (click)="setSectionFilter('mesas')">Mesas</button>
-        <button class="chip" [class.active]="activeSection === 'cocina'" (click)="setSectionFilter('cocina')">Cocina</button>
-        <button class="chip" [class.active]="activeSection === 'clientes'" (click)="setSectionFilter('clientes')">Clientes</button>
-        <button class="chip" [class.active]="activeSection === 'entregas'" (click)="setSectionFilter('entregas')">Entregas</button>
-        <button class="chip" [class.active]="activeSection === 'usuarios'" (click)="setSectionFilter('usuarios')">Usuarios</button>
+      <div class="search-row">
+        <input
+          type="search"
+          class="search-input"
+          placeholder="Buscar por título, actor o rol"
+          (input)="onSearch($any($event.target).value)" />
       </div>
 
-      <div class="filter-chips status">
-        <button class="chip" [class.active]="activeStatus === 'all'" (click)="setStatusFilter('all')">Todos</button>
-        <button class="chip" [class.active]="activeStatus === 'info'" (click)="setStatusFilter('info')">Info</button>
-        <button class="chip" [class.active]="activeStatus === 'success'" (click)="setStatusFilter('success')">Éxito</button>
-        <button class="chip" [class.active]="activeStatus === 'warning'" (click)="setStatusFilter('warning')">Alerta</button>
+      <div class="chip-rows">
+        <div class="filter-chips">
+          <span class="chip-label">Sección</span>
+          <button class="chip" [class.active]="activeSection === 'all'" (click)="setSectionFilter('all')">Todos</button>
+          <button class="chip" [class.active]="activeSection === 'menu'" (click)="setSectionFilter('menu')">Menú</button>
+          <button class="chip" [class.active]="activeSection === 'mesas'" (click)="setSectionFilter('mesas')">Mesas</button>
+          <button class="chip" [class.active]="activeSection === 'cocina'" (click)="setSectionFilter('cocina')">Cocina</button>
+          <button class="chip" [class.active]="activeSection === 'clientes'" (click)="setSectionFilter('clientes')">Clientes</button>
+          <button class="chip" [class.active]="activeSection === 'entregas'" (click)="setSectionFilter('entregas')">Entregas</button>
+          <button class="chip" [class.active]="activeSection === 'usuarios'" (click)="setSectionFilter('usuarios')">Usuarios</button>
+        </div>
+
+        <div class="filter-chips status">
+          <span class="chip-label">Estado</span>
+          <button class="chip" [class.active]="activeStatus === 'all'" (click)="setStatusFilter('all')">Todos</button>
+          <button class="chip" [class.active]="activeStatus === 'info'" (click)="setStatusFilter('info')">Info</button>
+          <button class="chip" [class.active]="activeStatus === 'success'" (click)="setStatusFilter('success')">Éxito</button>
+          <button class="chip" [class.active]="activeStatus === 'warning'" (click)="setStatusFilter('warning')">Alerta</button>
+        </div>
       </div>
     </div>
   </div>

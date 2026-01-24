@@ -23,8 +23,24 @@
 		}
 
 		@if (activeTab === 'resumen') {
+			<!-- Primary summary stats (first row: 4 cards) -->
 			<div class="dashboard-stats">
-				@for (stat of statCards; track stat.title) {
+				@for (stat of primaryStats; track stat.title) {
+					<app-stat-card
+						[title]="stat.title"
+						[value]="stat.value"
+						[subtitle]="stat.subtitle ?? ''"
+						[trendLabel]="stat.trendLabel ?? ''"
+						[trendDirection]="stat.trendDirection ?? ''"
+						[iconSvg]="stat.iconSvg"
+						[variant]="stat.variant">
+					</app-stat-card>
+				}
+			</div>
+
+			<!-- Secondary summary stats (second row: 3 prominent cards) -->
+			<div class="dashboard-stats dashboard-stats-secondary">
+				@for (stat of secondaryStats; track stat.title) {
 					<app-stat-card
 						[title]="stat.title"
 						[value]="stat.value"

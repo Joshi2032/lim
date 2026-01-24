@@ -59,6 +59,20 @@
 	}
 }
 
+/* Secondary row: always prefer 3 columns when space allows */
+.dashboard-stats-secondary {
+	margin-top: -8px;
+	@media (min-width: 1024px) {
+		grid-template-columns: repeat(3, 1fr);
+	}
+
+	/* Make second row cards compact and darker, matching reference */
+	.stat-card {
+		min-height: 150px;
+		box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+	}
+}
+
 .dashboard-grid {
 	display: grid;
 	grid-template-columns: 1.6fr 1fr;

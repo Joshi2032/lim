@@ -8,7 +8,7 @@
 	</div>
 
 	<nav class="sidebar-nav">
-		@for (item of menuItems; track item.id) {
+		@for (item of filteredMenuItems; track item.id) {
 			<a
 				[routerLink]="item.route"
 				routerLinkActive="active"

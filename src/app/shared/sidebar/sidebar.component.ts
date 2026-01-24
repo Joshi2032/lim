@@ -23,6 +23,10 @@ export interface User {
 })
 export class SidebarComponent {
   @Input() menuItems: MenuItem[] = [];
+  // Globally hidden item ids (requested): remove Dashboard and Usuarios
+  private readonly hiddenIdsDefault: string[] = ['dashboard', 'usuarios'];
+  // Optional extension point to hide other ids if needed
+  @Input() hiddenIds: string[] = [];
   @Input() currentUser: User | null = null;
   @Input() cartCount: number = 0;
 
@@ -30,5 +34,13 @@ export class SidebarComponent {
 
   onLogout() {
     this.logout.emit();
+  }
+
+  get filteredMenuItems(): MenuItem[] {
+    const hideSet = new Set([...
+      this.hiddenIdsDefault,
+      ...this.hiddenIds
+    ]);
+    return this.menuItems.filter(item => !hideSet.has(item.id));
   }
 }

@@ -90,13 +90,13 @@ export class DashboardComponent implements OnInit {
 
   loadData() {
     this.chartData = [
-      { day: 'Lun', value: 18000, label: 'Lunes' },
-      { day: 'Mar', value: 25000, label: 'Martes' },
-      { day: 'Mié', value: 32000, label: 'Miércoles' },
-      { day: 'Jue', value: 38000, label: 'Jueves' },
-      { day: 'Vie', value: 52000, label: 'Viernes' },
-      { day: 'Sáb', value: 45000, label: 'Sábado' },
-      { day: 'Dom', value: 41000, label: 'Domingo' }
+      { day: 'Lun', value: 1000, label: 'Lunes' },
+      { day: 'Mar', value: 1500, label: 'Martes' },
+      { day: 'Mié', value: 5000, label: 'Miércoles' },
+      { day: 'Jue', value: 32000, label: 'Jueves' },
+      { day: 'Vie', value: 45000, label: 'Viernes' },
+      { day: 'Sáb', value: 50000, label: 'Sábado' },
+      { day: 'Dom', value: 35000, label: 'Domingo' }
     ];
 
     this.statCards = [
@@ -214,39 +214,47 @@ export class DashboardComponent implements OnInit {
   }
 
   onChartMove(event: MouseEvent) {
-    const svg = event.currentTarget as SVGElement;
-    const containerRect = svg.parentElement?.getBoundingClientRect();
+		const svg = event.currentTarget as SVGElement;
+		const containerRect = svg.getBoundingClientRect();
 
-    const x = event.clientX - (containerRect?.left || 0);
-    const y = event.clientY - (containerRect?.top || 0);
+		const x = event.clientX - containerRect.left;
 
-    const minX = 50;
-    const maxX = 530;
-    const constrainedX = Math.max(minX, Math.min(maxX, x));
+		const dayZones = [
+      { range: [40, 145], day: 'Lun', value: 1000, pointX: 100, label: 'Lunes' },
+      { range: [145, 250], day: 'Mar', value: 1500, pointX: 252, label: 'Martes' },
+      { range: [250, 355], day: 'Mié', value: 5000, pointX: 405, label: 'Miércoles' },
+      { range: [355, 460], day: 'Jue', value: 32000, pointX: 558, label: 'Jueves' },
+      { range: [460, 565], day: 'Vie', value: 45000, pointX: 711, label: 'Viernes' },
+      { range: [565, 670], day: 'Sáb', value: 50000, pointX: 864, label: 'Sábado' },
+      { range: [670, 900], day: 'Dom', value: 35000, pointX: 1017, label: 'Domingo' }
+		];
 
-    const dayZones = [
-      { range: [50, 100], day: 'Lun', value: 18000, pointX: 70 },
-      { range: [100, 160], day: 'Mar', value: 25000, pointX: 130 },
-      { range: [160, 220], day: 'Mié', value: 32000, pointX: 190 },
-      { range: [220, 280], day: 'Jue', value: 38000, pointX: 250 },
-      { range: [280, 340], day: 'Vie', value: 52000, pointX: 310 },
-      { range: [340, 400], day: 'Sáb', value: 45000, pointX: 370 },
-      { range: [400, 460], day: 'Dom', value: 41000, pointX: 430 }
-    ];
+		const zone = dayZones.find(z => x >= z.range[0] && x < z.range[1]);
 
-    const zone = dayZones.find(z => x >= z.range[0] && x < z.range[1]);
-
-    if (zone) {
-      this.tooltipX = zone.pointX;
-      this.tooltipY = y - 50;
-      this.tooltipValue = '$' + zone.value.toLocaleString();
-      this.tooltipDay = zone.day;
-      this.tooltipVisible = true;
-    }
-  }
+		if (zone) {
+			this.tooltipX = zone.pointX;
+			this.tooltipY = 180;
+			this.tooltipValue = '$' + zone.value.toLocaleString('es-MX');
+			this.tooltipDay = zone.label;
+			this.tooltipVisible = true;
+		}
+	}
 
   onChartLeave() {
     this.tooltipVisible = false;
+  }
+
+  getPointY(day: string): number {
+    const dayMap: { [key: string]: number } = {
+    'Lunes': 295,
+    'Martes': 291,
+    'Miércoles': 266,
+    'Jueves': 153,
+    'Viernes': 105,
+    'Sábado': 83,
+    'Domingo': 133
+    };
+    return dayMap[day] || 283;
   }
 
   setActiveTab(tabId: 'resumen' | 'movimientos' | 'usuarios') {

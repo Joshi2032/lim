@@ -6,6 +6,7 @@ import { MenuItemCardComponent, MenuItem } from '../menu-item-card/menu-item-car
 import { CartComponent, CartItem } from '../../shared/cart/cart.component';
 import { BadgeComponent } from '../../shared/badge/badge.component';
 import { VariantSelectorComponent } from '../variant-selector/variant-selector.component';
+import { MovementsService } from '../../shared/movements/movements.service';
 
 interface Filter {
 	id: string;
@@ -61,6 +62,8 @@ export class MenuComponent {
     { id: 'panel', label: 'Panel de Control', icon: '📈', route: '/panel-control' },
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
+
+  constructor(private movements: MovementsService) {}
 
   filters: Filter[] = [
     { id: 'todos', label: 'Todos' },
@@ -301,6 +304,15 @@ export class MenuComponent {
       }
       this.cartCount++;
       this.isCartOpen = true;
+
+      this.movements.log({
+        title: 'Producto agregado',
+        description: `${item.name} añadido al carrito`,
+        section: 'menu',
+        status: 'success',
+        actor: this.currentUser.name,
+        role: this.currentUser.role
+      });
     }
     console.log('Added to cart:', itemId);
   }
@@ -352,6 +364,15 @@ export class MenuComponent {
         }
         this.cartCount += event.quantity;
         this.isCartOpen = true;
+
+        this.movements.log({
+          title: 'Combo con variante',
+          description: `${combo.name} (${event.item.name} - ${event.variant.name}) x${event.quantity}`,
+          section: 'menu',
+          status: 'success',
+          actor: this.currentUser.name,
+          role: this.currentUser.role
+        });
       }
     }
     this.isVariantSelectorOpen = false;
@@ -372,6 +393,15 @@ export class MenuComponent {
     }
     this.cartCount++;
     this.isCartOpen = true;
+
+    this.movements.log({
+      title: 'Combo agregado',
+      description: `${combo.name} añadido al carrito`,
+      section: 'menu',
+      status: 'success',
+      actor: this.currentUser.name,
+      role: this.currentUser.role
+    });
   }
 
   toggleCart() {

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../../shared/sidebar/sidebar.component';
 import { UserCardComponent } from '../../../shared/user-card/user-card.component';
 import { UserFormComponent, UserFormData, RoleOption } from '../../../shared/user-form/user-form.component';
+import { MovementsService } from '../../../shared/movements/movements.service';
 
 export type UserRole = 'duena' | 'encargado' | 'chef' | 'mesero' | 'cajero' | 'repartidor';
 
@@ -50,6 +51,8 @@ export class UsersComponent implements OnInit {
     { id: 'panel', label: 'Panel de Control', icon: '📈', route: '/panel-control' },
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios', active: true }
   ];
+
+  constructor(private movements: MovementsService) {}
 
   roleStats: RoleStat[] = [
     { id: 'duena', label: 'Dueña', icon: '👑', count: 0 },
@@ -120,6 +123,15 @@ export class UsersComponent implements OnInit {
           roleId: formData.roleId as UserRole,
           initials: this.generateInitials(formData.name)
         };
+
+        this.movements.log({
+          title: 'Usuario actualizado',
+          description: `${formData.name} ahora es ${this.getRoleLabel(formData.roleId as UserRole)}`,
+          section: 'usuarios',
+          status: 'success',
+          actor: this.currentUser.name,
+          role: this.currentUser.role
+        });
       }
     } else {
       // Modo creación
@@ -132,6 +144,15 @@ export class UsersComponent implements OnInit {
         status: 'activo'
       };
       this.users.push(newUser);
+
+      this.movements.log({
+        title: 'Usuario creado',
+        description: `${formData.name} (${formData.email}) como ${this.getRoleLabel(formData.roleId as UserRole)}`,
+        section: 'usuarios',
+        status: 'success',
+        actor: this.currentUser.name,
+        role: this.currentUser.role
+      });
     }
 
     this.updateRoleStats();
@@ -150,5 +171,14 @@ export class UsersComponent implements OnInit {
   deleteUser(userId: string) {
     this.users = this.users.filter(u => u.id !== userId);
     this.updateRoleStats();
+
+    this.movements.log({
+      title: 'Usuario eliminado',
+      description: `Usuario con id ${userId} removido`,
+      section: 'usuarios',
+      status: 'warning',
+      actor: this.currentUser.name,
+      role: this.currentUser.role
+    });
   }
 }

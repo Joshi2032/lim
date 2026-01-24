@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { KitchenOrderComponent, Order, OrderStatus } from '../kitchen-order/kitchen-order.component';
+import { MovementsService } from '../../shared/movements/movements.service';
 
 @Component({
   selector: 'app-kitchen',
@@ -30,6 +31,8 @@ export class KitchenComponent implements OnInit {
     { id: 'panel', label: 'Panel de Control', icon: '📈', route: '/panel-control' },
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
+
+  constructor(private movements: MovementsService) {}
 
   ngOnInit() {
     this.loadOrders();
@@ -136,6 +139,15 @@ export class KitchenComponent implements OnInit {
     const order = this.orders.find(o => o.id === orderId);
     if (order) {
       order.status = newStatus;
+
+      this.movements.log({
+        title: `Orden ${newStatus === 'listo' ? 'lista' : 'actualizada'}`,
+        description: `${order.tableName} · ${order.items.length} ítems ahora ${newStatus}`,
+        section: 'cocina',
+        status: newStatus === 'listo' ? 'success' : 'info',
+        actor: this.currentUser.name,
+        role: this.currentUser.role
+      });
 
       // Si se marca como "servido", podría removerse después de un tiempo
       if (newStatus === 'servido') {

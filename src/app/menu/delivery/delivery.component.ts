@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { DeliveryCardComponent } from '../../shared/delivery-card/delivery-card.component';
+import { MovementsService } from '../../shared/movements/movements.service';
 
 export type DeliveryStatus = 'pendiente' | 'enCurso' | 'entregada';
 
@@ -44,6 +45,8 @@ export class DeliveryComponent implements OnInit {
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
 
+  constructor(private movements: MovementsService) {}
+
   ngOnInit() {
     this.loadDeliveries();
   }
@@ -74,6 +77,15 @@ export class DeliveryComponent implements OnInit {
     const delivery = this.deliveries.find(d => d.id === deliveryId);
     if (delivery) {
       delivery.status = newStatus;
+
+      this.movements.log({
+        title: `Entrega ${this.getStatusLabel(newStatus)}`,
+        description: `${delivery.customerName} · Pedido ${delivery.orderNumber} ahora ${this.getStatusLabel(newStatus)}`,
+        section: 'entregas',
+        status: newStatus === 'entregada' ? 'success' : 'info',
+        actor: this.currentUser.name,
+        role: this.currentUser.role
+      });
     }
   }
 }

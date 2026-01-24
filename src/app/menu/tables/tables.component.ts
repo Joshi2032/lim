@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { TableCardComponent, Table, TableStatus } from '../table-card/table-card.component';
+import { MovementsService } from '../../shared/movements/movements.service';
 
 interface Filter {
 	id: string;
@@ -36,6 +37,8 @@ export class TablesComponent {
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
 
+  constructor(private movements: MovementsService) {}
+
   filters: Filter[] = [
     { id: 'todas', label: 'Todas', icon: '📍' },
     { id: 'disponible', label: 'Disponibles', status: 'disponible' },
@@ -64,6 +67,16 @@ export class TablesComponent {
 
   onFilterChange(filterId: string) {
     this.selectedFilter = filterId;
+
+    const label = this.filters.find(f => f.id === filterId)?.label || filterId;
+    this.movements.log({
+      title: 'Vista de mesas filtrada',
+      description: `Filtro aplicado: ${label}`,
+      section: 'mesas',
+      status: 'info',
+      actor: this.currentUser.name,
+      role: this.currentUser.role
+    });
   }
 
   getCountByStatus(status: TableStatus): number {

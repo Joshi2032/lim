@@ -42,7 +42,7 @@ interface StatCardData {
 @Component({
   selector: 'app-owner',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, DashboardComponent, UsersComponent, MovementsComponent],
+    imports: [CommonModule, SidebarComponent, DashboardComponent, UsersComponent, MovementsComponent],
   templateUrl: './owner.component.html',
   styleUrl: './owner.component.scss'
 })

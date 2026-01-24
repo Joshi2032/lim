@@ -24,10 +24,41 @@
   }
 }
 
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+  min-width: 280px;
+}
+
+.search-input {
+  width: 100%;
+  min-width: 260px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 13px;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
 .filter-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.filter-chips.status {
+	justify-content: flex-end;
 }
 
 .chip {

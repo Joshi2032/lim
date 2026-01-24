@@ -14,41 +14,27 @@
       </div>
 
       <div class="chip-rows">
-        <div class="filter-chips">
-          <span class="chip-label">Sección</span>
-          <button class="chip" [class.active]="activeSection === 'all'" (click)="setSectionFilter('all')">Todos</button>
-          <button class="chip" [class.active]="activeSection === 'menu'" (click)="setSectionFilter('menu')">Menú</button>
-          <button class="chip" [class.active]="activeSection === 'mesas'" (click)="setSectionFilter('mesas')">Mesas</button>
-          <button class="chip" [class.active]="activeSection === 'cocina'" (click)="setSectionFilter('cocina')">Cocina</button>
-          <button class="chip" [class.active]="activeSection === 'clientes'" (click)="setSectionFilter('clientes')">Clientes</button>
-          <button class="chip" [class.active]="activeSection === 'entregas'" (click)="setSectionFilter('entregas')">Entregas</button>
-          <button class="chip" [class.active]="activeSection === 'usuarios'" (click)="setSectionFilter('usuarios')">Usuarios</button>
-        </div>
+        <app-filter-chips
+          label="Sección"
+          [options]="sectionOptions"
+          [selectedId]="activeSection"
+          (optionSelected)="setSectionFilter($event)">
+        </app-filter-chips>
 
-        <div class="filter-chips status">
-          <span class="chip-label">Estado</span>
-          <button class="chip" [class.active]="activeStatus === 'all'" (click)="setStatusFilter('all')">Todos</button>
-          <button class="chip" [class.active]="activeStatus === 'info'" (click)="setStatusFilter('info')">Info</button>
-          <button class="chip" [class.active]="activeStatus === 'success'" (click)="setStatusFilter('success')">Éxito</button>
-          <button class="chip" [class.active]="activeStatus === 'warning'" (click)="setStatusFilter('warning')">Alerta</button>
-        </div>
+        <app-filter-chips
+          label="Estado"
+          [options]="statusOptions"
+          [selectedId]="activeStatus"
+          [status]="true"
+          (optionSelected)="setStatusFilter($event)">
+        </app-filter-chips>
       </div>
     </div>
   </div>
 
   <div class="movements-list">
     @for (item of filteredActivityLog; track item.id) {
-      <div class="movement-card" [class]="item.status">
-        <div class="movement-main">
-          <div class="movement-title">{{ item.title }}</div>
-          <div class="movement-description">{{ item.description }}</div>
-        </div>
-        <div class="movement-meta">
-          <span class="badge" [class]="item.section">{{ item.section }}</span>
-          <span class="actor">{{ item.actor }} · {{ item.role }}</span>
-          <span class="time">{{ item.timestamp | date:'shortTime' }}</span>
-        </div>
-      </div>
+      <app-activity-card [item]="item"></app-activity-card>
     } @empty {
       <div class="empty-movements">
         <p>Sin movimientos para esta categoría</p>

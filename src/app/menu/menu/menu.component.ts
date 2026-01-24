@@ -7,6 +7,7 @@ import { CartComponent, CartItem } from '../../shared/cart/cart.component';
 import { BadgeComponent } from '../../shared/badge/badge.component';
 import { VariantSelectorComponent } from '../variant-selector/variant-selector.component';
 import { MovementsService } from '../../shared/movements/movements.service';
+import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
 
 interface Filter {
 	id: string;
@@ -33,7 +34,7 @@ interface Combo {
 
 @Component({
   selector: 'app-menu',
-  imports: [CommonModule, SidebarComponent, MenuItemCardComponent, FormsModule, CartComponent, BadgeComponent, VariantSelectorComponent],
+  imports: [CommonModule, SidebarComponent, MenuItemCardComponent, FormsModule, CartComponent, BadgeComponent, VariantSelectorComponent, FilterChipsComponent],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'
 })
@@ -51,6 +52,17 @@ export class MenuComponent {
     role: 'Dueña',
     initials: 'J'
   };
+
+  filterOptions: FilterOption[] = [
+    { id: 'todos', label: 'Todos' },
+    { id: 'combos', label: 'Combos' },
+    { id: 'rolls', label: 'Rolls' },
+    { id: 'nigiri', label: 'Nigiri' },
+    { id: 'sashimi', label: 'Sashimi' },
+    { id: 'especiales', label: 'Especiales' },
+    { id: 'bebidas', label: 'Bebidas' },
+    { id: 'postres', label: 'Postres' }
+  ];
 
   sidebarItems: SidebarMenuItem[] = [
     { id: 'menu', label: 'Menú', icon: '🍜', route: '/menu', active: true },
@@ -245,7 +257,7 @@ export class MenuComponent {
   filteredItems: MenuItem[] = this.menuItems;
   filteredCombos: Combo[] = this.combos;
 
-  onFilterChange(filterId: string) {
+  onFilterChange(filterId: any) {
     this.selectedFilter = filterId;
     this.filterItems();
   }

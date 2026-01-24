@@ -58,24 +58,12 @@
 		</div>
 
 		<div class="delivery-tabs">
-			<button
-				[class.active]="selectedStatus === 'pendiente'"
-				(click)="selectedStatus = 'pendiente'"
-				class="tab-btn">
-				Pendientes ({{ getDeliveriesByStatus('pendiente').length }})
-			</button>
-			<button
-				[class.active]="selectedStatus === 'enCurso'"
-				(click)="selectedStatus = 'enCurso'"
-				class="tab-btn">
-				En Curso ({{ getDeliveriesByStatus('enCurso').length }})
-			</button>
-			<button
-				[class.active]="selectedStatus === 'entregada'"
-				(click)="selectedStatus = 'entregada'"
-				class="tab-btn">
-				Entregadas ({{ getDeliveriesByStatus('entregada').length }})
-			</button>
+			<app-filter-chips
+				label="Estado"
+				[options]="statusOptions"
+				[selectedId]="selectedStatus"
+				(optionSelected)="onStatusFilterChange($event)">
+			</app-filter-chips>
 		</div>
 
 		<div class="deliveries-list">

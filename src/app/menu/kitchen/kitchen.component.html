@@ -29,30 +29,12 @@
 		</div>
 
 		<div class="kitchen-filters">
-			<button
-				[class.active]="selectedStatus === 'all'"
-				(click)="selectedStatus = 'all'"
-				class="filter-btn">
-				Todos
-			</button>
-			<button
-				[class.active]="selectedStatus === 'pendiente'"
-				(click)="selectedStatus = 'pendiente'"
-				class="filter-btn">
-				Pendientes
-			</button>
-			<button
-				[class.active]="selectedStatus === 'preparando'"
-				(click)="selectedStatus = 'preparando'"
-				class="filter-btn">
-				Preparando
-			</button>
-			<button
-				[class.active]="selectedStatus === 'listo'"
-				(click)="selectedStatus = 'listo'"
-				class="filter-btn">
-				Listos
-			</button>
+			<app-filter-chips
+				label="Estado"
+				[options]="statusOptions"
+				[selectedId]="selectedStatus"
+				(optionSelected)="onStatusFilterChange($event)">
+			</app-filter-chips>
 		</div>
 
 		<div class="orders-grid">

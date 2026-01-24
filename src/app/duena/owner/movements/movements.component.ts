@@ -2,11 +2,13 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ActivityLog, ActivitySection, ActivityStatus, MovementsService } from '../../../shared/movements/movements.service';
+import { FilterChipsComponent, FilterOption } from '../../../shared/filter-chips/filter-chips.component';
+import { ActivityCardComponent } from '../../../shared/activity-card/activity-card.component';
 
 @Component({
   selector: 'app-movements',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FilterChipsComponent, ActivityCardComponent],
   templateUrl: './movements.component.html',
   styleUrl: './movements.component.scss'
 })
@@ -16,6 +18,23 @@ export class MovementsComponent implements OnInit, OnDestroy {
   searchQuery: string = '';
   activityLog: ActivityLog[] = [];
   private sub?: Subscription;
+
+  sectionOptions: FilterOption[] = [
+    { id: 'all', label: 'Todos' },
+    { id: 'menu', label: 'Menú' },
+    { id: 'mesas', label: 'Mesas' },
+    { id: 'cocina', label: 'Cocina' },
+    { id: 'clientes', label: 'Clientes' },
+    { id: 'entregas', label: 'Entregas' },
+    { id: 'usuarios', label: 'Usuarios' }
+  ];
+
+  statusOptions: FilterOption[] = [
+    { id: 'all', label: 'Todos' },
+    { id: 'info', label: 'Info' },
+    { id: 'success', label: 'Éxito' },
+    { id: 'warning', label: 'Alerta' }
+  ];
 
   constructor(private movements: MovementsService) {}
 
@@ -28,12 +47,12 @@ export class MovementsComponent implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  setSectionFilter(section: ActivitySection | 'all') {
-    this.activeSection = section;
+  setSectionFilter(section: any) {
+    this.activeSection = section as ActivitySection | 'all';
   }
 
-  setStatusFilter(status: ActivityStatus | 'all') {
-    this.activeStatus = status;
+  setStatusFilter(status: any) {
+    this.activeStatus = status as ActivityStatus | 'all';
   }
 
   onSearch(query: string) {

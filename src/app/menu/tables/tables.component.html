@@ -30,19 +30,12 @@
 		</div>
 
 		<div class="tables-filters">
-			@for (filter of filters; track filter.id) {
-				<button
-					type="button"
-					class="filter-btn"
-					[class.active]="selectedFilter === filter.id"
-					(click)="onFilterChange(filter.id)"
-				>
-					@if (filter.icon) {
-						<span class="filter-icon">{{ filter.icon }}</span>
-					}
-					{{ filter.label }}
-				</button>
-			}
+			<app-filter-chips
+				label="Filtro"
+				[options]="filterOptions"
+				[selectedId]="selectedFilter"
+				(optionSelected)="onFilterChange($event)">
+			</app-filter-chips>
 		</div>
 
 		<div class="tables-grid">

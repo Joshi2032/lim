@@ -29,26 +29,17 @@
 			</div>
 
 			<div class="menu-filters">
-				@for (filter of filters; track filter.id) {
-					<button
-						type="button"
-						class="filter-btn"
-						[class.active]="selectedFilter === filter.id"
-						(click)="onFilterChange(filter.id)"
-					>
-						{{ filter.label }}
-						@if (filter.labelJapanese) {
-							<span class="filter-japanese">{{ filter.labelJapanese }}</span>
-						}
-					</button>
-				}
-			</div>
-		</header>
+			<app-filter-chips
+				label="Categoría"
+				[options]="filterOptions"
+				[selectedId]="selectedFilter"
+				(optionSelected)="onFilterChange($event)">
+			</app-filter-chips>
+		</div>		</header>
 
 		<div class="menu-grid">
 			<!-- Sección de Combos -->
-			@if (filteredCombos.length > 0) {
-				<div class="combos-section">
+			@if (filteredCombos.length > 0) {				<div class="combos-section">
 					<div class="section-title">
 						<h2>✨ Combos Especiales</h2>
 						<p class="section-subtitle">Ofertas combinadas con los mejores platillos</p>

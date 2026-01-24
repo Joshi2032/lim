@@ -3,15 +3,22 @@ import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { KitchenOrderComponent, Order, OrderStatus } from '../kitchen-order/kitchen-order.component';
 import { MovementsService } from '../../shared/movements/movements.service';
+import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
 
 @Component({
   selector: 'app-kitchen',
-  imports: [CommonModule, SidebarComponent, KitchenOrderComponent],
+  imports: [CommonModule, SidebarComponent, KitchenOrderComponent, FilterChipsComponent],
   templateUrl: './kitchen.component.html',
   styleUrl: './kitchen.component.scss'
 })
 export class KitchenComponent implements OnInit {
   selectedStatus: 'all' | OrderStatus = 'all';
+  statusOptions: FilterOption[] = [
+    { id: 'all', label: 'Todos' },
+    { id: 'pendiente', label: 'Pendientes' },
+    { id: 'preparando', label: 'Preparando' },
+    { id: 'listo', label: 'Listos' }
+  ];
   orders: Order[] = [];
   cartCount: number = 0;
 
@@ -31,8 +38,6 @@ export class KitchenComponent implements OnInit {
     { id: 'panel', label: 'Panel de Control', icon: '📈', route: '/panel-control' },
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
-
-  constructor(private movements: MovementsService) {}
 
   ngOnInit() {
     this.loadOrders();
@@ -156,5 +161,9 @@ export class KitchenComponent implements OnInit {
         }, 3000);
       }
     }
+  }
+
+  onStatusFilterChange(statusId: any) {
+    this.selectedStatus = statusId as 'all' | OrderStatus;
   }
 }

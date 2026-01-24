@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { TableCardComponent, Table, TableStatus } from '../table-card/table-card.component';
 import { MovementsService } from '../../shared/movements/movements.service';
+import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
 
 interface Filter {
 	id: string;
@@ -12,12 +13,19 @@ interface Filter {
 
 @Component({
   selector: 'app-tables',
-  imports: [SidebarComponent, TableCardComponent],
+  imports: [SidebarComponent, TableCardComponent, FilterChipsComponent],
   templateUrl: './tables.component.html',
   styleUrl: './tables.component.scss'
 })
 export class TablesComponent {
   selectedFilter: string = 'todas';
+  filterOptions: FilterOption[] = [
+    { id: 'todas', label: 'Todas' },
+    { id: 'disponible', label: 'Disponibles' },
+    { id: 'ocupada', label: 'Ocupadas' },
+    { id: 'reservada', label: 'Reservadas' },
+    { id: 'limpieza', label: 'Limpieza' }
+  ];
   cartCount: number = 0;
 
   currentUser: User = {
@@ -65,7 +73,7 @@ export class TablesComponent {
     return this.tables;
   }
 
-  onFilterChange(filterId: string) {
+  onFilterChange(filterId: any) {
     this.selectedFilter = filterId;
 
     const label = this.filters.find(f => f.id === filterId)?.label || filterId;

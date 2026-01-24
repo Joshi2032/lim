@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { DeliveryCardComponent } from '../../shared/delivery-card/delivery-card.component';
 import { MovementsService } from '../../shared/movements/movements.service';
+import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
 
 export type DeliveryStatus = 'pendiente' | 'enCurso' | 'entregada';
 
@@ -19,12 +20,17 @@ export interface Delivery {
 
 @Component({
   selector: 'app-delivery',
-  imports: [CommonModule, SidebarComponent, DeliveryCardComponent],
+  imports: [CommonModule, SidebarComponent, DeliveryCardComponent, FilterChipsComponent],
   templateUrl: './delivery.component.html',
   styleUrl: './delivery.component.scss'
 })
 export class DeliveryComponent implements OnInit {
   selectedStatus: DeliveryStatus = 'pendiente';
+  statusOptions: FilterOption[] = [
+    { id: 'pendiente', label: 'Pendientes' },
+    { id: 'enCurso', label: 'En Curso' },
+    { id: 'entregada', label: 'Entregadas' }
+  ];
   deliveries: Delivery[] = [];
   cartCount: number = 0;
 
@@ -87,5 +93,9 @@ export class DeliveryComponent implements OnInit {
         role: this.currentUser.role
       });
     }
+  }
+
+  onStatusFilterChange(statusId: any) {
+    this.selectedStatus = statusId as DeliveryStatus;
   }
 }

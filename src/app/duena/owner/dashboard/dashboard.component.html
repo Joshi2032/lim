@@ -66,27 +66,19 @@
 				<div class="chart-container" (mouseleave)="onChartLeave()">
 					<svg viewBox="0 0 1100 350" preserveAspectRatio="xMidYMid meet" class="chart-svg" (mousemove)="onChartMove($event)">
 						<!-- Grid lines verticales -->
-						<line x1="100" y1="50" x2="100" y2="300" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
-						<line x1="252" y1="50" x2="252" y2="300" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
-						<line x1="405" y1="50" x2="405" y2="300" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
-						<line x1="558" y1="50" x2="558" y2="300" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
-						<line x1="711" y1="50" x2="711" y2="300" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
-						<line x1="864" y1="50" x2="864" y2="300" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
-						<line x1="1017" y1="50" x2="1017" y2="300" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
+						@for (point of chartPoints; track point.day) {
+							<line [attr.x1]="point.x" y1="50" [attr.x2]="point.x" y2="300" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
+						}
 
 						<!-- Grid lines horizontales -->
-						<line x1="40" y1="300" x2="1060" y2="300" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-						<line x1="40" y1="237" x2="1060" y2="237" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
-						<line x1="40" y1="175" x2="1060" y2="175" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
-						<line x1="40" y1="112" x2="1060" y2="112" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
-						<line x1="40" y1="50" x2="1060" y2="50" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
+						@for (tick of yTicks; track tick.value) {
+							<line x1="40" [attr.y1]="tick.y" x2="1060" [attr.y2]="tick.y" stroke="rgba(255,255,255,0.05)" stroke-width="1" [attr.stroke-width]="tick.value === 0 ? 1.2 : 1" [attr.stroke-dasharray]="tick.value === 0 ? undefined : '4,4'"/>
+						}
 
 						<!-- Y-axis labels -->
-						<text x="30" y="305" font-size="11" fill="#6b7280" text-anchor="end">$0</text>
-						<text x="30" y="242" font-size="11" fill="#6b7280" text-anchor="end">$15k</text>
-						<text x="30" y="180" font-size="11" fill="#6b7280" text-anchor="end">$30k</text>
-						<text x="30" y="117" font-size="11" fill="#6b7280" text-anchor="end">$45k</text>
-						<text x="30" y="55" font-size="11" fill="#6b7280" text-anchor="end">$60k</text>
+						@for (tick of yTicks; track tick.value) {
+							<text x="30" [attr.y]="tick.y + 5" font-size="11" fill="#6b7280" text-anchor="end">{{ '$' + (tick.value | number:'1.0-0') }}</text>
+						}
 
 						<!-- Gradient definitions -->
 						<defs>
@@ -103,27 +95,13 @@
 
 						<!-- Area bajo la curva -->
 						<path
-							d="M 100 283
-							   C 140 283, 212 283, 252 283
-							   C 292 283, 365 283, 405 283
-							   C 445 243, 518 172, 558 153
-							   C 598 135, 671 112, 711 105
-							   C 751 98, 824 135, 864 163
-							   C 904 191, 977 225, 1017 243
-							   L 1017 300
-							   L 100 300 Z"
+							[attr.d]="areaPath"
 							fill="url(#areaGradient)"
 							class="chart-area"/>
 
-						<!-- Línea principal con curvas suaves -->
+						<!-- Línea principal -->
 						<path
-							d="M 100 283
-							   C 140 283, 212 283, 252 283
-							   C 292 283, 365 283, 405 283
-							   C 445 243, 518 172, 558 153
-							   C 598 135, 671 112, 711 105
-							   C 751 98, 824 135, 864 163
-							   C 904 191, 977 225, 1017 243"
+							[attr.d]="linePath"
 							stroke="url(#lineGradient)"
 							stroke-width="3"
 							fill="none"
@@ -132,9 +110,9 @@
 						<!-- Línea vertical del tooltip (cuando esté visible) -->
 						@if (tooltipVisible) {
 							<line
-								[attr.x1]="tooltipX"
+								[attr.x1]="tooltipSvgX"
 								y1="50"
-								[attr.x2]="tooltipX"
+								[attr.x2]="tooltipSvgX"
 								y2="300"
 								stroke="rgba(255,255,255,0.2)"
 								stroke-width="1.5"
@@ -142,19 +120,15 @@
 						}
 
 						<!-- Puntos interactivos invisibles para hover -->
-						<circle cx="100" cy="295" r="25" fill="transparent" class="chart-point-hover" (mouseenter)="onChartHover($event, 'Lun', 1000)"/>
-						<circle cx="252" cy="291" r="25" fill="transparent" class="chart-point-hover" (mouseenter)="onChartHover($event, 'Mar', 1500)"/>
-						<circle cx="405" cy="266" r="25" fill="transparent" class="chart-point-hover" (mouseenter)="onChartHover($event, 'Mié', 5000)"/>
-						<circle cx="558" cy="153" r="25" fill="transparent" class="chart-point-hover" (mouseenter)="onChartHover($event, 'Jue', 32000)"/>
-						<circle cx="711" cy="105" r="25" fill="transparent" class="chart-point-hover" (mouseenter)="onChartHover($event, 'Vie', 45000)"/>
-						<circle cx="864" cy="83" r="25" fill="transparent" class="chart-point-hover" (mouseenter)="onChartHover($event, 'Sáb', 50000)"/>
-						<circle cx="1017" cy="133" r="25" fill="transparent" class="chart-point-hover" (mouseenter)="onChartHover($event, 'Dom', 35000)"/>
+						@for (point of chartPoints; track point.day) {
+							<circle [attr.cx]="point.x" [attr.cy]="point.y" r="25" fill="transparent" class="chart-point-hover" (mouseenter)="onChartHover($event, point.label, point.value)"/>
+						}
 
 						<!-- Punto visible cuando hay hover -->
 						@if (tooltipVisible) {
 							<circle
-								[attr.cx]="tooltipX"
-								[attr.cy]="getPointY(tooltipDay)"
+								[attr.cx]="tooltipSvgX"
+								[attr.cy]="tooltipPointY"
 								r="5"
 								fill="#dc2626"
 								stroke="#fff"
@@ -163,13 +137,9 @@
 						}
 
 						<!-- X-axis labels -->
-						<text x="100" y="325" font-size="12" fill="#9ca3af" text-anchor="middle">Lun</text>
-						<text x="252" y="325" font-size="12" fill="#9ca3af" text-anchor="middle">Mar</text>
-						<text x="405" y="325" font-size="12" fill="#9ca3af" text-anchor="middle">Mié</text>
-						<text x="558" y="325" font-size="12" fill="#9ca3af" text-anchor="middle">Jue</text>
-						<text x="711" y="325" font-size="12" fill="#9ca3af" text-anchor="middle">Vie</text>
-						<text x="864" y="325" font-size="12" fill="#9ca3af" text-anchor="middle">Sáb</text>
-						<text x="1017" y="325" font-size="12" fill="#9ca3af" text-anchor="middle">Dom</text>
+						@for (point of chartPoints; track point.day) {
+							<text [attr.x]="point.x" y="325" font-size="12" fill="#9ca3af" text-anchor="middle">{{ point.day }}</text>
+						}
 					</svg>
 
 					@if (tooltipVisible) {

@@ -53,9 +53,20 @@ export class DashboardComponent implements OnInit {
   topProducts: Product[] = [];
   recentOrders: Order[] = [];
   chartData: ChartData[] = [];
+  chartPoints: Array<{ x: number; y: number; day: string; label: string; value: number }> = [];
+  linePath = '';
+  areaPath = '';
+  yTicks: Array<{ value: number; y: number }> = [];
+  chartMaxValue = 0;
+  private readonly chartXStart = 100;
+  private readonly chartXEnd = 1017;
+  private readonly chartYBase = 300;
+  private readonly chartYTop = 50;
   tooltipVisible = false;
-  tooltipX = 0;
-  tooltipY = 0;
+  tooltipX = 0; // HTML position (px)
+  tooltipY = 0; // HTML position (px)
+  tooltipSvgX = 0; // SVG coord (user units)
+  tooltipPointY = 0; // SVG coord (user units)
   tooltipValue = '';
   tooltipDay = '';
   chartContainerRef: any;
@@ -98,6 +109,8 @@ export class DashboardComponent implements OnInit {
       { day: 'Sáb', value: 50000, label: 'Sábado' },
       { day: 'Dom', value: 35000, label: 'Domingo' }
     ];
+
+    this.updateChartGeometry();
 
     this.statCards = [
       {
@@ -196,47 +209,53 @@ export class DashboardComponent implements OnInit {
   }
 
   onChartHover(event: MouseEvent, day: string, value: number) {
-    const svg = event.currentTarget as SVGElement;
+    const svg = event.currentTarget as SVGSVGElement;
     const containerRect = svg.parentElement?.getBoundingClientRect();
+    const viewBox = svg.viewBox.baseVal;
+    const scaleX = containerRect ? containerRect.width / viewBox.width : 1;
+    const scaleY = containerRect ? containerRect.height / viewBox.height : 1;
 
-    const x = event.clientX - (containerRect?.left || 0);
-    const y = event.clientY - (containerRect?.top || 0);
+    const xClient = event.clientX - (containerRect?.left || 0);
+    const yClient = event.clientY - (containerRect?.top || 0);
 
-    const minX = 50;
-    const maxX = 530;
-    const constrainedX = Math.max(minX, Math.min(maxX, x));
+    const minX = this.chartXStart * scaleX;
+    const maxX = this.chartXEnd * scaleX;
+    const constrainedX = Math.max(minX, Math.min(maxX, xClient));
 
-    this.tooltipX = constrainedX;
-    this.tooltipY = y - 50;
+    const point = this.chartPoints.find(p => p.label === day);
+
+    this.tooltipSvgX = point?.x ?? constrainedX / scaleX;
+    this.tooltipPointY = point?.y ?? yClient / scaleY;
+    this.tooltipX = (point?.x ?? constrainedX / scaleX) * scaleX;
+    this.tooltipY = (point?.y ?? yClient / scaleY) * scaleY - 40;
     this.tooltipValue = '$' + value.toLocaleString();
     this.tooltipDay = day;
     this.tooltipVisible = true;
   }
 
   onChartMove(event: MouseEvent) {
-		const svg = event.currentTarget as SVGElement;
+		const svg = event.currentTarget as SVGSVGElement;
 		const containerRect = svg.getBoundingClientRect();
+		const viewBox = svg.viewBox.baseVal;
+		const scaleX = containerRect.width / viewBox.width;
+		const scaleY = containerRect.height / viewBox.height;
 
-		const x = event.clientX - containerRect.left;
+		const x = ((event.clientX - containerRect.left) / containerRect.width) * viewBox.width;
 
-		const dayZones = [
-      { range: [40, 145], day: 'Lun', value: 1000, pointX: 100, label: 'Lunes' },
-      { range: [145, 250], day: 'Mar', value: 1500, pointX: 252, label: 'Martes' },
-      { range: [250, 355], day: 'Mié', value: 5000, pointX: 405, label: 'Miércoles' },
-      { range: [355, 460], day: 'Jue', value: 32000, pointX: 558, label: 'Jueves' },
-      { range: [460, 565], day: 'Vie', value: 45000, pointX: 711, label: 'Viernes' },
-      { range: [565, 670], day: 'Sáb', value: 50000, pointX: 864, label: 'Sábado' },
-      { range: [670, 900], day: 'Dom', value: 35000, pointX: 1017, label: 'Domingo' }
-		];
+    const zones = this.buildDynamicZones();
 
-		const zone = dayZones.find(z => x >= z.range[0] && x < z.range[1]);
+    const zone = zones.find(z => x >= z.start && x < z.end);
 
 		if (zone) {
-			this.tooltipX = zone.pointX;
-			this.tooltipY = 180;
-			this.tooltipValue = '$' + zone.value.toLocaleString('es-MX');
-			this.tooltipDay = zone.label;
+      this.tooltipSvgX = zone.point.x;
+      this.tooltipPointY = zone.point.y;
+      this.tooltipX = zone.point.x * scaleX;
+      this.tooltipY = zone.point.y * scaleY - 40;
+      this.tooltipValue = '$' + zone.point.value.toLocaleString('es-MX');
+      this.tooltipDay = zone.point.label;
 			this.tooltipVisible = true;
+    } else {
+      this.tooltipVisible = false;
 		}
 	}
 
@@ -244,20 +263,61 @@ export class DashboardComponent implements OnInit {
     this.tooltipVisible = false;
   }
 
-  getPointY(day: string): number {
-    const dayMap: { [key: string]: number } = {
-    'Lunes': 295,
-    'Martes': 291,
-    'Miércoles': 266,
-    'Jueves': 153,
-    'Viernes': 105,
-    'Sábado': 83,
-    'Domingo': 133
-    };
-    return dayMap[day] || 283;
-  }
-
   setActiveTab(tabId: 'resumen' | 'movimientos' | 'usuarios') {
     this.activeTab = tabId;
+  }
+
+  private updateChartGeometry() {
+    if (!this.chartData.length) {
+      this.chartPoints = [];
+      this.linePath = '';
+      this.areaPath = '';
+      return;
+    }
+
+    const step = this.chartData.length > 1
+      ? (this.chartXEnd - this.chartXStart) / (this.chartData.length - 1)
+      : 0;
+
+    const maxValue = Math.max(...this.chartData.map(d => d.value), 1);
+    this.chartMaxValue = maxValue;
+    const yRange = this.chartYBase - this.chartYTop;
+    this.chartPoints = this.chartData.map((d, i) => {
+      const x = this.chartXStart + i * step;
+      const y = this.chartYBase - (d.value / maxValue) * yRange;
+      return { x, y, day: d.day, label: d.label, value: d.value };
+    });
+
+    if (this.chartPoints.length === 1) {
+      const p = this.chartPoints[0];
+      this.linePath = `M ${p.x} ${p.y}`;
+      this.areaPath = `M ${p.x} ${p.y} L ${p.x} ${this.chartYBase} Z`;
+    } else {
+      const lineSegments = this.chartPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+      this.linePath = lineSegments;
+
+      const first = this.chartPoints[0];
+      const last = this.chartPoints[this.chartPoints.length - 1];
+      this.areaPath = `${lineSegments} L ${last.x} ${this.chartYBase} L ${first.x} ${this.chartYBase} Z`;
+    }
+
+    const tickCount = 4;
+    this.yTicks = Array.from({ length: tickCount + 1 }, (_, i) => {
+      const value = (maxValue / tickCount) * i;
+      const y = this.chartYBase - (value / maxValue) * yRange;
+      return { value, y };
+    });
+  }
+
+  private buildDynamicZones(): Array<{ start: number; end: number; point: { x: number; y: number; value: number; label: string } }> {
+    if (this.chartPoints.length === 0) return [];
+    const pts = this.chartPoints;
+    const zones: Array<{ start: number; end: number; point: { x: number; y: number; value: number; label: string } }> = [];
+    for (let i = 0; i < pts.length; i++) {
+      const prevMid = i === 0 ? -Infinity : (pts[i - 1].x + pts[i].x) / 2;
+      const nextMid = i === pts.length - 1 ? Infinity : (pts[i].x + pts[i + 1].x) / 2;
+      zones.push({ start: prevMid, end: nextMid, point: pts[i] });
+    }
+    return zones;
   }
 }

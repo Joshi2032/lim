@@ -59,7 +59,7 @@
 					<h2>Ingresos de la Semana</h2>
 				</div>
 				<div class="chart-container" (mouseleave)="onChartLeave()">
-					<svg viewBox="0 0 850 265" class="chart-svg" (mousemove)="onChartMove($event)">
+					<svg viewBox="0 0 850 265" preserveAspectRatio="xMidYMid meet" class="chart-svg" (mousemove)="onChartMove($event)">
 						<!-- Grid lines -->
 						<line x1="50" y1="30" x2="50" y2="230" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
 						<line x1="50" y1="230" x2="820" y2="230" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>

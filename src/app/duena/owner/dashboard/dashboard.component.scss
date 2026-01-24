@@ -1,9 +1,21 @@
+:host {
+	display: block;
+	width: 100%;
+	max-width: 100%;
+	overflow: visible;
+	box-sizing: border-box;
+}
+
 .dashboard-stats {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 	gap: 16px;
 	margin-bottom: 24px;
 	align-items: stretch;
+	overflow: visible;
+	width: 100%;
+	box-sizing: border-box;
+	max-width: 100%;
 }
 
 /* Solo la primera fila (recuadro azul): columnas iguales y altura uniforme */
@@ -20,6 +32,7 @@
 		max-height: 160px !important;
 		display: flex;
 		flex-direction: column;
+		overflow: hidden;
 	}
 }
 
@@ -93,6 +106,12 @@
 	display: grid;
 	grid-template-columns: 1.6fr 1fr;
 	gap: 24px;
+	width: 100%;
+	box-sizing: border-box;
+
+	@media (max-width: 1200px) {
+		grid-template-columns: 1fr;
+	}
 }
 
 .chart-section,
@@ -100,7 +119,9 @@
 	background: rgba(255, 255, 255, 0.02);
 	border: 1px solid rgba(255, 255, 255, 0.1);
 	border-radius: 12px;
-	padding: 24px;
+	padding: 20px;
+	min-width: 0;
+	box-sizing: border-box;
 }
 
 .section-header {
@@ -123,6 +144,12 @@
 	width: 100%;
 	position: relative;
 	margin-top: 8px;
+
+	svg {
+		width: 100%;
+		height: auto;
+		display: block;
+	}
 }
 
 .chart-tooltip {
@@ -395,17 +422,33 @@
 
 .dashboard-container {
 	display: flex;
-	background: #0a0a0a;
+	background: transparent;
 	color: #fff;
+
+	&.embedded {
+		background: transparent;
+
+		.dashboard-content {
+			margin-left: 0;
+			padding: 0;
+		}
+	}
 }
 
 .dashboard-content {
 	flex: 1;
 	padding: 32px 40px;
 	margin-left: 240px;
+	overflow: visible;
+
+	&.embedded {
+		margin-left: 0;
+		padding: 0;
+	}
 }
 
 .dashboard-container.embedded .dashboard-content,
 .dashboard-content.embedded {
 	margin-left: 0;
+	padding: 0;
 }

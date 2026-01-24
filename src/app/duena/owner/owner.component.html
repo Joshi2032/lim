@@ -25,7 +25,9 @@
 		</div>
 
 		@if (activeTab === 'resumen') {
-			<app-dashboard [embedded]="true"></app-dashboard>
+			<div class="embedded-content">
+				<app-dashboard [embedded]="true"></app-dashboard>
+			</div>
 		}
 
 		@if (activeTab === 'movimientos') {
@@ -35,7 +37,9 @@
 		}
 
 		@if (activeTab === 'usuarios') {
-			<app-users [embedded]="true"></app-users>
+			<div class="embedded-content">
+				<app-users [embedded]="true"></app-users>
+			</div>
 		}
 	</div>
 </div>

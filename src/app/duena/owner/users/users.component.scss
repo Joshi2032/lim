@@ -1,3 +1,8 @@
+:host {
+	display: block;
+	width: 100%;
+}
+
 /* Layout container to align with fixed sidebar when not embedded */
 .users-container {
 	display: flex;
@@ -13,6 +18,7 @@
 
 .users-container.embedded .users-content {
 	margin-left: 0;
+	padding: 0;
 }
 
 .users-header {

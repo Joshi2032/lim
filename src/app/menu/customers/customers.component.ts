@@ -37,11 +37,33 @@ export class CustomersComponent implements OnInit {
   filteredCustomers: Customer[] = [];
   cartCount: number = 0;
   showNewCustomerModal: boolean = false;
+  showEditCustomerModal: boolean = false;
+  showAddressModal: boolean = false;
+  editingAddress: Address | null = null;
+
   newCustomerForm = {
     name: '',
     phone: '',
     email: '',
     notes: ''
+  };
+
+  addressForm: {
+    label: string;
+    street: string;
+    city: string;
+    state: string;
+    zipCode?: string;
+    reference?: string;
+    isDefault: boolean;
+  } = {
+    label: '',
+    street: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    reference: '',
+    isDefault: false
   };
 
   currentUser: User = {
@@ -67,7 +89,17 @@ export class CustomersComponent implements OnInit {
 
   loadCustomers() {
     // Mock data - En producción vendrá del backend
-    this.customers = [];
+    this.customers = [
+      {
+        id: '1',
+        name: 'ssf',
+        phone: '55 1234 5678',
+        email: 'ssf@email.com',
+        initials: 'S',
+        addressCount: 0,
+        addresses: []
+      }
+    ];
     this.filteredCustomers = this.customers;
   }
 
@@ -129,20 +161,168 @@ export class CustomersComponent implements OnInit {
     this.customers.unshift(newCustomer);
     this.filteredCustomers = this.customers;
     this.closeNewCustomerModal();
+    this.selectCustomer(newCustomer);
+  }
+
+  openEditCustomerModal() {
+    if (!this.selectedCustomer) return;
+    this.showEditCustomerModal = true;
+    this.newCustomerForm = {
+      name: this.selectedCustomer.name,
+      phone: this.selectedCustomer.phone,
+      email: this.selectedCustomer.email || '',
+      notes: ''
+    };
+  }
+
+  closeEditCustomerModal() {
+    this.showEditCustomerModal = false;
+  }
+
+  updateCustomer() {
+    if (!this.selectedCustomer || !this.newCustomerForm.name.trim() || !this.newCustomerForm.phone.trim()) {
+      alert('Por favor completa los campos requeridos');
+      return;
+    }
+
+    const initials = this.newCustomerForm.name
+      .split(' ')
+      .slice(0, 2)
+      .map(word => word[0])
+      .join('')
+      .toUpperCase();
+
+    const customerIndex = this.customers.findIndex(c => c.id === this.selectedCustomer!.id);
+    if (customerIndex !== -1) {
+      this.customers[customerIndex] = {
+        ...this.customers[customerIndex],
+        name: this.newCustomerForm.name,
+        phone: this.newCustomerForm.phone,
+        email: this.newCustomerForm.email || undefined,
+        initials
+      };
+      this.selectedCustomer = { ...this.customers[customerIndex] };
+      this.filteredCustomers = this.customers;
+    }
+
+    this.closeEditCustomerModal();
+  }
+
+  deleteCustomer() {
+    if (!this.selectedCustomer) return;
+
+    const confirmed = confirm(`¿Eliminar cliente "${this.selectedCustomer.name}"?\n\nEsta acción no se puede deshacer.`);
+    if (!confirmed) return;
+
+    this.customers = this.customers.filter(c => c.id !== this.selectedCustomer!.id);
+    this.filteredCustomers = this.customers;
+    this.selectedCustomer = null;
   }
 
   addAddress() {
-    console.log('Agregar dirección para cliente:', this.selectedCustomer?.name);
-    // TODO: Implementar modal de agregar dirección
+    if (!this.selectedCustomer) return;
+    this.editingAddress = null;
+    this.addressForm = {
+      label: '',
+      street: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      reference: '',
+      isDefault: this.selectedCustomer.addresses.length === 0
+    };
+    this.showAddressModal = true;
   }
 
   editAddress(address: Address) {
-    console.log('Editar dirección:', address);
-    // TODO: Implementar modal de editar dirección
+    this.editingAddress = address;
+    this.addressForm = { ...address };
+    this.showAddressModal = true;
+  }
+
+  closeAddressModal() {
+    this.showAddressModal = false;
+    this.editingAddress = null;
+  }
+
+  saveAddress() {
+    if (!this.selectedCustomer || !this.addressForm.label.trim() || !this.addressForm.street.trim() ||
+        !this.addressForm.city.trim() || !this.addressForm.state.trim()) {
+      alert('Por favor completa todos los campos requeridos');
+      return;
+    }
+
+    const customerIndex = this.customers.findIndex(c => c.id === this.selectedCustomer!.id);
+    if (customerIndex === -1) return;
+
+    if (this.editingAddress) {
+      // Editar dirección existente
+      const addressIndex = this.customers[customerIndex].addresses.findIndex(a => a.id === this.editingAddress!.id);
+      if (addressIndex !== -1) {
+        // Si se marca como principal, quitar principal de las demás
+        if (this.addressForm.isDefault) {
+          this.customers[customerIndex].addresses.forEach(a => a.isDefault = false);
+        }
+
+        this.customers[customerIndex].addresses[addressIndex] = {
+          ...this.editingAddress,
+          ...this.addressForm
+        };
+      }
+    } else {
+      // Agregar nueva dirección
+      // Si se marca como principal, quitar principal de las demás
+      if (this.addressForm.isDefault) {
+        this.customers[customerIndex].addresses.forEach(a => a.isDefault = false);
+      }
+
+      const newAddress: Address = {
+        id: Date.now().toString(),
+        ...this.addressForm
+      };
+
+      this.customers[customerIndex].addresses.push(newAddress);
+      this.customers[customerIndex].addressCount = this.customers[customerIndex].addresses.length;
+    }
+
+    this.selectedCustomer = { ...this.customers[customerIndex] };
+    this.filteredCustomers = [...this.customers];
+    this.closeAddressModal();
   }
 
   deleteAddress(addressId: string) {
-    console.log('Eliminar dirección:', addressId);
-    // TODO: Implementar confirmación y eliminación
+    if (!this.selectedCustomer) return;
+
+    const confirmed = confirm('¿Eliminar esta dirección?\n\nEsta acción no se puede deshacer.');
+    if (!confirmed) return;
+
+    const customerIndex = this.customers.findIndex(c => c.id === this.selectedCustomer!.id);
+    if (customerIndex === -1) return;
+
+    this.customers[customerIndex].addresses = this.customers[customerIndex].addresses.filter(a => a.id !== addressId);
+    this.customers[customerIndex].addressCount = this.customers[customerIndex].addresses.length;
+
+    // Si se eliminó la dirección principal y quedan direcciones, marcar la primera como principal
+    if (this.customers[customerIndex].addresses.length > 0 &&
+        !this.customers[customerIndex].addresses.some(a => a.isDefault)) {
+      this.customers[customerIndex].addresses[0].isDefault = true;
+    }
+
+    this.selectedCustomer = { ...this.customers[customerIndex] };
+    this.filteredCustomers = [...this.customers];
+  }
+
+  setDefaultAddress(addressId: string) {
+    if (!this.selectedCustomer) return;
+
+    const customerIndex = this.customers.findIndex(c => c.id === this.selectedCustomer!.id);
+    if (customerIndex === -1) return;
+
+    this.customers[customerIndex].addresses.forEach(a => {
+      a.isDefault = a.id === addressId;
+    });
+
+    this.selectedCustomer = { ...this.customers[customerIndex] };
+    this.filteredCustomers = [...this.customers];
   }
 }

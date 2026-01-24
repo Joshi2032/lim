@@ -6,56 +6,13 @@
 	</app-sidebar>
 
 	<div class="delivery-content">
-		<div class="delivery-header">
-			<div class="header-title">
-				<h1>
-					<svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M16.5 2H2V11H16.5M16.5 2L20 7.5M16.5 2V11M2 11H20M20 7.5L22 9.5V11M20 7.5V11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-					Entregas a Domicilio
-				</h1>
-				<p class="header-subtitle">Gestiona las entregas pendientes y en curso</p>
-			</div>
-		</div>
+		<app-page-header
+			title="Entregas a Domicilio"
+			japaneseName="配達"
+			subtitle="Gestiona las entregas pendientes y en curso">
+		</app-page-header>
 
-		<div class="delivery-stats">
-			<div class="stat-card pendiente">
-				<div class="stat-content">
-					<div class="stat-label">Pendientes</div>
-					<div class="stat-value">{{ getDeliveriesByStatus('pendiente').length }}</div>
-				</div>
-				<div class="stat-icon">
-					<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M3 5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H5C4.46957 17 3.96086 16.7893 3.58579 16.4142C3.21071 16.0391 3 15.5304 3 15V5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						<path d="M3 5L12 11L21 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-				</div>
-			</div>
-
-			<div class="stat-card enCurso">
-				<div class="stat-content">
-					<div class="stat-label">En Curso</div>
-					<div class="stat-value">{{ getDeliveriesByStatus('enCurso').length }}</div>
-				</div>
-				<div class="stat-icon">
-					<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M18 18.5H1V9.5C1 8.837 1.26339 8.20107 1.73223 7.73223C2.20107 7.26339 2.837 7 3.5 7H17.5C18.163 7 18.7989 7.26339 19.2678 7.73223C19.7366 8.20107 20 8.837 20 9.5V14.5M18 18.5V16.5C18 15.837 17.7366 15.2011 17.2678 14.7322C16.7989 14.2634 16.163 14 15.5 14H3.5C2.837 14 2.20107 14.2634 1.73223 14.7322C1.26339 15.2011 1 15.837 1 16.5V18.5M18 18.5H23V14.5C23 14.1022 22.842 13.7206 22.5607 13.4393C22.2794 13.158 21.8978 13 21.5 13H15.5C15.1022 13 14.7206 13.158 14.4393 13.4393C14.158 13.7206 14 14.1022 14 14.5V18.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-				</div>
-			</div>
-
-			<div class="stat-card entregada">
-				<div class="stat-content">
-					<div class="stat-label">Entregadas Hoy</div>
-					<div class="stat-value">{{ getDeliveriesByStatus('entregada').length }}</div>
-				</div>
-				<div class="stat-icon">
-					<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-				</div>
-			</div>
-		</div>
+		<app-stats-grid [stats]="deliveryStats"></app-stats-grid>
 
 		<div class="delivery-tabs">
 			<app-filter-chips

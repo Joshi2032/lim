@@ -8,6 +8,8 @@ import { BadgeComponent } from '../../shared/badge/badge.component';
 import { VariantSelectorComponent } from '../variant-selector/variant-selector.component';
 import { MovementsService } from '../../shared/movements/movements.service';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
+import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
+import { SectionHeaderComponent } from '../../shared/section-header/section-header.component';
 
 interface Filter {
 	id: string;
@@ -34,7 +36,7 @@ interface Combo {
 
 @Component({
   selector: 'app-menu',
-  imports: [CommonModule, SidebarComponent, MenuItemCardComponent, FormsModule, CartComponent, BadgeComponent, VariantSelectorComponent, FilterChipsComponent],
+  imports: [CommonModule, SidebarComponent, MenuItemCardComponent, FormsModule, CartComponent, BadgeComponent, VariantSelectorComponent, FilterChipsComponent, PageHeaderComponent, SectionHeaderComponent],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'
 })

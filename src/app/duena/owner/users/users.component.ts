@@ -2,8 +2,8 @@ import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../../shared/sidebar/sidebar.component';
 import { UserCardComponent } from '../../../shared/user-card/user-card.component';
-import { UserFormComponent, UserFormData, RoleOption } from '../../../shared/user-form/user-form.component';
-import { MovementsService } from '../../../shared/movements/movements.service';
+import { UserFormComponent, UserFormData, RoleOption } from '../../../shared/user-form/user-form.component';import { PageHeaderComponent, PageAction } from '../../../shared/page-header/page-header.component';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';import { MovementsService } from '../../../shared/movements/movements.service';
 
 export type UserRole = 'duena' | 'encargado' | 'chef' | 'mesero' | 'cajero' | 'repartidor';
 
@@ -24,7 +24,7 @@ export interface RoleStat extends RoleOption {
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, UserCardComponent, UserFormComponent],
+  imports: [CommonModule, SidebarComponent, UserCardComponent, UserFormComponent, PageHeaderComponent, EmptyStateComponent],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss'
 })
@@ -34,6 +34,10 @@ export class UsersComponent implements OnInit {
   cartCount: number = 0;
   showUserFormModal: boolean = false;
   userBeingEdited: UserEmployee | null = null;
+  headerAction: PageAction = {
+    label: 'Nuevo Usuario',
+    icon: '+'
+  };
 
   currentUser: User = {
     name: 'Josue',

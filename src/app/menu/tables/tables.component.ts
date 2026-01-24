@@ -1,8 +1,11 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { TableCardComponent, Table, TableStatus } from '../table-card/table-card.component';
 import { MovementsService } from '../../shared/movements/movements.service';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
+import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
+import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stats-grid.component';
 
 interface Filter {
 	id: string;
@@ -13,7 +16,7 @@ interface Filter {
 
 @Component({
   selector: 'app-tables',
-  imports: [SidebarComponent, TableCardComponent, FilterChipsComponent],
+  imports: [CommonModule, SidebarComponent, TableCardComponent, FilterChipsComponent, PageHeaderComponent, StatsGridComponent],
   templateUrl: './tables.component.html',
   styleUrl: './tables.component.scss'
 })
@@ -62,6 +65,14 @@ export class TablesComponent {
     status: ['disponible', 'disponible', 'disponible', 'disponible', 'disponible', 'disponible', 'disponible', 'disponible', 'disponible', 'disponible', 'disponible', 'disponible'][i] as TableStatus
   }));
 
+  get tableStats(): SimpleStatItem[] {
+    return [
+      { value: this.getCountByStatus('disponible'), label: 'Disponibles', status: 'disponible' },
+      { value: this.getCountByStatus('ocupada'), label: 'Ocupadas', status: 'ocupada' },
+      { value: this.getCountByStatus('reservada'), label: 'Reservadas', status: 'reservada' }
+    ];
+  }
+
   get filteredTables(): Table[] {
     if (this.selectedFilter === 'todas') {
       return this.tables;
@@ -89,6 +100,11 @@ export class TablesComponent {
 
   getCountByStatus(status: TableStatus): number {
     return this.tables.filter(t => t.status === status).length;
+  }
+
+  handleLogout() {
+    console.log('Logout');
+  }
   }
 
   handleLogout() {

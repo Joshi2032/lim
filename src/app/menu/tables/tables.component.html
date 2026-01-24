@@ -7,27 +7,13 @@
 	/>
 
 	<main class="tables-content">
-		<header class="tables-header">
-			<div class="header-title">
-				<h1>Mesas <span class="title-japanese">テーブル</span></h1>
-				<p class="header-subtitle">Gestión de mesas del restaurante</p>
-			</div>
-		</header>
+		<app-page-header
+			title="Mesas"
+			japaneseName="テーブル"
+			subtitle="Gestión de mesas del restaurante">
+		</app-page-header>
 
-		<div class="tables-stats">
-			<div class="stat-card">
-				<span class="stat-number">{{ getCountByStatus('disponible') }}</span>
-				<span class="stat-label">Disponibles</span>
-			</div>
-			<div class="stat-card ocupada">
-				<span class="stat-number">{{ getCountByStatus('ocupada') }}</span>
-				<span class="stat-label">Ocupadas</span>
-			</div>
-			<div class="stat-card reservada">
-				<span class="stat-number">{{ getCountByStatus('reservada') }}</span>
-				<span class="stat-label">Reservadas</span>
-			</div>
-		</div>
+		<app-stats-grid [stats]="tableStats"></app-stats-grid>
 
 		<div class="tables-filters">
 			<app-filter-chips

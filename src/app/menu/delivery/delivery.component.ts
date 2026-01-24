@@ -4,6 +4,8 @@ import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../share
 import { DeliveryCardComponent } from '../../shared/delivery-card/delivery-card.component';
 import { MovementsService } from '../../shared/movements/movements.service';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
+import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
+import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stats-grid.component';
 
 export type DeliveryStatus = 'pendiente' | 'enCurso' | 'entregada';
 
@@ -20,7 +22,7 @@ export interface Delivery {
 
 @Component({
   selector: 'app-delivery',
-  imports: [CommonModule, SidebarComponent, DeliveryCardComponent, FilterChipsComponent],
+  imports: [CommonModule, SidebarComponent, DeliveryCardComponent, FilterChipsComponent, PageHeaderComponent, StatsGridComponent],
   templateUrl: './delivery.component.html',
   styleUrl: './delivery.component.scss'
 })
@@ -33,6 +35,14 @@ export class DeliveryComponent implements OnInit {
   ];
   deliveries: Delivery[] = [];
   cartCount: number = 0;
+
+  get deliveryStats(): SimpleStatItem[] {
+    return [
+      { value: this.getDeliveriesByStatus('pendiente').length, label: 'Pendientes', status: 'pendiente' },
+      { value: this.getDeliveriesByStatus('enCurso').length, label: 'En Curso', status: 'enCurso' },
+      { value: this.getDeliveriesByStatus('entregada').length, label: 'Entregadas Hoy', status: 'entregada' }
+    ];
+  }
 
   currentUser: User = {
     name: 'Josue',

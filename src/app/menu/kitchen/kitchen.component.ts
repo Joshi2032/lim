@@ -4,10 +4,12 @@ import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../share
 import { KitchenOrderComponent, Order, OrderStatus } from '../kitchen-order/kitchen-order.component';
 import { MovementsService } from '../../shared/movements/movements.service';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
+import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
+import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stats-grid.component';
 
 @Component({
   selector: 'app-kitchen',
-  imports: [CommonModule, SidebarComponent, KitchenOrderComponent, FilterChipsComponent],
+  imports: [CommonModule, SidebarComponent, KitchenOrderComponent, FilterChipsComponent, PageHeaderComponent, StatsGridComponent],
   templateUrl: './kitchen.component.html',
   styleUrl: './kitchen.component.scss'
 })
@@ -21,6 +23,14 @@ export class KitchenComponent implements OnInit {
   ];
   orders: Order[] = [];
   cartCount: number = 0;
+
+  get kitchenStats(): SimpleStatItem[] {
+    return [
+      { value: this.getOrdersByStatus('pendiente').length, label: 'Pendientes', status: 'pendiente' },
+      { value: this.getOrdersByStatus('preparando').length, label: 'Preparando', status: 'preparando' },
+      { value: this.getOrdersByStatus('listo').length, label: 'Listos', status: 'listo' }
+    ];
+  }
 
   currentUser: User = {
     name: 'Josue',

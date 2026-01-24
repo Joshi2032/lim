@@ -6,27 +6,13 @@
 	</app-sidebar>
 
 	<div class="kitchen-content">
-		<div class="kitchen-header">
-			<div class="header-title">
-				<h1>Cocina <span class="japanese-text">厨房</span></h1>
-				<p class="header-subtitle">Gestión de órdenes en tiempo real</p>
-			</div>
-		</div>
+		<app-page-header
+			title="Cocina"
+			japaneseName="厨房"
+			subtitle="Gestión de órdenes en tiempo real">
+		</app-page-header>
 
-		<div class="kitchen-stats">
-			<div class="stat-card pendiente">
-				<div class="stat-value">{{ getOrdersByStatus('pendiente').length }}</div>
-				<div class="stat-label">Pendientes</div>
-			</div>
-			<div class="stat-card preparando">
-				<div class="stat-value">{{ getOrdersByStatus('preparando').length }}</div>
-				<div class="stat-label">Preparando</div>
-			</div>
-			<div class="stat-card listo">
-				<div class="stat-value">{{ getOrdersByStatus('listo').length }}</div>
-				<div class="stat-label">Listos</div>
-			</div>
-		</div>
+		<app-stats-grid [stats]="kitchenStats"></app-stats-grid>
 
 		<div class="kitchen-filters">
 			<app-filter-chips

@@ -10,7 +10,7 @@ export const routes: Routes = [
 	{ path: 'entregas', loadComponent: () => import('./menu/delivery/delivery.component').then(m => m.DeliveryComponent) },
 	{ path: 'dashboard', loadComponent: () => import('./duena/owner/dashboard/dashboard.component').then(m => m.DashboardComponent) },
 	{ path: 'panel-control', loadComponent: () => import('./duena/owner/owner.component').then(m => m.OwnerComponent) },
-	{ path: 'usuarios', loadComponent: () => import('./menu/users/users.component').then(m => m.UsersComponent) },
+	{ path: 'usuarios', loadComponent: () => import('./duena/owner/users/users.component').then(m => m.UsersComponent) },
 	{ path: '', redirectTo: 'login', pathMatch: 'full' },
 	{ path: '**', redirectTo: 'login' }
 ];

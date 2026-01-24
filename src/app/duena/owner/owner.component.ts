@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { StatVariant } from '../../shared/stat-card/stat-card.component';
-import { DashboardComponent } from './dashboard';
+import { DashboardComponent } from './dashboard/dashboard.component';
+import { UsersComponent } from './users/users.component';
 
 export interface Product {
   id: string;
@@ -40,7 +41,7 @@ interface StatCardData {
 @Component({
   selector: 'app-owner',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, DashboardComponent],
+  imports: [CommonModule, SidebarComponent, DashboardComponent, UsersComponent],
   templateUrl: './owner.component.html',
   styleUrl: './owner.component.scss'
 })

@@ -1,9 +1,11 @@
-<div class="users-container">
-	<app-sidebar
-		[menuItems]="sidebarItems"
-		[currentUser]="currentUser"
-		[cartCount]="cartCount">
-	</app-sidebar>
+<div class="users-container" [class.embedded]="embedded">
+	@if (!embedded) {
+		<app-sidebar
+			[menuItems]="sidebarItems"
+			[currentUser]="currentUser"
+			[cartCount]="cartCount">
+		</app-sidebar>
+	}
 
 	<div class="users-content">
 		<div class="users-header">

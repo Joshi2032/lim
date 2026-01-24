@@ -1,3 +1,43 @@
+/* Layout container to align with fixed sidebar when not embedded */
+.users-container {
+	display: flex;
+	background: #0a0a0a;
+	color: #fff;
+}
+
+.users-content {
+	flex: 1;
+	padding: 32px 40px;
+	margin-left: 240px;
+}
+
+.users-container.embedded .users-content {
+	margin-left: 0;
+}
+
+.users-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 24px;
+}
+
+.header-title {
+	display: flex;
+	flex-direction: column;
+}
+
+.header-title h1 {
+	margin: 0;
+	font-size: 28px;
+	font-weight: 800;
+}
+
+.header-subtitle {
+	margin-top: 6px;
+	color: #9ca3af;
+	font-size: 13px;
+}
 .new-user-btn {
 	display: flex;
 	align-items: center;

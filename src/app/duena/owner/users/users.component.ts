@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
@@ -25,11 +25,13 @@ export interface RoleStat {
 
 @Component({
   selector: 'app-users',
+  standalone: true,
   imports: [CommonModule, SidebarComponent, UserCardComponent, FormsModule, ReactiveFormsModule],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss'
 })
 export class UsersComponent implements OnInit {
+  @Input() embedded: boolean = false;
   users: UserEmployee[] = [];
   cartCount: number = 0;
   showNewUserModal: boolean = false;

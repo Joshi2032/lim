@@ -1,3 +1,29 @@
+.dashboard-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 16px;
+	margin-bottom: 24px;
+	align-items: stretch;
+}
+
+/* Solo la primera fila (recuadro azul): columnas iguales y altura uniforme */
+.dashboard-stats:not(.dashboard-stats-secondary) {
+	grid-auto-rows: 160px;
+
+	@media (min-width: 1024px) {
+		grid-template-columns: repeat(4, 1fr);
+	}
+
+	::ng-deep .stat-card {
+		height: 160px !important;
+		min-height: 160px !important;
+		max-height: 160px !important;
+		display: flex;
+		flex-direction: column;
+	}
+}
+
+/* Pestañas del dashboard */
 .dashboard-tabs {
 	display: flex;
 	gap: 8px;
@@ -48,16 +74,6 @@
 	font-weight: 500;
 }
 
-.dashboard-stats {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-	gap: 16px;
-	margin-bottom: 24px;
-
-	@media (min-width: 1400px) {
-		grid-template-columns: repeat(4, 1fr);
-	}
-}
 
 /* Secondary row: always prefer 3 columns when space allows */
 .dashboard-stats-secondary {

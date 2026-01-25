@@ -35,6 +35,8 @@ export class ProductsManagementComponent implements OnInit {
     category: 'combos'
   };
 
+  selectedComboItems: { [itemId: string]: boolean } = {};
+
   constructor(private menuService: MenuService, private changeDetectorRef: ChangeDetectorRef) {}
 
   ngOnInit(): void {
@@ -72,16 +74,34 @@ export class ProductsManagementComponent implements OnInit {
       this.resetForm();
       this.showForm = false;
     } else {
-      if (!this.newCombo.name || !this.newCombo.description || this.newCombo.price <= 0) {
-        alert('Por favor completa todos los campos');
+      if (!this.newCombo.name || this.newCombo.price <= 0) {
+        alert('Por favor completa el nombre y selecciona platillos para el combo');
         return;
+      }
+
+      const selectedItems = Object.entries(this.selectedComboItems)
+        .filter(([_, selected]) => selected)
+        .map(([itemId, _]) => ({ itemId, quantity: 1 }));
+
+      if (selectedItems.length === 0) {
+        alert('Por favor selecciona al menos un platillo para el combo');
+        return;
+      }
+
+      // Generar descripción automáticamente si no la tiene
+      if (!this.newCombo.description) {
+        const selectedNames = this.menuItems
+          .filter(item => Object.keys(this.selectedComboItems).includes(item.id) && this.selectedComboItems[item.id])
+          .map(item => item.name)
+          .join(' + ');
+        this.newCombo.description = `Combo que incluye: ${selectedNames}`;
       }
 
       const combo: Combo = {
         id: Date.now().toString(),
         ...this.newCombo,
         image: this.comboImagePreview || '/assets/placeholder.png',
-        items: []
+        items: selectedItems
       };
 
       this.menuService.addCombo(combo);
@@ -107,6 +127,7 @@ export class ProductsManagementComponent implements OnInit {
     this.newCombo = { name: '', japaneseName: '', description: '', price: 0, category: 'combos' };
     this.itemImagePreview = null;
     this.comboImagePreview = null;
+    this.selectedComboItems = {};
   }
 
   switchType(type: 'platos' | 'combos'): void {
@@ -207,5 +228,29 @@ export class ProductsManagementComponent implements OnInit {
     if (this.newCombo.name && !this.newCombo.japaneseName) {
       this.newCombo.japaneseName = this.transliterateToKatakana(this.newCombo.name);
     }
+  }
+
+  toggleComboItem(itemId: string): void {
+    this.selectedComboItems[itemId] = !this.selectedComboItems[itemId];
+    this.updateComboPrice();
+  }
+
+  updateComboPrice(): void {
+    const selectedItems = this.menuItems.filter(item =>
+      Object.keys(this.selectedComboItems).includes(item.id) && this.selectedComboItems[item.id]
+    );
+
+    if (selectedItems.length > 0) {
+      const totalPrice = selectedItems.reduce((sum, item) => sum + item.price, 0);
+      // Aplicar descuento del 10% por combo
+      this.newCombo.price = Math.round(totalPrice * 0.9 * 100) / 100;
+    }
+  }
+
+  getSelectedComboPrice(): number {
+    const selectedItems = this.menuItems.filter(item =>
+      Object.keys(this.selectedComboItems).includes(item.id) && this.selectedComboItems[item.id]
+    );
+    return selectedItems.reduce((sum, item) => sum + item.price, 0);
   }
 }

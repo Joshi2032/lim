@@ -579,6 +579,39 @@
   letter-spacing: 0.3px;
 }
 
+.product-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.btn-edit {
+  padding: 10px 16px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-radius: 8px;
+  color: #93c5fd;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.25);
+    border-color: rgba(59, 130, 246, 0.6);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
 .btn-delete {
   padding: 10px 16px;
   background: rgba(220, 38, 38, 0.1);
@@ -589,7 +622,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  width: 100%;
+  flex: 1;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 

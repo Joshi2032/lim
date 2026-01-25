@@ -39,7 +39,10 @@
             <div class="product-category">
               <span class="badge">{{ item.category }}</span>
             </div>
-            <button class="btn-delete" (click)="deleteItem(item.id)">Eliminar</button>
+            <div class="product-actions">
+              <button class="btn-edit" (click)="editItem(item)">Editar</button>
+              <button class="btn-delete" (click)="deleteItem(item.id)">Eliminar</button>
+            </div>
           </div>
         }
       } @else {
@@ -66,7 +69,10 @@
             <div class="product-category">
               <span class="badge">{{ combo.category }}</span>
             </div>
-            <button class="btn-delete" (click)="deleteCombo(combo.id)">Eliminar</button>
+            <div class="product-actions">
+              <button class="btn-edit" (click)="editCombo(combo)">Editar</button>
+              <button class="btn-delete" (click)="deleteCombo(combo.id)">Eliminar</button>
+            </div>
           </div>
         }
       } @else {
@@ -82,7 +88,7 @@
 <div class="modal-overlay" *ngIf="showForm" (click)="toggleForm()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>{{ activeType === 'platos' ? 'Nuevo Plato' : 'Nuevo Combo' }}</h2>
+      <h2>{{ isEditing ? 'Editar' : 'Nuevo' }} {{ activeType === 'platos' ? 'Plato' : 'Combo' }}</h2>
       <button type="button" class="close-btn" (click)="toggleForm()" aria-label="Cerrar">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -171,7 +177,7 @@
           </div>
 
           <button class="btn-submit" (click)="addItem()">
-            <span>✓</span> Guardar Plato
+            <span>✓</span> {{ isEditing ? 'Actualizar' : 'Guardar' }} Plato
           </button>
         </div>
       }
@@ -262,7 +268,7 @@
           </div>
 
           <button class="btn-submit" (click)="addItem()">
-            <span>✓</span> Guardar Combo
+            <span>✓</span> {{ isEditing ? 'Actualizar' : 'Guardar' }} Combo
           </button>
         </div>
       }

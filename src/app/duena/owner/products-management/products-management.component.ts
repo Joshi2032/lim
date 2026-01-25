@@ -26,6 +26,7 @@ export class ProductsManagementComponent implements OnInit {
   combos: Combo[] = [];
   activeType: ProductType = 'platos';
   showForm = false;
+  editingId: string | null = null;
   itemImagePreview: string | null = null;
   comboImagePreview: string | null = null;
 
@@ -91,6 +92,38 @@ export class ProductsManagementComponent implements OnInit {
     }
   }
 
+  editItem(item: MenuItem): void {
+    this.editingId = item.id;
+    this.activeType = 'platos';
+    this.newItem = {
+      name: item.name,
+      japaneseName: item.japaneseName || '',
+      description: item.description,
+      price: item.price,
+      category: item.category
+    };
+    this.itemImagePreview = item.image;
+    this.showForm = true;
+  }
+
+  editCombo(combo: Combo): void {
+    this.editingId = combo.id;
+    this.activeType = 'combos';
+    this.newCombo = {
+      name: combo.name,
+      japaneseName: combo.japaneseName || '',
+      description: combo.description || '',
+      price: combo.price,
+      category: combo.category || 'combos'
+    };
+    this.comboImagePreview = combo.image;
+    this.selectedComboItems = {};
+    combo.items.forEach(item => {
+      this.selectedComboItems[item.itemId] = true;
+    });
+    this.showForm = true;
+  }
+
   switchType(type: ProductType): void {
     this.activeType = type;
     this.showForm = false;
@@ -111,12 +144,19 @@ export class ProductsManagementComponent implements OnInit {
     }
 
     const item: MenuItem = {
-      id: Date.now().toString(),
+      id: this.editingId || Date.now().toString(),
       ...this.newItem,
       image: this.itemImagePreview || '/assets/placeholder.png'
     };
 
-    this.menuService.addMenuItem(item);
+    if (this.editingId) {
+      this.menuService.updateMenuItem(this.editingId, {
+        ...this.newItem,
+        image: this.itemImagePreview || '/assets/placeholder.png'
+      });
+    } else {
+      this.menuService.addMenuItem(item);
+    }
     this.closeForm();
   }
 
@@ -133,19 +173,31 @@ export class ProductsManagementComponent implements OnInit {
     }
 
     const combo: Combo = {
-      id: Date.now().toString(),
+      id: this.editingId || Date.now().toString(),
       ...this.newCombo,
       image: this.comboImagePreview || '/assets/placeholder.png',
       items: selectedItems
     };
 
-    this.menuService.addCombo(combo);
+    if (this.editingId) {
+      this.menuService.updateCombo(this.editingId, {
+        ...this.newCombo,
+        image: this.comboImagePreview || '/assets/placeholder.png',
+        items: selectedItems
+      });
+    } else {
+      this.menuService.addCombo(combo);
+    }
     this.closeForm();
   }
 
   private closeForm(): void {
     this.resetForm();
     this.showForm = false;
+  }
+
+  get isEditing(): boolean {
+    return this.editingId !== null;
   }
 
   deleteItem(id: string): void {
@@ -166,6 +218,7 @@ export class ProductsManagementComponent implements OnInit {
     this.itemImagePreview = null;
     this.comboImagePreview = null;
     this.selectedComboItems = {};
+    this.editingId = null;
   }
 
   onItemImageSelected(event: Event): void {

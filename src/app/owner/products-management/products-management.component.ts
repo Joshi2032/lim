@@ -1,11 +1,11 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MenuService, MenuItem, Combo } from '../../../shared/services/menu.service';
-import { PageHeaderComponent, PageAction } from '../../../shared/page-header/page-header.component';
-import { TabsContainerComponent, TabItem } from '../../../shared/tabs-container/tabs-container.component';
-import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
-import { ProductCardComponent, ProductCardData } from '../../../shared/product-card/product-card.component';
+import { MenuService, MenuItem, Combo } from '../../shared/services/menu.service';
+import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
+import { TabsContainerComponent, TabItem } from '../../shared/tabs-container/tabs-container.component';
+import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
+import { ProductCardComponent, ProductCardData } from '../../shared/product-card/product-card.component';
 
 interface ProductForm {
   name: string;

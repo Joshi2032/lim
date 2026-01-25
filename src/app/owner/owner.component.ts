@@ -1,8 +1,8 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
-import { StatVariant } from '../../shared/stat-card/stat-card.component';
-import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
+import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../shared/sidebar/sidebar.component';
+import { StatVariant } from '../shared/stat-card/stat-card.component';
+import { PageHeaderComponent } from '../shared/page-header/page-header.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { UsersComponent } from './users/users.component';
 import { MovementsComponent } from './movements/movements.component';

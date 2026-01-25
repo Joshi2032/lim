@@ -1,9 +1,11 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../../shared/sidebar/sidebar.component';
-import { UserCardComponent } from '../../../shared/user-card/user-card.component';
-import { UserFormComponent, UserFormData, RoleOption } from '../../../shared/user-form/user-form.component';import { PageHeaderComponent, PageAction } from '../../../shared/page-header/page-header.component';
-import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';import { MovementsService } from '../../../shared/movements/movements.service';
+import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
+import { UserCardComponent } from '../../shared/user-card/user-card.component';
+import { UserFormComponent, UserFormData, RoleOption } from '../../shared/user-form/user-form.component';
+import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
+import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
+import { MovementsService } from '../../shared/movements/movements.service';
 
 export type UserRole = 'duena' | 'encargado' | 'chef' | 'mesero' | 'cajero' | 'repartidor';
 

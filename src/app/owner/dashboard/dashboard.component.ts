@@ -1,8 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../../shared/sidebar/sidebar.component';
-import { StatCardComponent, StatVariant } from '../../../shared/stat-card/stat-card.component';
-import { SectionHeaderComponent } from '../../../shared/section-header/section-header.component';
+import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
+import { StatCardComponent, StatVariant } from '../../shared/stat-card/stat-card.component';
+import { SectionHeaderComponent } from '../../shared/section-header/section-header.component';
 
 export interface Product {
   id: string;

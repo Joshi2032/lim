@@ -2,8 +2,8 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../shared/sidebar/sidebar.component';
 import { PageHeaderComponent } from '../shared/page-header/page-header.component';
-import { CustomersComponent } from '../menu/customers/customers.component';
-import { DeliveryComponent } from '../menu/delivery/delivery.component';
+import { CustomersComponent } from './customers/customers.component';
+import { DeliveryComponent } from './delivery/delivery.component';
 
 type TabId = 'clientes' | 'entregas';
 

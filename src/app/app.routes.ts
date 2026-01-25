@@ -6,12 +6,12 @@ export const routes: Routes = [
 	{ path: 'menu', loadComponent: () => import('./menu/menu/menu.component').then(m => m.MenuComponent) },
 	{ path: 'mesas', loadComponent: () => import('./menu/tables/tables.component').then(m => m.TablesComponent) },
 	{ path: 'cocina', loadComponent: () => import('./menu/kitchen/kitchen.component').then(m => m.KitchenComponent) },
-	{ path: 'clientes', loadComponent: () => import('./menu/customers/customers.component').then(m => m.CustomersComponent) },
-	{ path: 'entregas', loadComponent: () => import('./menu/delivery/delivery.component').then(m => m.DeliveryComponent) },
+	{ path: 'clientes', loadComponent: () => import('./orders/customers/customers.component').then(m => m.CustomersComponent) },
+	{ path: 'entregas', loadComponent: () => import('./orders/delivery/delivery.component').then(m => m.DeliveryComponent) },
 	{ path: 'pedidos', loadComponent: () => import('./orders/orders.component').then(m => m.OrdersComponent) },
-	{ path: 'dashboard', loadComponent: () => import('./duena/owner/dashboard/dashboard.component').then(m => m.DashboardComponent) },
-	{ path: 'panel-control', loadComponent: () => import('./duena/owner/owner.component').then(m => m.OwnerComponent) },
-	{ path: 'usuarios', loadComponent: () => import('./duena/owner/users/users.component').then(m => m.UsersComponent) },
+	{ path: 'dashboard', loadComponent: () => import('./owner/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+	{ path: 'panel-control', loadComponent: () => import('./owner/owner.component').then(m => m.OwnerComponent) },
+	{ path: 'usuarios', loadComponent: () => import('./owner/users/users.component').then(m => m.UsersComponent) },
 	{ path: '', redirectTo: 'login', pathMatch: 'full' },
 	{ path: '**', redirectTo: 'login' }
 ];

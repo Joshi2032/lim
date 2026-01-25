@@ -1,11 +1,11 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { ActivityLog, ActivitySection, ActivityStatus, MovementsService } from '../../../shared/movements/movements.service';
-import { FilterChipsComponent, FilterOption } from '../../../shared/filter-chips/filter-chips.component';
-import { ActivityCardComponent } from '../../../shared/activity-card/activity-card.component';
-import { PageHeaderComponent } from '../../../shared/page-header/page-header.component';
-import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { ActivityLog, ActivitySection, ActivityStatus, MovementsService } from '../../shared/movements/movements.service';
+import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
+import { ActivityCardComponent } from '../../shared/activity-card/activity-card.component';
+import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
+import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-movements',

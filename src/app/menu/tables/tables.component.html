@@ -31,6 +31,7 @@
 					[name]="table.name"
 					[capacity]="table.capacity"
 					[status]="table.status"
+					(statusChanged)="onTableStatusChange(table.id, $event)"
 				/>
 			}
 		</div>

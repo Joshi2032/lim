@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 
 export type TableStatus = 'disponible' | 'ocupada' | 'reservada' | 'limpieza';
 
@@ -20,6 +20,9 @@ export class TableCardComponent {
   @Input() name: string = '';
   @Input() capacity: number = 2;
   @Input() status: TableStatus = 'disponible';
+  @Output() statusChanged = new EventEmitter<TableStatus>();
+
+  private readonly statusCycle: TableStatus[] = ['disponible', 'ocupada', 'reservada', 'limpieza'];
 
   get statusLabel(): string {
     const labels: Record<TableStatus, string> = {
@@ -29,5 +32,12 @@ export class TableCardComponent {
       limpieza: 'Limpieza'
     };
     return labels[this.status] || 'Desconocido';
+  }
+
+  onStatusClick(): void {
+    const currentIndex = this.statusCycle.indexOf(this.status);
+    const nextIndex = (currentIndex + 1) % this.statusCycle.length;
+    const newStatus = this.statusCycle[nextIndex];
+    this.statusChanged.emit(newStatus);
   }
 }

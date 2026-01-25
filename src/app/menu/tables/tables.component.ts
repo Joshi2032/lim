@@ -105,4 +105,21 @@ export class TablesComponent {
   handleLogout() {
     console.log('Logout');
   }
+
+  onTableStatusChange(tableId: string, newStatus: TableStatus): void {
+    const table = this.tables.find(t => t.id === tableId);
+    if (table) {
+      const oldStatus = table.status;
+      table.status = newStatus;
+
+      this.movements.log({
+        title: `Mesa actualizada a ${newStatus}`,
+        description: `${table.name} · Cambió de ${oldStatus} a ${newStatus}`,
+        section: 'mesas',
+        status: 'info',
+        actor: this.currentUser.name,
+        role: this.currentUser.role
+      });
+    }
+  }
 }

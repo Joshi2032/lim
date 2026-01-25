@@ -4,11 +4,12 @@ import { Subscription } from 'rxjs';
 import { ActivityLog, ActivitySection, ActivityStatus, MovementsService } from '../../../shared/movements/movements.service';
 import { FilterChipsComponent, FilterOption } from '../../../shared/filter-chips/filter-chips.component';
 import { ActivityCardComponent } from '../../../shared/activity-card/activity-card.component';
+import { PageHeaderComponent } from '../../../shared/page-header/page-header.component';
 
 @Component({
   selector: 'app-movements',
   standalone: true,
-  imports: [CommonModule, FilterChipsComponent, ActivityCardComponent],
+  imports: [CommonModule, FilterChipsComponent, ActivityCardComponent, PageHeaderComponent],
   templateUrl: './movements.component.html',
   styleUrl: './movements.component.scss'
 })

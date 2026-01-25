@@ -1,25 +1,16 @@
 <div class="products-management">
-  <div class="management-header">
-    <h2>Gestión de Productos</h2>
-    <button class="btn-add" (click)="toggleForm()">
-      + Nuevo Producto
-    </button>
-  </div>
+  <app-page-header
+    title="Gestión de Productos"
+    japaneseName="製品管理"
+    [action]="pageAction"
+    (actionClick)="toggleForm()">
+  </app-page-header>
 
-  <div class="type-tabs">
-    <button
-      class="type-tab"
-      [class.active]="activeType === 'platos'"
-      (click)="switchType('platos')">
-      🍜 Platos
-    </button>
-    <button
-      class="type-tab"
-      [class.active]="activeType === 'combos'"
-      (click)="switchType('combos')">
-      📦 Combos
-    </button>
-  </div>
+  <app-tabs-container
+    [tabs]="tabs"
+    [activeTab]="activeType"
+    [onTabChange]="onTabChange">
+  </app-tabs-container>
 
   <div class="products-list">
     @if (activeType === 'platos') {
@@ -37,7 +28,7 @@
             </div>
             <p class="product-description">{{ item.description }}</p>
             <div class="product-category">
-              <span class="badge">{{ item.category }}</span>
+              <app-badge [text]="item.category" type="popular"></app-badge>
             </div>
             <div class="product-actions">
               <button class="btn-edit" (click)="editItem(item)">Editar</button>
@@ -46,9 +37,11 @@
           </div>
         }
       } @else {
-        <div class="empty-state">
-          <p>No hay platos registrados</p>
-        </div>
+        <app-empty-state
+          icon="search"
+          title="No hay platos registrados"
+          description="Comienza agregando un nuevo plato al menú">
+        </app-empty-state>
       }
     }
 
@@ -67,7 +60,7 @@
             </div>
             <p class="product-description">{{ combo.description }}</p>
             <div class="product-category">
-              <span class="badge">{{ combo.category }}</span>
+              <app-badge [text]="combo.category || 'combo'" type="oferta"></app-badge>
             </div>
             <div class="product-actions">
               <button class="btn-edit" (click)="editCombo(combo)">Editar</button>
@@ -76,9 +69,11 @@
           </div>
         }
       } @else {
-        <div class="empty-state">
-          <p>No hay combos registrados</p>
-        </div>
+        <app-empty-state
+          icon="cart"
+          title="No hay combos registrados"
+          description="Crea combos para ofrecer ofertas especiales">
+        </app-empty-state>
       }
     }
   </div>

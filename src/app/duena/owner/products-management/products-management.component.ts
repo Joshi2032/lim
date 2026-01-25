@@ -2,6 +2,10 @@ import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuService, MenuItem, Combo } from '../../../shared/services/menu.service';
+import { PageHeaderComponent, PageAction } from '../../../shared/page-header/page-header.component';
+import { TabsContainerComponent, TabItem } from '../../../shared/tabs-container/tabs-container.component';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { BadgeComponent } from '../../../shared/badge/badge.component';
 
 interface ProductForm {
   name: string;
@@ -16,7 +20,14 @@ type ProductType = 'platos' | 'combos';
 @Component({
   selector: 'app-products-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    PageHeaderComponent,
+    TabsContainerComponent,
+    EmptyStateComponent,
+    BadgeComponent
+  ],
   templateUrl: './products-management.component.html',
   styleUrls: ['./products-management.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -70,6 +81,16 @@ export class ProductsManagementComponent implements OnInit {
   newItem: ProductForm = { ...this.DEFAULT_ITEM };
   newCombo: ProductForm = { ...this.DEFAULT_COMBO };
   selectedComboItems: Record<string, boolean> = {};
+
+  readonly pageAction: PageAction = {
+    label: 'Nuevo Producto',
+    icon: '+'
+  };
+
+  readonly tabs: TabItem[] = [
+    { id: 'platos', label: 'Platos', icon: '🍜' },
+    { id: 'combos', label: 'Combos', icon: '📦' }
+  ];
 
   constructor(private menuService: MenuService, private cdr: ChangeDetectorRef) {}
 
@@ -128,6 +149,10 @@ export class ProductsManagementComponent implements OnInit {
     this.activeType = type;
     this.showForm = false;
   }
+
+  onTabChange = (tabId: string): void => {
+    this.switchType(tabId as ProductType);
+  };
 
   addItem(): void {
     if (this.activeType === 'platos') {

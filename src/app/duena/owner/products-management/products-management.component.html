@@ -16,25 +16,12 @@
     @if (activeType === 'platos') {
       @if (menuItems.length > 0) {
         @for (item of menuItems; track item.id) {
-          <div class="product-card">
-            <div class="product-header">
-              <div class="product-info">
-                <h3>{{ item.name }}</h3>
-                @if (item.japaneseName) {
-                  <p class="japanese">{{ item.japaneseName }}</p>
-                }
-              </div>
-              <div class="product-price">${{ item.price }}</div>
-            </div>
-            <p class="product-description">{{ item.description }}</p>
-            <div class="product-category">
-              <app-badge [text]="item.category" type="popular"></app-badge>
-            </div>
-            <div class="product-actions">
-              <button class="btn-edit" (click)="editItem(item)">Editar</button>
-              <button class="btn-delete" (click)="deleteItem(item.id)">Eliminar</button>
-            </div>
-          </div>
+          <app-product-card
+            [product]="item"
+            badgeType="popular"
+            (edit)="editItem($any($event))"
+            (delete)="deleteItem($event)">
+          </app-product-card>
         }
       } @else {
         <app-empty-state
@@ -48,25 +35,12 @@
     @if (activeType === 'combos') {
       @if (combos.length > 0) {
         @for (combo of combos; track combo.id) {
-          <div class="product-card">
-            <div class="product-header">
-              <div class="product-info">
-                <h3>{{ combo.name }}</h3>
-                @if (combo.japaneseName) {
-                  <p class="japanese">{{ combo.japaneseName }}</p>
-                }
-              </div>
-              <div class="product-price">${{ combo.price }}</div>
-            </div>
-            <p class="product-description">{{ combo.description }}</p>
-            <div class="product-category">
-              <app-badge [text]="combo.category || 'combo'" type="oferta"></app-badge>
-            </div>
-            <div class="product-actions">
-              <button class="btn-edit" (click)="editCombo(combo)">Editar</button>
-              <button class="btn-delete" (click)="deleteCombo(combo.id)">Eliminar</button>
-            </div>
-          </div>
+          <app-product-card
+            [product]="combo"
+            badgeType="oferta"
+            (edit)="editCombo($any($event))"
+            (delete)="deleteCombo($event)">
+          </app-product-card>
         }
       } @else {
         <app-empty-state

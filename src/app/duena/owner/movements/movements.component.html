@@ -36,9 +36,11 @@
     @for (item of filteredActivityLog; track item.id) {
       <app-activity-card [item]="item"></app-activity-card>
     } @empty {
-      <div class="empty-movements">
-        <p>Sin movimientos para esta categoría</p>
-      </div>
+      <app-empty-state
+        icon="search"
+        title="Sin movimientos"
+        description="No hay movimientos para esta categoría">
+      </app-empty-state>
     }
   </div>
 </div>

@@ -5,7 +5,7 @@ import { MenuService, MenuItem, Combo } from '../../../shared/services/menu.serv
 import { PageHeaderComponent, PageAction } from '../../../shared/page-header/page-header.component';
 import { TabsContainerComponent, TabItem } from '../../../shared/tabs-container/tabs-container.component';
 import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
-import { BadgeComponent } from '../../../shared/badge/badge.component';
+import { ProductCardComponent, ProductCardData } from '../../../shared/product-card/product-card.component';
 
 interface ProductForm {
   name: string;
@@ -26,7 +26,7 @@ type ProductType = 'platos' | 'combos';
     PageHeaderComponent,
     TabsContainerComponent,
     EmptyStateComponent,
-    BadgeComponent
+    ProductCardComponent
   ],
   templateUrl: './products-management.component.html',
   styleUrls: ['./products-management.component.scss'],

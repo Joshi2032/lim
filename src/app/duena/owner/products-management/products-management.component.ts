@@ -3,23 +3,33 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuService, MenuItem, Combo } from '../../../shared/services/menu.service';
 
+interface ProductForm {
+  name: string;
+  japaneseName: string;
+  description: string;
+  price: number;
+  category: string;
+}
+
+type ProductType = 'platos' | 'combos';
+
 @Component({
   selector: 'app-products-management',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './products-management.component.html',
-  styleUrls: ['./products-management.component.scss']
+  styleUrls: ['./products-management.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProductsManagementComponent implements OnInit {
   menuItems: MenuItem[] = [];
   combos: Combo[] = [];
-  activeType: 'platos' | 'combos' = 'platos';
+  activeType: ProductType = 'platos';
   showForm = false;
-  editingId: string | null = null;
   itemImagePreview: string | null = null;
   comboImagePreview: string | null = null;
 
-  newItem = {
+  private readonly DEFAULT_ITEM: ProductForm = {
     name: '',
     japaneseName: '',
     description: '',
@@ -27,7 +37,7 @@ export class ProductsManagementComponent implements OnInit {
     category: 'bebidas'
   };
 
-  newCombo = {
+  private readonly DEFAULT_COMBO: ProductForm = {
     name: '',
     japaneseName: '',
     description: '',
@@ -35,79 +45,107 @@ export class ProductsManagementComponent implements OnInit {
     category: 'combos'
   };
 
-  selectedComboItems: { [itemId: string]: boolean } = {};
+  private readonly ROMAJI_TO_KATAKANA: { [key: string]: string } = {
+    'a': 'ア', 'i': 'イ', 'u': 'ウ', 'e': 'エ', 'o': 'オ',
+    'ka': 'カ', 'ki': 'キ', 'ku': 'ク', 'ke': 'ケ', 'ko': 'コ',
+    'sa': 'サ', 'si': 'シ', 'su': 'ス', 'se': 'セ', 'so': 'ソ',
+    'ta': 'タ', 'ti': 'チ', 'tu': 'ツ', 'te': 'テ', 'to': 'ト',
+    'na': 'ナ', 'ni': 'ニ', 'nu': 'ヌ', 'ne': 'ネ', 'no': 'ノ',
+    'ha': 'ハ', 'hi': 'ヒ', 'hu': 'フ', 'he': 'ヘ', 'ho': 'ホ',
+    'ma': 'マ', 'mi': 'ミ', 'mu': 'ム', 'me': 'メ', 'mo': 'モ',
+    'ya': 'ヤ', 'yu': 'ユ', 'yo': 'ヨ',
+    'ra': 'ラ', 'ri': 'リ', 'ru': 'ル', 're': 'レ', 'ro': 'ロ',
+    'wa': 'ワ', 'wi': 'ウィ', 'we': 'ウェ', 'wo': 'ウォ', 'n': 'ン',
+    'ga': 'ガ', 'gi': 'ギ', 'gu': 'グ', 'ge': 'ゲ', 'go': 'ゴ',
+    'za': 'ザ', 'zi': 'ジ', 'zu': 'ズ', 'ze': 'ゼ', 'zo': 'ゾ',
+    'da': 'ダ', 'di': 'ディ', 'du': 'ドゥ', 'de': 'デ', 'do': 'ド',
+    'ba': 'バ', 'bi': 'ビ', 'bu': 'ブ', 'be': 'ベ', 'bo': 'ボ',
+    'pa': 'パ', 'pi': 'ピ', 'pu': 'プ', 'pe': 'ペ', 'po': 'ポ',
+    'fa': 'ファ', 'fi': 'フィ', 'fe': 'フェ', 'fo': 'フォ',
+    'va': 'ヴァ', 'vi': 'ヴィ', 'vu': 'ヴ', 've': 'ヴェ', 'vo': 'ヴォ',
+    'sh': 'シ', 'ch': 'チ', 'ts': 'ツ', 'j': 'ジ', 'z': 'ズ', '-': 'ー'
+  };
 
-  constructor(private menuService: MenuService, private changeDetectorRef: ChangeDetectorRef) {}
+  newItem: ProductForm = { ...this.DEFAULT_ITEM };
+  newCombo: ProductForm = { ...this.DEFAULT_COMBO };
+  selectedComboItems: Record<string, boolean> = {};
+
+  constructor(private menuService: MenuService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.menuService.getMenuItems().subscribe(items => {
       this.menuItems = items;
-      this.changeDetectorRef.markForCheck();
+      this.cdr.markForCheck();
     });
 
     this.menuService.getCombos().subscribe(combos => {
       this.combos = combos;
-      this.changeDetectorRef.markForCheck();
+      this.cdr.markForCheck();
     });
   }
 
   toggleForm(): void {
     this.showForm = !this.showForm;
-    this.editingId = null;
-    this.resetForm();
+    if (!this.showForm) {
+      this.resetForm();
+    }
+  }
+
+  switchType(type: ProductType): void {
+    this.activeType = type;
+    this.showForm = false;
   }
 
   addItem(): void {
     if (this.activeType === 'platos') {
-      if (!this.newItem.name || !this.newItem.description || this.newItem.price <= 0) {
-        alert('Por favor completa todos los campos');
-        return;
-      }
-
-      const item: MenuItem = {
-        id: Date.now().toString(),
-        ...this.newItem,
-        image: this.itemImagePreview || '/assets/placeholder.png'
-      };
-
-      this.menuService.addMenuItem(item);
-      this.resetForm();
-      this.showForm = false;
+      this.addPlato();
     } else {
-      if (!this.newCombo.name || this.newCombo.price <= 0) {
-        alert('Por favor completa el nombre y selecciona platillos para el combo');
-        return;
-      }
-
-      const selectedItems = Object.entries(this.selectedComboItems)
-        .filter(([_, selected]) => selected)
-        .map(([itemId, _]) => ({ itemId, quantity: 1 }));
-
-      if (selectedItems.length === 0) {
-        alert('Por favor selecciona al menos un platillo para el combo');
-        return;
-      }
-
-      // Generar descripción automáticamente si no la tiene
-      if (!this.newCombo.description) {
-        const selectedNames = this.menuItems
-          .filter(item => Object.keys(this.selectedComboItems).includes(item.id) && this.selectedComboItems[item.id])
-          .map(item => item.name)
-          .join(' + ');
-        this.newCombo.description = `Combo que incluye: ${selectedNames}`;
-      }
-
-      const combo: Combo = {
-        id: Date.now().toString(),
-        ...this.newCombo,
-        image: this.comboImagePreview || '/assets/placeholder.png',
-        items: selectedItems
-      };
-
-      this.menuService.addCombo(combo);
-      this.resetForm();
-      this.showForm = false;
+      this.addCombo();
     }
+  }
+
+  private addPlato(): void {
+    if (!this.newItem.name || !this.newItem.description || this.newItem.price <= 0) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+
+    const item: MenuItem = {
+      id: Date.now().toString(),
+      ...this.newItem,
+      image: this.itemImagePreview || '/assets/placeholder.png'
+    };
+
+    this.menuService.addMenuItem(item);
+    this.closeForm();
+  }
+
+  private addCombo(): void {
+    if (!this.newCombo.name || this.newCombo.price <= 0) {
+      alert('Por favor completa el nombre y selecciona platillos para el combo');
+      return;
+    }
+
+    const selectedItems = this.getSelectedComboItems();
+    if (selectedItems.length === 0) {
+      alert('Por favor selecciona al menos un platillo para el combo');
+      return;
+    }
+
+    const combo: Combo = {
+      id: Date.now().toString(),
+      ...this.newCombo,
+      image: this.comboImagePreview || '/assets/placeholder.png',
+      items: selectedItems
+    };
+
+    this.menuService.addCombo(combo);
+    this.closeForm();
+  }
+
+  private closeForm(): void {
+    this.resetForm();
+    this.showForm = false;
   }
 
   deleteItem(id: string): void {
@@ -123,94 +161,67 @@ export class ProductsManagementComponent implements OnInit {
   }
 
   resetForm(): void {
-    this.newItem = { name: '', japaneseName: '', description: '', price: 0, category: 'bebidas' };
-    this.newCombo = { name: '', japaneseName: '', description: '', price: 0, category: 'combos' };
+    this.newItem = { ...this.DEFAULT_ITEM };
+    this.newCombo = { ...this.DEFAULT_COMBO };
     this.itemImagePreview = null;
     this.comboImagePreview = null;
     this.selectedComboItems = {};
   }
 
-  switchType(type: 'platos' | 'combos'): void {
-    this.activeType = type;
-    this.showForm = false;
-    this.editingId = null;
-  }
-
   onItemImageSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.itemImagePreview = e.target?.result as string;
-        this.changeDetectorRef.markForCheck();
-      };
-      reader.readAsDataURL(file);
-    }
+    this.readImageFile(event, image => {
+      this.itemImagePreview = image;
+    });
   }
 
   onComboImageSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+    this.readImageFile(event, image => {
+      this.comboImagePreview = image;
+    });
+  }
 
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.comboImagePreview = e.target?.result as string;
-        this.changeDetectorRef.markForCheck();
-      };
-      reader.readAsDataURL(file);
+  private readImageFile(event: Event, callback: (image: string) => void): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      callback(result);
+      this.cdr.markForCheck();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  onItemNameChange(): void {
+    this.generateJapaneseName(this.newItem);
+  }
+
+  onComboNameChange(): void {
+    this.generateJapaneseName(this.newCombo);
+  }
+
+  private generateJapaneseName(form: ProductForm): void {
+    if (form.name && !form.japaneseName) {
+      form.japaneseName = this.transliterateToKatakana(form.name);
     }
   }
 
-  // Función para transliterar a katakana
   private transliterateToKatakana(text: string): string {
     if (!text) return '';
 
-    const romajiToKatakana: { [key: string]: string } = {
-      'a': 'ア', 'i': 'イ', 'u': 'ウ', 'e': 'エ', 'o': 'オ',
-      'ka': 'カ', 'ki': 'キ', 'ku': 'ク', 'ke': 'ケ', 'ko': 'コ',
-      'sa': 'サ', 'si': 'シ', 'su': 'ス', 'se': 'セ', 'so': 'ソ',
-      'ta': 'タ', 'ti': 'チ', 'tu': 'ツ', 'te': 'テ', 'to': 'ト',
-      'na': 'ナ', 'ni': 'ニ', 'nu': 'ヌ', 'ne': 'ネ', 'no': 'ノ',
-      'ha': 'ハ', 'hi': 'ヒ', 'hu': 'フ', 'he': 'ヘ', 'ho': 'ホ',
-      'ma': 'マ', 'mi': 'ミ', 'mu': 'ム', 'me': 'メ', 'mo': 'モ',
-      'ya': 'ヤ', 'yu': 'ユ', 'yo': 'ヨ',
-      'ra': 'ラ', 'ri': 'リ', 'ru': 'ル', 're': 'レ', 'ro': 'ロ',
-      'wa': 'ワ', 'wi': 'ウィ', 'we': 'ウェ', 'wo': 'ウォ', 'n': 'ン',
-      'ga': 'ガ', 'gi': 'ギ', 'gu': 'グ', 'ge': 'ゲ', 'go': 'ゴ',
-      'za': 'ザ', 'zi': 'ジ', 'zu': 'ズ', 'ze': 'ゼ', 'zo': 'ゾ',
-      'da': 'ダ', 'di': 'ディ', 'du': 'ドゥ', 'de': 'デ', 'do': 'ド',
-      'ba': 'バ', 'bi': 'ビ', 'bu': 'ブ', 'be': 'ベ', 'bo': 'ボ',
-      'pa': 'パ', 'pi': 'ピ', 'pu': 'プ', 'pe': 'ペ', 'po': 'ポ',
-      'fa': 'ファ', 'fi': 'フィ', 'fe': 'フェ', 'fo': 'フォ',
-      'va': 'ヴァ', 'vi': 'ヴィ', 'vu': 'ヴ', 've': 'ヴェ', 'vo': 'ヴォ',
-      'sh': 'シ', 'ch': 'チ', 'ts': 'ツ', 'j': 'ジ', 'z': 'ズ',
-      '-': 'ー'
-    };
-
-    const text_lower = text.toLowerCase();
+    const textLower = text.toLowerCase();
     let result = '';
     let i = 0;
 
-    while (i < text_lower.length) {
-      // Intenta 2 caracteres primero
-      const twoChar = text_lower.substring(i, i + 2);
-      if (romajiToKatakana[twoChar]) {
-        result += romajiToKatakana[twoChar];
+    while (i < textLower.length) {
+      const twoChar = textLower.substring(i, i + 2);
+      if (this.ROMAJI_TO_KATAKANA[twoChar]) {
+        result += this.ROMAJI_TO_KATAKANA[twoChar];
         i += 2;
       } else {
-        // Intenta 1 carácter
-        const oneChar = text_lower[i];
-        if (romajiToKatakana[oneChar]) {
-          result += romajiToKatakana[oneChar];
-        } else if (oneChar === ' ') {
-          result += ' ';
-        } else {
-          // Caracteres no reconocidos se ignoran o se pueden mapear a vocales
-          result += romajiToKatakana[oneChar] || '';
-        }
+        const oneChar = textLower[i];
+        result += this.ROMAJI_TO_KATAKANA[oneChar] || (oneChar === ' ' ? ' ' : '');
         i += 1;
       }
     }
@@ -218,39 +229,30 @@ export class ProductsManagementComponent implements OnInit {
     return result;
   }
 
-  onItemNameChange(): void {
-    if (this.newItem.name && !this.newItem.japaneseName) {
-      this.newItem.japaneseName = this.transliterateToKatakana(this.newItem.name);
-    }
-  }
-
-  onComboNameChange(): void {
-    if (this.newCombo.name && !this.newCombo.japaneseName) {
-      this.newCombo.japaneseName = this.transliterateToKatakana(this.newCombo.name);
-    }
-  }
-
   toggleComboItem(itemId: string): void {
     this.selectedComboItems[itemId] = !this.selectedComboItems[itemId];
     this.updateComboPrice();
   }
 
-  updateComboPrice(): void {
-    const selectedItems = this.menuItems.filter(item =>
-      Object.keys(this.selectedComboItems).includes(item.id) && this.selectedComboItems[item.id]
-    );
-
+  private updateComboPrice(): void {
+    const selectedItems = this.getSelectedMenuItems();
     if (selectedItems.length > 0) {
       const totalPrice = selectedItems.reduce((sum, item) => sum + item.price, 0);
-      // Aplicar descuento del 10% por combo
       this.newCombo.price = Math.round(totalPrice * 0.9 * 100) / 100;
     }
   }
 
+  private getSelectedMenuItems(): MenuItem[] {
+    return this.menuItems.filter(item => this.selectedComboItems[item.id]);
+  }
+
+  private getSelectedComboItems(): Array<{ itemId: string; quantity: number }> {
+    return Object.entries(this.selectedComboItems)
+      .filter(([_, selected]) => selected)
+      .map(([itemId]) => ({ itemId, quantity: 1 }));
+  }
+
   getSelectedComboPrice(): number {
-    const selectedItems = this.menuItems.filter(item =>
-      Object.keys(this.selectedComboItems).includes(item.id) && this.selectedComboItems[item.id]
-    );
-    return selectedItems.reduce((sum, item) => sum + item.price, 0);
+    return this.getSelectedMenuItems().reduce((sum, item) => sum + item.price, 0);
   }
 }

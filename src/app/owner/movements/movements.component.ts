@@ -6,11 +6,12 @@ import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/fi
 import { ActivityCardComponent } from '../../shared/activity-card/activity-card.component';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
+import { SearchInputComponent } from '../../shared/search-input/search-input.component';
 
 @Component({
   selector: 'app-movements',
   standalone: true,
-  imports: [CommonModule, FilterChipsComponent, ActivityCardComponent, PageHeaderComponent, EmptyStateComponent],
+  imports: [CommonModule, FilterChipsComponent, ActivityCardComponent, PageHeaderComponent, EmptyStateComponent, SearchInputComponent],
   templateUrl: './movements.component.html',
   styleUrl: './movements.component.scss'
 })

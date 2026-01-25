@@ -11,6 +11,7 @@ import { MenuService } from '../../shared/services/menu.service';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { SectionHeaderComponent } from '../../shared/section-header/section-header.component';
+import { SearchInputComponent } from '../../shared/search-input/search-input.component';
 
 interface Filter {
 	id: string;
@@ -37,7 +38,7 @@ interface Combo {
 
 @Component({
   selector: 'app-menu',
-  imports: [CommonModule, SidebarComponent, MenuItemCardComponent, FormsModule, CartComponent, BadgeComponent, VariantSelectorComponent, FilterChipsComponent, PageHeaderComponent, SectionHeaderComponent],
+  imports: [CommonModule, SidebarComponent, MenuItemCardComponent, FormsModule, CartComponent, BadgeComponent, VariantSelectorComponent, FilterChipsComponent, PageHeaderComponent, SectionHeaderComponent, SearchInputComponent],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'
 })

@@ -5,6 +5,8 @@ import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../share
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { SectionHeaderComponent } from '../../shared/section-header/section-header.component';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
+import { ModalComponent } from '../../shared/modal/modal.component';
+import { SearchInputComponent } from '../../shared/search-input/search-input.component';
 
 export interface Address {
 	id: string;
@@ -29,7 +31,7 @@ export interface Customer {
 
 @Component({
   selector: 'app-customers',
-  imports: [CommonModule, SidebarComponent, FormsModule, PageHeaderComponent, SectionHeaderComponent, EmptyStateComponent],
+  imports: [CommonModule, SidebarComponent, FormsModule, PageHeaderComponent, SectionHeaderComponent, EmptyStateComponent, ModalComponent, SearchInputComponent],
   templateUrl: './customers.component.html',
   styleUrl: './customers.component.scss'
 })

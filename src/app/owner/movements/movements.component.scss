@@ -32,28 +32,10 @@
   width: 100%;
   display: flex;
   justify-content: flex-end;
-}
 
-.search-input {
-  width: 100%;
-  max-width: 825px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
-  color: #fff;
-  font-size: 14px;
-  transition: all 0.2s ease;
-
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: #dc2626;
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
-    background: rgba(255, 255, 255, 0.08);
+  app-search-input {
+    width: 100%;
+    max-width: 825px;
   }
 }
 

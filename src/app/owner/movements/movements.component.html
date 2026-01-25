@@ -8,11 +8,10 @@
 
     <div class="movements-controls">
       <div class="search-row">
-        <input
-          type="search"
-          class="search-input"
+        <app-search-input
           placeholder="Buscar por título, actor o rol"
-          (input)="onSearch($any($event.target).value)" />
+          (search)="onSearch($event)">
+        </app-search-input>
       </div>
 
       <div class="chip-rows">

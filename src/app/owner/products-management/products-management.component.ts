@@ -6,6 +6,7 @@ import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-h
 import { TabsContainerComponent, TabItem } from '../../shared/tabs-container/tabs-container.component';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { ProductCardComponent, ProductCardData } from '../../shared/product-card/product-card.component';
+import { ModalComponent } from '../../shared/modal/modal.component';
 
 interface ProductForm {
   name: string;
@@ -26,7 +27,8 @@ type ProductType = 'platos' | 'combos';
     PageHeaderComponent,
     TabsContainerComponent,
     EmptyStateComponent,
-    ProductCardComponent
+    ProductCardComponent,
+    ModalComponent
   ],
   templateUrl: './products-management.component.html',
   styleUrls: ['./products-management.component.scss'],

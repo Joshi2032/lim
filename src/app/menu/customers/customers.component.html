@@ -1,11 +1,13 @@
 <div class="customers-container">
-	<app-sidebar
-		[menuItems]="sidebarItems"
-		[currentUser]="currentUser"
-		[cartCount]="cartCount">
-	</app-sidebar>
+	@if (!embedded) {
+		<app-sidebar
+			[menuItems]="sidebarItems"
+			[currentUser]="currentUser"
+			[cartCount]="cartCount">
+		</app-sidebar>
+	}
 
-	<div class="customers-content">
+	<div class="customers-content" [class.embedded]="embedded">
 		<app-page-header
 			title="Clientes"
 			subtitle="Gestiona clientes y sus direcciones de entrega"

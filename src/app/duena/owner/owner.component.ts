@@ -1,11 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { StatVariant } from '../../shared/stat-card/stat-card.component';
+import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { UsersComponent } from './users/users.component';
 import { MovementsComponent } from './movements/movements.component';
-import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
+
+type TabId = 'resumen' | 'movimientos' | 'usuarios';
+
+interface TabItem {
+  id: TabId;
+  label: string;
+  icon: string;
+}
 
 export interface Product {
   id: string;
@@ -43,12 +51,39 @@ interface StatCardData {
 @Component({
   selector: 'app-owner',
   standalone: true,
-    imports: [CommonModule, SidebarComponent, DashboardComponent, UsersComponent, MovementsComponent, PageHeaderComponent],
+  imports: [CommonModule, SidebarComponent, DashboardComponent, UsersComponent, MovementsComponent, PageHeaderComponent],
   templateUrl: './owner.component.html',
-  styleUrl: './owner.component.scss'
+  styleUrl: './owner.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OwnerComponent implements OnInit {
-  cartCount: number = 0;
+  readonly cartCount = 0;
+  activeTab: TabId = 'resumen';
+
+  readonly tabs: TabItem[] = [
+    { id: 'resumen', label: 'Resumen', icon: '📊' },
+    { id: 'movimientos', label: 'Movimientos', icon: '🔄' },
+    { id: 'usuarios', label: 'Usuarios', icon: '👥' }
+  ];
+
+  readonly currentUser: User = {
+    name: 'Josue',
+    role: 'Dueña',
+    initials: 'J'
+  };
+
+  readonly sidebarItems: SidebarMenuItem[] = [
+    { id: 'menu', label: 'Menú', icon: '🍜', route: '/menu' },
+    { id: 'mesas', label: 'Mesas', icon: '🪑', route: '/mesas' },
+    { id: 'cocina', label: 'Cocina', icon: '🍳', route: '/cocina' },
+    { id: 'clientes', label: 'Clientes', icon: '👥', route: '/clientes' },
+    { id: 'entregas', label: 'Entregas', icon: '🚚', route: '/entregas' },
+    { id: 'pedidos', label: 'Pedidos', icon: '🧾', route: '/pedidos' },
+    { id: 'dashboard', label: 'Dashboard', icon: '📊', route: '/dashboard' },
+    { id: 'panel', label: 'Panel de Control', icon: '📈', route: '/panel-control', active: true },
+    { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
+  ];
+
   statCards: StatCardData[] = [];
   topProducts: Product[] = [];
   recentOrders: Order[] = [];
@@ -58,33 +93,13 @@ export class OwnerComponent implements OnInit {
   tooltipY = 0;
   tooltipValue = '';
   tooltipDay = '';
-  activeTab: 'resumen' | 'movimientos' | 'usuarios' = 'resumen';
-
-  tabs: Array<{id: 'resumen' | 'movimientos' | 'usuarios', label: string, icon: string}> = [
-    { id: 'resumen', label: 'Resumen', icon: '📊' },
-    { id: 'movimientos', label: 'Movimientos', icon: '🔄' },
-    { id: 'usuarios', label: 'Usuarios', icon: '👥' }
-  ];
-
-  currentUser: User = {
-    name: 'Josue',
-    role: 'Dueña',
-    initials: 'J'
-  };
-
-  sidebarItems: SidebarMenuItem[] = [
-    { id: 'menu', label: 'Menú', icon: '🍜', route: '/menu' },
-    { id: 'mesas', label: 'Mesas', icon: '🪑', route: '/mesas' },
-    { id: 'cocina', label: 'Cocina', icon: '🍳', route: '/cocina' },
-    { id: 'clientes', label: 'Clientes', icon: '👥', route: '/clientes' },
-    { id: 'entregas', label: 'Entregas', icon: '🚚', route: '/entregas' },
-    { id: 'dashboard', label: 'Dashboard', icon: '📊', route: '/dashboard' },
-    { id: 'panel', label: 'Panel de Control', icon: '📈', route: '/panel-control', active: true },
-    { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
-  ];
 
   ngOnInit() {
     this.loadData();
+  }
+
+  setActiveTab(tabId: string): void {
+    this.activeTab = tabId as TabId;
   }
 
   loadData() {
@@ -227,9 +242,5 @@ export class OwnerComponent implements OnInit {
 
   onChartLeave() {
     this.tooltipVisible = false;
-  }
-
-  setActiveTab(tabId: 'resumen' | 'movimientos' | 'usuarios') {
-    this.activeTab = tabId;
   }
 }

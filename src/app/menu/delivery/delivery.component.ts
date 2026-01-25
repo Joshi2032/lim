@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { DeliveryCardComponent } from '../../shared/delivery-card/delivery-card.component';
@@ -27,6 +27,7 @@ export interface Delivery {
   styleUrl: './delivery.component.scss'
 })
 export class DeliveryComponent implements OnInit {
+  @Input() embedded: boolean = false;
   selectedStatus: DeliveryStatus = 'pendiente';
   statusOptions: FilterOption[] = [
     { id: 'pendiente', label: 'Pendientes' },
@@ -56,6 +57,7 @@ export class DeliveryComponent implements OnInit {
     { id: 'cocina', label: 'Cocina', icon: '🍳', route: '/cocina' },
     { id: 'clientes', label: 'Clientes', icon: '👥', route: '/clientes' },
     { id: 'entregas', label: 'Entregas', icon: '🚚', route: '/entregas', active: true },
+    { id: 'pedidos', label: 'Pedidos', icon: '🧾', route: '/pedidos' },
     { id: 'dashboard', label: 'Dashboard', icon: '📊', route: '/dashboard' },
     { id: 'panel', label: 'Panel de Control', icon: '📈', route: '/panel-control' },
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }

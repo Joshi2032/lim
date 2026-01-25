@@ -1,0 +1,12 @@
+<div class="tabs-container">
+  @for (tab of tabs; track tab.id) {
+    <button
+      class="tab-button"
+      [class.active]="activeTab === tab.id"
+      (click)="selectTab(tab.id)"
+      [attr.aria-pressed]="activeTab === tab.id">
+      <span class="tab-icon">{{ tab.icon }}</span>
+      <span>{{ tab.label }}</span>
+    </button>
+  }
+</div>

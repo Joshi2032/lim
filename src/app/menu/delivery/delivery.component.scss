@@ -64,7 +64,8 @@
 }
 
 @media (max-width: 768px) {
-	.delivery-content {
+	.delivery-content,
+	.delivery-content.embedded {
 		margin-left: 0;
 		padding: 20px 16px;
 	}

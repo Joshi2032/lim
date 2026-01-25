@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
@@ -34,6 +34,7 @@ export interface Customer {
   styleUrl: './customers.component.scss'
 })
 export class CustomersComponent implements OnInit {
+  @Input() embedded: boolean = false;
   headerAction: PageAction = { label: 'Nuevo Cliente', icon: '+' };
   searchQuery: string = '';
   selectedCustomer: Customer | null = null;
@@ -82,6 +83,7 @@ export class CustomersComponent implements OnInit {
     { id: 'cocina', label: 'Cocina', icon: '🍳', route: '/cocina' },
     { id: 'clientes', label: 'Clientes', icon: '👥', route: '/clientes', active: true },
     { id: 'entregas', label: 'Entregas', icon: '🚚', route: '/entregas' },
+    { id: 'pedidos', label: 'Pedidos', icon: '🧾', route: '/pedidos' },
     { id: 'dashboard', label: 'Dashboard', icon: '📊', route: '/dashboard' },
     { id: 'panel', label: 'Panel de Control', icon: '📈', route: '/panel-control' },
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }

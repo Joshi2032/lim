@@ -1,12 +1,16 @@
-<div class="panel-container">
+<div class="orders-container">
 	<app-sidebar
 		[menuItems]="sidebarItems"
 		[currentUser]="currentUser"
 		[cartCount]="cartCount">
 	</app-sidebar>
 
-	<div class="panel-content">
-		<app-page-header title="Panel de Control" japaneseName="管理"></app-page-header>
+	<div class="orders-content">
+		<app-page-header
+			title="Pedidos"
+			subtitle="Gestiona clientes y entregas"
+			japaneseName="注文">
+		</app-page-header>
 
 		<div class="tabs-container">
 			@for (tab of tabs; track tab.id) {
@@ -22,19 +26,14 @@
 		</div>
 
 		@switch (activeTab) {
-			@case ('resumen') {
+			@case ('clientes') {
 				<div class="embedded-content">
-					<app-dashboard [embedded]="true"></app-dashboard>
+					<app-customers [embedded]="true"></app-customers>
 				</div>
 			}
-			@case ('movimientos') {
+			@case ('entregas') {
 				<div class="embedded-content">
-					<app-movements></app-movements>
-				</div>
-			}
-			@case ('usuarios') {
-				<div class="embedded-content">
-					<app-users [embedded]="true"></app-users>
+					<app-delivery [embedded]="true"></app-delivery>
 				</div>
 			}
 		}

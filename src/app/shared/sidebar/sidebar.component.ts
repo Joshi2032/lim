@@ -23,8 +23,8 @@ export interface User {
 })
 export class SidebarComponent {
   @Input() menuItems: MenuItem[] = [];
-  // Globally hidden item ids (requested): remove Dashboard and Usuarios
-  private readonly hiddenIdsDefault: string[] = ['dashboard', 'usuarios'];
+  // Globally hidden item ids: remove Dashboard, Usuarios, Clientes, Entregas (now in Pedidos)
+  private readonly hiddenIdsDefault: string[] = ['dashboard', 'usuarios', 'clientes', 'entregas'];
   // Optional extension point to hide other ids if needed
   @Input() hiddenIds: string[] = [];
   @Input() currentUser: User | null = null;

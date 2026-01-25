@@ -37,6 +37,11 @@
 					<app-users [embedded]="true"></app-users>
 				</div>
 			}
+			@case ('productos') {
+				<div class="embedded-content">
+					<app-products-management></app-products-management>
+				</div>
+			}
 		}
 	</div>
 </div>

@@ -1,0 +1,143 @@
+<div class="products-management">
+  <div class="management-header">
+    <h2>Gestión de Productos</h2>
+    <button class="btn-add" (click)="toggleForm()">
+      {{ showForm ? '✕ Cancelar' : '+ Nuevo Producto' }}
+    </button>
+  </div>
+
+  <div class="type-tabs">
+    <button
+      class="type-tab"
+      [class.active]="activeType === 'platos'"
+      (click)="switchType('platos')">
+      Platos
+    </button>
+    <button
+      class="type-tab"
+      [class.active]="activeType === 'combos'"
+      (click)="switchType('combos')">
+      Combos
+    </button>
+  </div>
+
+  @if (showForm) {
+    <div class="form-container">
+      @if (activeType === 'platos') {
+        <div class="form">
+          <input
+            type="text"
+            [(ngModel)]="newItem.name"
+            placeholder="Nombre del plato"
+            class="form-input">
+          <input
+            type="text"
+            [(ngModel)]="newItem.japaneseName"
+            placeholder="Nombre en japonés (opcional)"
+            class="form-input">
+          <textarea
+            [(ngModel)]="newItem.description"
+            placeholder="Descripción"
+            class="form-input"
+            rows="3"></textarea>
+          <select [(ngModel)]="newItem.category" class="form-input">
+            <option value="bebidas">Bebidas</option>
+            <option value="rolls">Rolls</option>
+            <option value="nigiri">Nigiri</option>
+            <option value="sashimi">Sashimi</option>
+            <option value="especiales">Especiales</option>
+            <option value="postres">Postres</option>
+          </select>
+          <input
+            type="number"
+            [(ngModel)]="newItem.price"
+            placeholder="Precio"
+            class="form-input">
+          <button class="btn-submit" (click)="addItem()">Guardar Plato</button>
+        </div>
+      }
+
+      @if (activeType === 'combos') {
+        <div class="form">
+          <input
+            type="text"
+            [(ngModel)]="newCombo.name"
+            placeholder="Nombre del combo"
+            class="form-input">
+          <input
+            type="text"
+            [(ngModel)]="newCombo.japaneseName"
+            placeholder="Nombre en japonés (opcional)"
+            class="form-input">
+          <textarea
+            [(ngModel)]="newCombo.description"
+            placeholder="Descripción"
+            class="form-input"
+            rows="3"></textarea>
+          <input
+            type="number"
+            [(ngModel)]="newCombo.price"
+            placeholder="Precio"
+            class="form-input">
+          <button class="btn-submit" (click)="addItem()">Guardar Combo</button>
+        </div>
+      }
+    </div>
+  }
+
+  <div class="products-list">
+    @if (activeType === 'platos') {
+      @if (menuItems.length > 0) {
+        @for (item of menuItems; track item.id) {
+          <div class="product-card">
+            <div class="product-header">
+              <div class="product-info">
+                <h3>{{ item.name }}</h3>
+                @if (item.japaneseName) {
+                  <p class="japanese">{{ item.japaneseName }}</p>
+                }
+              </div>
+              <div class="product-price">${{ item.price }}</div>
+            </div>
+            <p class="product-description">{{ item.description }}</p>
+            <div class="product-category">
+              <span class="badge">{{ item.category }}</span>
+            </div>
+            <button class="btn-delete" (click)="deleteItem(item.id)">Eliminar</button>
+          </div>
+        }
+      } @else {
+        <div class="empty-state">
+          <p>No hay platos registrados</p>
+        </div>
+      }
+    }
+
+    @if (activeType === 'combos') {
+      @if (combos.length > 0) {
+        @for (combo of combos; track combo.id) {
+          <div class="product-card">
+            <div class="product-header">
+              <div class="product-info">
+                <h3>{{ combo.name }}</h3>
+                @if (combo.japaneseName) {
+                  <p class="japanese">{{ combo.japaneseName }}</p>
+                }
+              </div>
+              <div class="product-price">${{ combo.price }}</div>
+            </div>
+            <p class="product-description">{{ combo.description }}</p>
+            <div class="product-category">
+              <span class="badge">{{ combo.category }}</span>
+            </div>
+            <button class="btn-delete" (click)="deleteCombo(combo.id)">Eliminar</button>
+          </div>
+        }
+      } @else {
+        <div class="empty-state">
+          <p>No hay combos registrados</p>
+        </div>
+      }
+    }
+  </div>
+</div>

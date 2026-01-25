@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
@@ -7,6 +7,7 @@ import { CartComponent, CartItem } from '../../shared/cart/cart.component';
 import { BadgeComponent } from '../../shared/badge/badge.component';
 import { VariantSelectorComponent } from '../variant-selector/variant-selector.component';
 import { MovementsService } from '../../shared/movements/movements.service';
+import { MenuService } from '../../shared/services/menu.service';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { SectionHeaderComponent } from '../../shared/section-header/section-header.component';
@@ -40,7 +41,7 @@ interface Combo {
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'
 })
-export class MenuComponent {
+export class MenuComponent implements OnInit {
   searchQuery: string = '';
   selectedFilter: string = 'todos';
   cartCount: number = 0;
@@ -78,7 +79,21 @@ export class MenuComponent {
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
 
-  constructor(private movements: MovementsService) {}
+  constructor(private movements: MovementsService, private menuService: MenuService) {}
+
+  ngOnInit(): void {
+    // Subscribe to menu items from service
+    this.menuService.getMenuItems().subscribe(items => {
+      this.menuItems = items;
+      this.filterItems();
+    });
+
+    // Subscribe to combos from service
+    this.menuService.getCombos().subscribe(combos => {
+      this.combos = combos;
+      this.filterItems();
+    });
+  }
 
   filters: Filter[] = [
     { id: 'todos', label: 'Todos' },

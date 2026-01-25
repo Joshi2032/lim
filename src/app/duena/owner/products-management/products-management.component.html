@@ -98,19 +98,37 @@
             <input
               type="text"
               [(ngModel)]="newItem.name"
+              (ngModelChange)="onItemNameChange()"
               placeholder="Ej: Sushi Roll California"
               class="form-input"
               maxlength="50">
             <span class="input-counter">{{ newItem.name.length }}/50</span>
+            @if (newItem.japaneseName) {
+              <span class="japanese-preview">{{ newItem.japaneseName }}</span>
+            }
           </div>
 
           <div class="form-group">
-            <label class="form-label">Nombre en japonés (opcional)</label>
-            <input
-              type="text"
-              [(ngModel)]="newItem.japaneseName"
-              placeholder="Ej: カリフォルニアロール"
-              class="form-input">
+            <label class="form-label">Foto del plato</label>
+            <div class="image-upload-wrapper">
+              @if (itemImagePreview) {
+                <div class="image-preview">
+                  <img [src]="itemImagePreview" alt="Preview">
+                  <button type="button" class="change-btn" (click)="itemFileInput.click()">Cambiar</button>
+                </div>
+              } @else {
+                <label class="upload-area" (click)="itemFileInput.click()">
+                  <div class="upload-icon">📸</div>
+                  <div class="upload-text">Selecciona una foto</div>
+                </label>
+              }
+              <input
+                #itemFileInput
+                type="file"
+                accept="image/*"
+                (change)="onItemImageSelected($event)"
+                class="hidden-input">
+            </div>
           </div>
 
           <div class="form-group">
@@ -165,21 +183,37 @@
             <input
               type="text"
               [(ngModel)]="newCombo.name"
+              (change)="onComboNameChange()"
               placeholder="Ej: Combo Familiar"
               class="form-input"
               maxlength="50">
             <span class="input-counter">{{ newCombo.name.length }}/50</span>
+            @if (newCombo.japaneseName) {
+              <span class="japanese-preview">{{ newCombo.japaneseName }}</span>
+            }
           </div>
-
           <div class="form-group">
-            <label class="form-label">Nombre en japonés (opcional)</label>
-            <input
-              type="text"
-              [(ngModel)]="newCombo.japaneseName"
-              placeholder="Ej: ファミリーコンボ"
-              class="form-input">
+            <label class="form-label">Foto del combo</label>
+            <div class="image-upload-wrapper">
+              @if (comboImagePreview) {
+                <div class="image-preview">
+                  <img [src]="comboImagePreview" alt="Preview">
+                  <button type="button" class="change-btn" (click)="comboFileInput.click()">Cambiar</button>
+                </div>
+              } @else {
+                <label class="upload-area" (click)="comboFileInput.click()">
+                  <div class="upload-icon">📸</div>
+                  <div class="upload-text">Selecciona una foto</div>
+                </label>
+              }
+              <input
+                #comboFileInput
+                type="file"
+                accept="image/*"
+                (change)="onComboImageSelected($event)"
+                class="hidden-input">
+            </div>
           </div>
-
           <div class="form-group">
             <label class="form-label">Descripción *</label>
             <textarea

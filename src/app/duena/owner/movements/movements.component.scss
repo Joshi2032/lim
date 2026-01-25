@@ -4,22 +4,50 @@
   gap: 16px;
 }
 
+.movements-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+
+  @media (max-width: 968px) {
+    flex-direction: column;
+  }
+}
+
 .movements-controls {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  flex: 1;
+  min-width: 400px;
+
+  @media (max-width: 968px) {
+    min-width: 100%;
+    width: 100%;
+  }
+}
+
+.search-row {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .search-input {
   width: 100%;
-  min-width: 280px;
-  padding: 10px 12px;
+  max-width: 825px;
+  padding: 12px 16px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
   color: #fff;
-  font-size: 13px;
+  font-size: 14px;
   transition: all 0.2s ease;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
 
   &:focus {
     outline: none;
@@ -31,8 +59,29 @@
 
 .chip-rows {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  gap: 12px;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  overflow-x: auto;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
 }
 
 .movement-card {

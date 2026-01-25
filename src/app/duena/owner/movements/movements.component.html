@@ -1,34 +1,38 @@
 <div class="movements">
-  <app-page-header
-    title="Movimientos recientes"
-    japaneseName="最近の動き"
-    subtitle="Bitácora en tiempo real de acciones en el sistema">
-  </app-page-header>
+  <div class="movements-header">
+    <app-page-header
+      title="Movimientos recientes"
+      japaneseName="最近の動き"
+      subtitle="Bitácora en tiempo real de acciones en el sistema">
+    </app-page-header>
 
-  <div class="movements-controls">
-    <div class="search-row">
-      <input
-        type="search"
-        class="search-input"
-        placeholder="Buscar por título, actor o rol"
-        (input)="onSearch($any($event.target).value)" />
-    </div>
+    <div class="movements-controls">
+      <div class="search-row">
+        <input
+          type="search"
+          class="search-input"
+          placeholder="Buscar por título, actor o rol"
+          (input)="onSearch($any($event.target).value)" />
+      </div>
 
-    <div class="chip-rows">
-      <app-filter-chips
-        label="Sección"
-        [options]="sectionOptions"
-        [selectedId]="activeSection"
-        (optionSelected)="setSectionFilter($event)">
-      </app-filter-chips>
+      <div class="chip-rows">
+        <app-filter-chips
+          label="Sección"
+          [options]="sectionOptions"
+          [selectedId]="activeSection"
+          (optionSelected)="setSectionFilter($event)">
+        </app-filter-chips>
+      </div>
 
-      <app-filter-chips
-        label="Estado"
-        [options]="statusOptions"
-        [selectedId]="activeStatus"
-        [status]="true"
-        (optionSelected)="setStatusFilter($event)">
-      </app-filter-chips>
+      <div class="chip-rows">
+        <app-filter-chips
+          label="Estado"
+          [options]="statusOptions"
+          [selectedId]="activeStatus"
+          [status]="true"
+          (optionSelected)="setStatusFilter($event)">
+        </app-filter-chips>
+      </div>
     </div>
   </div>
 

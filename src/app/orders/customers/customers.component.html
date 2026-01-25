@@ -28,21 +28,11 @@
 				<div class="customers-list">
 					@if (filteredCustomers.length > 0) {
 						@for (customer of filteredCustomers; track customer.id) {
-							<div
-								class="customer-item"
-								[class.active]="selectedCustomer?.id === customer.id"
-								(click)="selectCustomer(customer)">
-								<div class="customer-avatar">
-									<span>{{ customer.initials }}</span>
-								</div>
-								<div class="customer-info">
-									<div class="customer-name">{{ customer.name }}</div>
-									<div class="customer-phone">{{ customer.phone }}</div>
-								</div>
-								<div class="customer-badge">
-									{{ customer.addressCount }} dir.
-								</div>
-							</div>
+							<app-customer-item
+								[customer]="customer"
+								[active]="selectedCustomer?.id === customer.id"
+								(select)="selectCustomer(customer)">
+							</app-customer-item>
 						}
 					} @else {
 						<app-empty-state icon="user" title="No hay clientes registrados" description="Agrega el primer cliente"></app-empty-state>
@@ -53,16 +43,21 @@
 			<div class="addresses-section">
 				<app-section-header title="Direcciones">
 					@if (selectedCustomer) {
-						<button class="icon-btn" type="button" (click)="openEditCustomerModal()" title="Editar cliente">
+						<app-icon-button
+							(clicked)="openEditCustomerModal()"
+							title="Editar cliente">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 								<path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13M18.5 2.5C18.8978 2.1022 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.1022 21.5 2.5C21.8978 2.8978 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.1022 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 							</svg>
-						</button>
-						<button class="icon-btn delete" type="button" (click)="deleteCustomer()" title="Eliminar cliente">
+						</app-icon-button>
+						<app-icon-button
+							variant="danger"
+							(clicked)="deleteCustomer()"
+							title="Eliminar cliente">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 								<path d="M3 6H5H21M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 							</svg>
-						</button>
+						</app-icon-button>
 						<button class="add-address-btn" type="button" (click)="addAddress()">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 								<path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -76,46 +71,12 @@
 					@if (selectedCustomer) {
 						@if (selectedCustomer.addresses.length > 0) {
 							@for (address of selectedCustomer.addresses; track address.id) {
-								<div class="address-card">
-									<div class="address-header">
-										<div class="address-label">{{ address.label }}</div>
-										<div class="address-header-actions">
-											@if (address.isDefault) {
-												<span class="default-badge">Principal</span>
-											} @else {
-												<button class="set-default-btn" type="button" (click)="setDefaultAddress(address.id)">
-													Marcar como principal
-												</button>
-											}
-										</div>
-									</div>
-									<div class="address-street">{{ address.street }}</div>
-									<div class="address-details">
-										{{ address.city }}, {{ address.state }}
-									</div>
-									@if (address.reference) {
-										<div class="address-reference">
-											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-												<path d="M13 16H12V12H11M12 8H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-											</svg>
-											{{ address.reference }}
-										</div>
-									}
-									<div class="address-actions">
-										<button class="action-btn" type="button" (click)="editAddress(address)">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-												<path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13M18.5 2.5C18.8978 2.1022 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.1022 21.5 2.5C21.8978 2.8978 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.1022 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-											</svg>
-											Editar
-										</button>
-										<button class="action-btn delete" type="button" (click)="deleteAddress(address.id)">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-												<path d="M3 6H5H21M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-											</svg>
-											Eliminar
-										</button>
-									</div>
-								</div>
+								<app-address-card
+									[address]="address"
+									(edit)="editAddress(address)"
+									(delete)="deleteAddress(address.id)"
+									(setDefault)="setDefaultAddress(address.id)">
+								</app-address-card>
 							}
 						} @else {
 							<app-empty-state icon="inbox" title="No hay direcciones" description="Agrega una dirección de entrega"></app-empty-state>

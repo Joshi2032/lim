@@ -1,0 +1,42 @@
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+
+  &.danger {
+    &:hover:not(:disabled) {
+      background: rgba(220, 38, 38, 0.15);
+      border-color: rgba(220, 38, 38, 0.3);
+      color: #dc2626;
+    }
+  }
+
+  &.primary {
+    background: rgba(220, 38, 38, 0.15);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    color: #dc2626;
+
+    &:hover:not(:disabled) {
+      background: rgba(220, 38, 38, 0.25);
+      border-color: rgba(220, 38, 38, 0.5);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

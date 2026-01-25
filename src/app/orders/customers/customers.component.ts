@@ -7,6 +7,9 @@ import { SectionHeaderComponent } from '../../shared/section-header/section-head
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { ModalComponent } from '../../shared/modal/modal.component';
 import { SearchInputComponent } from '../../shared/search-input/search-input.component';
+import { IconButtonComponent } from '../../shared/icon-button/icon-button.component';
+import { CustomerItemComponent, CustomerItemData } from '../../shared/customer-item/customer-item.component';
+import { AddressCardComponent, AddressData } from '../../shared/address-card/address-card.component';
 
 export interface Address {
 	id: string;
@@ -31,7 +34,19 @@ export interface Customer {
 
 @Component({
   selector: 'app-customers',
-  imports: [CommonModule, SidebarComponent, FormsModule, PageHeaderComponent, SectionHeaderComponent, EmptyStateComponent, ModalComponent, SearchInputComponent],
+  imports: [
+    CommonModule,
+    SidebarComponent,
+    FormsModule,
+    PageHeaderComponent,
+    SectionHeaderComponent,
+    EmptyStateComponent,
+    ModalComponent,
+    SearchInputComponent,
+    IconButtonComponent,
+    CustomerItemComponent,
+    AddressCardComponent
+  ],
   templateUrl: './customers.component.html',
   styleUrl: './customers.component.scss'
 })

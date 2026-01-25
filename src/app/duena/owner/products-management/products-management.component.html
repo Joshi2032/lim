@@ -2,7 +2,7 @@
   <div class="management-header">
     <h2>Gestión de Productos</h2>
     <button class="btn-add" (click)="toggleForm()">
-      {{ showForm ? '✕ Cancelar' : '+ Nuevo Producto' }}
+      + Nuevo Producto
     </button>
   </div>
 
@@ -11,79 +11,15 @@
       class="type-tab"
       [class.active]="activeType === 'platos'"
       (click)="switchType('platos')">
-      Platos
+      🍜 Platos
     </button>
     <button
       class="type-tab"
       [class.active]="activeType === 'combos'"
       (click)="switchType('combos')">
-      Combos
+      📦 Combos
     </button>
   </div>
-
-  @if (showForm) {
-    <div class="form-container">
-      @if (activeType === 'platos') {
-        <div class="form">
-          <input
-            type="text"
-            [(ngModel)]="newItem.name"
-            placeholder="Nombre del plato"
-            class="form-input">
-          <input
-            type="text"
-            [(ngModel)]="newItem.japaneseName"
-            placeholder="Nombre en japonés (opcional)"
-            class="form-input">
-          <textarea
-            [(ngModel)]="newItem.description"
-            placeholder="Descripción"
-            class="form-input"
-            rows="3"></textarea>
-          <select [(ngModel)]="newItem.category" class="form-input">
-            <option value="bebidas">Bebidas</option>
-            <option value="rolls">Rolls</option>
-            <option value="nigiri">Nigiri</option>
-            <option value="sashimi">Sashimi</option>
-            <option value="especiales">Especiales</option>
-            <option value="postres">Postres</option>
-          </select>
-          <input
-            type="number"
-            [(ngModel)]="newItem.price"
-            placeholder="Precio"
-            class="form-input">
-          <button class="btn-submit" (click)="addItem()">Guardar Plato</button>
-        </div>
-      }
-
-      @if (activeType === 'combos') {
-        <div class="form">
-          <input
-            type="text"
-            [(ngModel)]="newCombo.name"
-            placeholder="Nombre del combo"
-            class="form-input">
-          <input
-            type="text"
-            [(ngModel)]="newCombo.japaneseName"
-            placeholder="Nombre en japonés (opcional)"
-            class="form-input">
-          <textarea
-            [(ngModel)]="newCombo.description"
-            placeholder="Descripción"
-            class="form-input"
-            rows="3"></textarea>
-          <input
-            type="number"
-            [(ngModel)]="newCombo.price"
-            placeholder="Precio"
-            class="form-input">
-          <button class="btn-submit" (click)="addItem()">Guardar Combo</button>
-        </div>
-      }
-    </div>
-  }
 
   <div class="products-list">
     @if (activeType === 'platos') {
@@ -139,5 +75,141 @@
         </div>
       }
     }
+  </div>
+</div>
+
+<!-- Product Form Modal -->
+<div class="modal-overlay" *ngIf="showForm" (click)="toggleForm()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ activeType === 'platos' ? 'Nuevo Plato' : 'Nuevo Combo' }}</h2>
+      <button type="button" class="close-btn" (click)="toggleForm()" aria-label="Cerrar">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      @if (activeType === 'platos') {
+        <div class="form">
+          <div class="form-group">
+            <label class="form-label">Nombre del plato *</label>
+            <input
+              type="text"
+              [(ngModel)]="newItem.name"
+              placeholder="Ej: Sushi Roll California"
+              class="form-input"
+              maxlength="50">
+            <span class="input-counter">{{ newItem.name.length }}/50</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Nombre en japonés (opcional)</label>
+            <input
+              type="text"
+              [(ngModel)]="newItem.japaneseName"
+              placeholder="Ej: カリフォルニアロール"
+              class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Descripción *</label>
+            <textarea
+              [(ngModel)]="newItem.description"
+              placeholder="Describe los ingredientes y características del plato"
+              class="form-input form-textarea"
+              rows="3"
+              maxlength="200"></textarea>
+            <span class="input-counter">{{ newItem.description.length }}/200</span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Categoría *</label>
+              <select [(ngModel)]="newItem.category" class="form-input">
+                <option value="bebidas">🥤 Bebidas</option>
+                <option value="rolls">🍜 Rolls</option>
+                <option value="nigiri">🍣 Nigiri</option>
+                <option value="sashimi">🍱 Sashimi</option>
+                <option value="especiales">⭐ Especiales</option>
+                <option value="postres">🍰 Postres</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Precio *</label>
+              <div class="price-input-wrapper">
+                <span class="currency">$</span>
+                <input
+                  type="number"
+                  [(ngModel)]="newItem.price"
+                  placeholder="0.00"
+                  class="form-input price-input"
+                  min="0"
+                  step="0.01">
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-submit" (click)="addItem()">
+            <span>✓</span> Guardar Plato
+          </button>
+        </div>
+      }
+
+      @if (activeType === 'combos') {
+        <div class="form">
+          <div class="form-group">
+            <label class="form-label">Nombre del combo *</label>
+            <input
+              type="text"
+              [(ngModel)]="newCombo.name"
+              placeholder="Ej: Combo Familiar"
+              class="form-input"
+              maxlength="50">
+            <span class="input-counter">{{ newCombo.name.length }}/50</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Nombre en japonés (opcional)</label>
+            <input
+              type="text"
+              [(ngModel)]="newCombo.japaneseName"
+              placeholder="Ej: ファミリーコンボ"
+              class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Descripción *</label>
+            <textarea
+              [(ngModel)]="newCombo.description"
+              placeholder="Describe qué incluye el combo"
+              class="form-input form-textarea"
+              rows="3"
+              maxlength="200"></textarea>
+            <span class="input-counter">{{ newCombo.description.length }}/200</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Precio *</label>
+            <div class="price-input-wrapper">
+              <span class="currency">$</span>
+              <input
+                type="number"
+                [(ngModel)]="newCombo.price"
+                placeholder="0.00"
+                class="form-input price-input"
+                min="0"
+                step="0.01">
+            </div>
+          </div>
+
+          <button class="btn-submit" (click)="addItem()">
+            <span>✓</span> Guardar Combo
+          </button>
+        </div>
+      }
+    </div>
   </div>
 </div>

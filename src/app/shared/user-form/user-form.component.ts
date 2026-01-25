@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { IconButtonComponent } from '../icon-button/icon-button.component';
 
 export interface UserFormData {
   name: string;
@@ -26,7 +27,7 @@ export interface RoleOption {
 @Component({
   selector: 'app-user-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, IconButtonComponent],
   templateUrl: './user-form.component.html',
   styleUrl: './user-form.component.scss'
 })

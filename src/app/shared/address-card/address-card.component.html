@@ -3,7 +3,9 @@
     <div class="address-label">{{ address.label }}</div>
     <div class="address-header-actions">
       @if (address.isDefault) {
-        <span class="default-badge">Principal</span>
+        <app-badge variant="success" size="small">
+          Principal
+        </app-badge>
       } @else {
         <button class="set-default-btn" type="button" (click)="setDefault.emit()">
           Marcar como principal

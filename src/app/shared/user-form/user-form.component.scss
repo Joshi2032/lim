@@ -59,22 +59,6 @@
   }
 }
 
-.close-btn {
-  background: none;
-  border: none;
-  color: #999;
-  cursor: pointer;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s ease;
-
-  &:hover {
-    color: #dc2626;
-  }
-}
-
 form {
   display: flex;
   flex-direction: column;

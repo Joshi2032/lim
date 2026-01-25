@@ -1,5 +1,7 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AvatarComponent } from '../avatar/avatar.component';
+import { BadgeComponent } from '../badge/badge.component';
 
 export interface CustomerItemData {
   id: string;
@@ -12,22 +14,25 @@ export interface CustomerItemData {
 @Component({
   selector: 'app-customer-item',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AvatarComponent, BadgeComponent],
   template: `
     <div
       class="customer-item"
       [class.active]="active"
       (click)="select.emit()">
-      <div class="customer-avatar">
-        <span>{{ customer.initials }}</span>
-      </div>
+      <app-avatar
+        [initials]="customer.initials"
+        [name]="customer.name"
+        size="medium"
+        variant="primary">
+      </app-avatar>
       <div class="customer-info">
         <div class="customer-name">{{ customer.name }}</div>
         <div class="customer-phone">{{ customer.phone }}</div>
       </div>
-      <div class="customer-badge">
+      <app-badge variant="default" size="small">
         {{ customer.addressCount }} dir.
-      </div>
+      </app-badge>
     </div>
   `,
   styleUrl: './customer-item.component.scss',

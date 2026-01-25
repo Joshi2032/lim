@@ -1,3 +1,7 @@
-<span class="badge" [class]="'badge-' + type">
-	{{ text }}
+<span class="badge" [class]="'badge-' + effectiveVariant + ' ' + size">
+	@if (text) {
+		{{ text }}
+	} @else {
+		<ng-content></ng-content>
+	}
 </span>

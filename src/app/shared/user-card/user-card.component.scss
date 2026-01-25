@@ -47,51 +47,9 @@
 	gap: 12px;
 }
 
-.user-avatar {
-	width: 60px;
-	height: 60px;
-	border-radius: 8px;
-	background: rgba(220, 38, 38, 0.2);
-	border: 2px solid rgba(220, 38, 38, 0.3);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-weight: 700;
-	color: #dc2626;
-	font-size: 20px;
-	flex-shrink: 0;
-}
-
 .user-actions {
 	display: flex;
 	gap: 8px;
-}
-
-.icon-btn {
-	padding: 8px;
-	background: rgba(255, 255, 255, 0.05);
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	border-radius: 6px;
-	color: #6b7280;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	&:hover {
-		background: rgba(255, 255, 255, 0.1);
-		border-color: rgba(255, 255, 255, 0.2);
-		color: #fff;
-	}
-
-	&.delete {
-		&:hover {
-			background: rgba(220, 38, 38, 0.15);
-			border-color: rgba(220, 38, 38, 0.3);
-			color: #dc2626;
-		}
-	}
 }
 
 .user-info {

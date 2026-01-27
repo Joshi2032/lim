@@ -1,11 +1,11 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
-import { DeliveryCardComponent } from '../../shared/delivery-card/delivery-card.component';
-import { MovementsService } from '../../shared/movements/movements.service';
-import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stats-grid.component';
+import { DataTableComponent, DataTableColumn } from '../../shared/data-table/data-table.component';
+import { FilterBarComponent, FilterField, FilterOption } from '../../shared/filter-bar/filter-bar.component';
+import { MovementsService } from '../../shared/movements/movements.service';
 
 export type DeliveryStatus = 'pendiente' | 'enCurso' | 'entregada';
 
@@ -22,20 +22,28 @@ export interface Delivery {
 
 @Component({
   selector: 'app-delivery',
-  imports: [CommonModule, SidebarComponent, DeliveryCardComponent, FilterChipsComponent, PageHeaderComponent, StatsGridComponent],
+  imports: [CommonModule, SidebarComponent, PageHeaderComponent, StatsGridComponent, DataTableComponent, FilterBarComponent],
   templateUrl: './delivery.component.html',
   styleUrl: './delivery.component.scss'
 })
 export class DeliveryComponent implements OnInit {
   @Input() embedded: boolean = false;
   selectedStatus: DeliveryStatus = 'pendiente';
-  statusOptions: FilterOption[] = [
-    { id: 'pendiente', label: 'Pendientes' },
-    { id: 'enCurso', label: 'En Curso' },
-    { id: 'entregada', label: 'Entregadas' }
-  ];
   deliveries: Delivery[] = [];
   cartCount: number = 0;
+
+  // Para tabla de entregas
+  deliveryColumns: DataTableColumn[] = [];
+  deliveryTableData: any[] = [];
+
+  // Para filtros
+  filterFields: FilterField[] = [];
+
+  statusOptions: FilterOption[] = [
+    { value: 'pendiente', label: 'Pendientes' },
+    { value: 'enCurso', label: 'En Curso' },
+    { value: 'entregada', label: 'Entregadas' }
+  ];
 
   get deliveryStats(): SimpleStatItem[] {
     return [
@@ -66,12 +74,74 @@ export class DeliveryComponent implements OnInit {
   constructor(private movements: MovementsService) {}
 
   ngOnInit() {
+    this.initializeTableColumns();
+    this.initializeFilters();
     this.loadDeliveries();
+  }
+
+  private initializeTableColumns() {
+    this.deliveryColumns = [
+      { key: 'orderNumber', header: 'Orden', width: '100px', align: 'center' },
+      { key: 'customerName', header: 'Cliente', align: 'left' },
+      { key: 'phone', header: 'Teléfono', width: '140px', align: 'center' },
+      { key: 'address', header: 'Dirección', align: 'left' },
+      { key: 'total', header: 'Total', width: '100px', align: 'right' },
+      { key: 'status', header: 'Estado', width: '120px', align: 'center' }
+    ];
+  }
+
+  private initializeFilters() {
+    this.filterFields = [
+      {
+        name: 'status',
+        label: 'Estado',
+        type: 'select',
+        options: this.statusOptions,
+        gridSpan: 2
+      },
+      {
+        name: 'search',
+        label: 'Buscar',
+        type: 'search',
+        placeholder: 'Cliente, teléfono u orden',
+        gridSpan: 2
+      }
+    ];
   }
 
   loadDeliveries() {
     // Mock data - En producción vendrá del backend
     this.deliveries = [];
+    this.updateTableData();
+  }
+
+  private updateTableData() {
+    this.deliveryTableData = this.deliveries.map(d => ({
+      ...d,
+      status: this.getStatusLabel(d.status)
+    }));
+  }
+
+  onFilterChange(filters: Record<string, any>) {
+    let filtered = this.deliveries;
+
+    if (filters['status'] && filters['status'] !== '') {
+      filtered = filtered.filter(d => d.status === filters['status']);
+    }
+
+    if (filters['search'] && filters['search'].trim()) {
+      const search = filters['search'].toLowerCase();
+      filtered = filtered.filter(d =>
+        d.customerName.toLowerCase().includes(search) ||
+        d.phone.includes(search) ||
+        d.orderNumber.includes(search)
+      );
+    }
+
+    this.deliveryTableData = filtered.map(d => ({
+      ...d,
+      status: this.getStatusLabel(d.status)
+    }));
   }
 
   getDeliveriesByStatus(status: DeliveryStatus): Delivery[] {

@@ -42,6 +42,11 @@
 					<app-products-management></app-products-management>
 				</div>
 			}
+			@case ('ingresos') {
+				<div class="embedded-content">
+					<app-income-report [embedded]="true"></app-income-report>
+				</div>
+			}
 		}
 	</div>
 </div>

@@ -7,8 +7,9 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { UsersComponent } from './users/users.component';
 import { MovementsComponent } from './movements/movements.component';
 import { ProductsManagementComponent } from './products-management/products-management.component';
+import { IncomeReportComponent } from './income-report/income-report.component';
 
-type TabId = 'resumen' | 'movimientos' | 'usuarios' | 'productos';
+type TabId = 'resumen' | 'movimientos' | 'usuarios' | 'productos' | 'ingresos';
 
 interface TabItem {
   id: TabId;
@@ -52,7 +53,7 @@ interface StatCardData {
 @Component({
   selector: 'app-owner',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, DashboardComponent, UsersComponent, MovementsComponent, PageHeaderComponent, ProductsManagementComponent],
+  imports: [CommonModule, SidebarComponent, DashboardComponent, UsersComponent, MovementsComponent, PageHeaderComponent, ProductsManagementComponent, IncomeReportComponent],
   templateUrl: './owner.component.html',
   styleUrl: './owner.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -65,7 +66,8 @@ export class OwnerComponent implements OnInit {
     { id: 'resumen', label: 'Resumen', icon: '📊' },
     { id: 'movimientos', label: 'Movimientos', icon: '🔄' },
     { id: 'usuarios', label: 'Usuarios', icon: '👥' },
-    { id: 'productos', label: 'Productos', icon: '🍽️' }
+    { id: 'productos', label: 'Productos', icon: '🍽️' },
+    { id: 'ingresos', label: 'Ingresos', icon: '💰' }
   ];
 
   readonly currentUser: User = {

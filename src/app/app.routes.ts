@@ -12,6 +12,7 @@ export const routes: Routes = [
 	{ path: 'dashboard', loadComponent: () => import('./owner/dashboard/dashboard.component').then(m => m.DashboardComponent) },
 	{ path: 'panel-control', loadComponent: () => import('./owner/owner.component').then(m => m.OwnerComponent) },
 	{ path: 'usuarios', loadComponent: () => import('./owner/users/users.component').then(m => m.UsersComponent) },
+	{ path: 'ingresos', loadComponent: () => import('./owner/income-report/income-report.component').then(m => m.IncomeReportComponent) },
 	{ path: '', redirectTo: 'login', pathMatch: 'full' },
 	{ path: '**', redirectTo: 'login' }
 ];

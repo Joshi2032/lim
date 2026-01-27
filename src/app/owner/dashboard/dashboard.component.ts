@@ -93,6 +93,7 @@ export class DashboardComponent implements OnInit {
     { id: 'entregas', label: 'Entregas', icon: '🚚', route: '/entregas' },
     { id: 'dashboard', label: 'Dashboard', icon: '📊', route: '/dashboard', active: true },
     { id: 'panel', label: 'Panel de Control', icon: '📈', route: '/panel-control' },
+    { id: 'ingresos', label: 'Reportes de Ingresos', icon: '💰', route: '/ingresos' },
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
 

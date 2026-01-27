@@ -15,107 +15,29 @@
     </app-page-header>
 
     <!-- Filters Section -->
-    <div class="filters-card">
-      <app-section-header title="Filtros"></app-section-header>
-
-      <div class="filters-grid">
-        <div class="filter-group">
-          <label>Período</label>
-          <select [(ngModel)]="periodType" (change)="onPeriodTypeChange()" class="filter-select">
-            <option value="day">Por Día</option>
-            <option value="month">Por Mes</option>
-            <option value="year">Por Año</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label>Tipo de Orden</label>
-          <select [(ngModel)]="orderType" (change)="onOrderTypeChange()" class="filter-select">
-            <option value="todos">Todos</option>
-            <option value="mesa">Mesa</option>
-            <option value="entrega">Entrega</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label>Fecha Inicio</label>
-          <input
-            type="date"
-            [(ngModel)]="startDate"
-            (change)="onDateChange()"
-            class="filter-input">
-        </div>
-
-        <div class="filter-group">
-          <label>Fecha Fin</label>
-          <input
-            type="date"
-            [(ngModel)]="endDate"
-            (change)="onDateChange()"
-            class="filter-input">
-        </div>
-
-        <div class="filter-group search-group">
-          <label>Buscar</label>
-          <app-search-input
-            placeholder="Orden, cliente, producto..."
-            [(ngModel)]="searchQuery"
-            (search)="onSearch()">
-          </app-search-input>
-        </div>
-
-        <div class="filter-actions">
-          <button class="export-btn" type="button" (click)="exportToCSV()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M7 10L12 15M12 15L17 10M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Exportar CSV
-          </button>
-        </div>
-      </div>
-    </div>
+    <app-income-filters
+      [periodType]="periodType"
+      [orderType]="orderType"
+      [startDate]="startDate"
+      [endDate]="endDate"
+      [searchQuery]="searchQuery"
+      (periodTypeChange)="periodType = $event; onPeriodTypeChange()"
+      (orderTypeChange)="orderType = $event; onOrderTypeChange()"
+      (dateChange)="onDateChange()"
+      (search)="onSearch()"
+      (export)="exportToCSV()">
+    </app-income-filters>
 
     <!-- Stats Cards -->
     <div class="stats-grid">
-      <div class="stat-card total">
-        <div class="stat-icon">💰</div>
-        <div class="stat-info">
-          <div class="stat-label">Ingresos Totales</div>
-          <div class="stat-value">{{ formatCurrency(totalIncome) }}</div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">📦</div>
-        <div class="stat-info">
-          <div class="stat-label">Total Órdenes</div>
-          <div class="stat-value">{{ totalOrders }}</div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">📊</div>
-        <div class="stat-info">
-          <div class="stat-label">Promedio por Orden</div>
-          <div class="stat-value">{{ formatCurrency(averageOrder) }}</div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">⬆️</div>
-        <div class="stat-info">
-          <div class="stat-label">Orden Máxima</div>
-          <div class="stat-value">{{ formatCurrency(maxOrder) }}</div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">⬇️</div>
-        <div class="stat-info">
-          <div class="stat-label">Orden Mínima</div>
-          <div class="stat-value">{{ formatCurrency(minOrder) }}</div>
-        </div>
-      </div>
+      @for (card of statCards; track card.title) {
+        <app-stat-card
+          [title]="card.title"
+          [value]="card.value"
+          [iconSvg]="card.iconSvg"
+          [variant]="card.variant">
+        </app-stat-card>
+      }
     </div>
 
     <!-- Period Summary Chart -->
@@ -143,76 +65,16 @@
             }
           </div>
         } @else {
-          <div class="no-data">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 11H15M9 15H15M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L18.7071 8.70711C18.8946 8.89464 19 9.149 19 9.41421V19C19 20.1046 18.1046 21 17 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <p>No hay datos para mostrar</p>
-          </div>
+          <app-empty-state
+            icon="inbox"
+            title="No hay datos para mostrar"
+            subtitle="Ajusta los filtros para ver resultados">
+          </app-empty-state>
         }
       </div>
     </div>
 
     <!-- Detailed Table -->
-    <div class="table-card">
-      <app-section-header title="Detalle de Transacciones"></app-section-header>
-
-      <div class="table-container">
-        @if (filteredRecords.length > 0) {
-          <table class="income-table">
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Orden</th>
-                <th>Tipo</th>
-                <th>Items</th>
-                <th>Subtotal</th>
-                <th>IVA</th>
-                <th>Total</th>
-                <th>Pago</th>
-                <th>Cliente</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (record of filteredRecords; track record.id) {
-                <tr>
-                  <td class="date-col">{{ formatDate(record.date) }}</td>
-                  <td class="order-col">{{ record.orderNumber }}</td>
-                  <td>
-                    <span class="type-badge" [class]="record.type">
-                      {{ record.type === 'mesa' ? '🪑 Mesa' : '🚚 Entrega' }}
-                    </span>
-                  </td>
-                  <td class="items-col">
-                    <div class="items-list">
-                      @for (item of record.items; track item) {
-                        <span class="item-tag">{{ item }}</span>
-                      }
-                    </div>
-                  </td>
-                  <td class="amount-col">{{ formatCurrency(record.subtotal) }}</td>
-                  <td class="amount-col tax">{{ formatCurrency(record.tax) }}</td>
-                  <td class="amount-col total">{{ formatCurrency(record.total) }}</td>
-                  <td>
-                    <span class="payment-badge" [class]="record.paymentMethod">
-                      {{ getPaymentMethodLabel(record.paymentMethod) }}
-                    </span>
-                  </td>
-                  <td class="customer-col">{{ record.customer || '-' }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        } @else {
-          <div class="no-data">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <p>No se encontraron transacciones</p>
-            <small>Intenta ajustar los filtros</small>
-          </div>
-        }
-      </div>
-    </div>
+    <app-income-table [records]="filteredRecords"></app-income-table>
   </div>
 </div>

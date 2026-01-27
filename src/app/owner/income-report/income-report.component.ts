@@ -1,46 +1,27 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
-import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
+import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { SectionHeaderComponent } from '../../shared/section-header/section-header.component';
-import { SearchInputComponent } from '../../shared/search-input/search-input.component';
-
-export type PeriodType = 'day' | 'month' | 'year';
-export type OrderType = 'mesa' | 'entrega' | 'todos';
-
-export interface IncomeRecord {
-  id: string;
-  date: Date;
-  orderNumber: string;
-  type: 'mesa' | 'entrega';
-  items: string[];
-  subtotal: number;
-  tax: number;
-  total: number;
-  paymentMethod: 'efectivo' | 'tarjeta' | 'transferencia';
-  customer?: string;
-}
-
-export interface PeriodSummary {
-  period: string;
-  total: number;
-  orders: number;
-  average: number;
-  percentage: number;
-}
+import { StatCardComponent, StatVariant } from '../../shared/stat-card/stat-card.component';
+import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
+import { IncomeFiltersComponent, PeriodType, OrderType } from '../../shared/income-filters/income-filters.component';
+import { IncomeTableComponent, IncomeRecord } from '../../shared/income-table/income-table.component';
 
 @Component({
   selector: 'app-income-report',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     SidebarComponent,
     PageHeaderComponent,
     SectionHeaderComponent,
-    SearchInputComponent
+    StatCardComponent,
+    EmptyStateComponent,
+    IncomeFiltersComponent,
+    IncomeTableComponent
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './income-report.component.html',
   styleUrl: './income-report.component.scss'
 })
@@ -57,7 +38,7 @@ export class IncomeReportComponent implements OnInit {
   // Data
   incomeRecords: IncomeRecord[] = [];
   filteredRecords: IncomeRecord[] = [];
-  periodSummaries: PeriodSummary[] = [];
+  periodSummaries: Array<{ period: string; total: number; orders: number; average: number; percentage: number }> = [];
 
   // Stats
   totalIncome: number = 0;
@@ -65,6 +46,15 @@ export class IncomeReportComponent implements OnInit {
   averageOrder: number = 0;
   maxOrder: number = 0;
   minOrder: number = 0;
+
+  // Stat Cards Data
+  statCards: Array<{
+    title: string;
+    value: string | number;
+    subtitle?: string;
+    iconSvg: string;
+    variant: StatVariant;
+  }> = [];
 
   // UI
   cartCount: number = 0;
@@ -90,6 +80,42 @@ export class IncomeReportComponent implements OnInit {
   ngOnInit() {
     this.setDefaultDates();
     this.loadIncomeData();
+    this.updateStatCards();
+  }
+
+  private updateStatCards() {
+    this.statCards = [
+      {
+        title: 'Ingresos Totales',
+        value: this.formatCurrency(this.totalIncome),
+        iconSvg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12.5 7H11V13L16.2 16.2L17 15.3L12.5 12.4V7Z" fill="currentColor"/></svg>`,
+        variant: 'green' as StatVariant
+      },
+      {
+        title: 'Total Órdenes',
+        value: this.totalOrders,
+        iconSvg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="5" width="16" height="14" rx="2.5" ry="2.5" stroke="currentColor" stroke-width="2"/><path d="M7 9H17M7 13H13M17 13L15 11M17 13L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        variant: 'blue' as StatVariant
+      },
+      {
+        title: 'Promedio por Orden',
+        value: this.formatCurrency(this.averageOrder),
+        iconSvg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 13C3 11 5 10 9 10C13 10 15 11 15 13M9 10C6.24 10 4 11.5 4 13.5C4 15.5 6.24 17 9 17C11.76 17 14 15.5 14 13.5M15 13C15 11 17 10 21 10C25 10 27 11 27 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        variant: 'amber' as StatVariant
+      },
+      {
+        title: 'Orden Máxima',
+        value: this.formatCurrency(this.maxOrder),
+        iconSvg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 8L12 3L17 8V19C17 19.5304 16.7893 20.0391 16.4142 20.4142C16.0391 20.7893 15.5304 21 15 21H9C8.46957 21 7.96086 20.7893 7.58579 20.4142C7.21071 20.0391 7 19.5304 7 19V8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`,
+        variant: 'red' as StatVariant
+      },
+      {
+        title: 'Orden Mínima',
+        value: this.formatCurrency(this.minOrder),
+        iconSvg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 16L12 21L17 16V5C17 4.46957 16.7893 3.96086 16.4142 3.58579C16.0391 3.21071 15.5304 3 15 3H9C8.46957 3 7.96086 3.21071 7.58579 3.58579C7.21071 3.96086 7 4.46957 7 5V16Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`,
+        variant: 'purple' as StatVariant
+      }
+    ];
   }
 
   setDefaultDates() {
@@ -142,23 +168,16 @@ export class IncomeReportComponent implements OnInit {
   }
 
   generateRandomItems(): string[] {
-    const items = [
-      'Sushi Roll California',
-      'Ramen Tonkotsu',
-      'Tempura de Camarón',
-      'Sashimi Mix',
-      'Yakisoba',
-      'Gyoza',
-      'Edamame',
-      'Mochi',
-      'Té Verde'
+    const ITEMS = [
+      'Sushi Roll California', 'Ramen Tonkotsu', 'Tempura de Camarón', 'Sashimi Mix', 'Yakisoba',
+      'Gyoza', 'Edamame', 'Mochi', 'Té Verde', 'Bebida de Fruta', 'Ensalada Japonesa', 'Arroz Frito'
     ];
 
     const count = Math.floor(Math.random() * 4) + 1;
     const selected: string[] = [];
 
     for (let i = 0; i < count; i++) {
-      const item = items[Math.floor(Math.random() * items.length)];
+      const item = ITEMS[Math.floor(Math.random() * ITEMS.length)];
       if (!selected.includes(item)) {
         selected.push(item);
       }
@@ -173,8 +192,8 @@ export class IncomeReportComponent implements OnInit {
   }
 
   getRandomCustomer(): string {
-    const customers = ['Juan Pérez', 'María García', 'Carlos López', 'Ana Martínez', 'Luis Rodríguez'];
-    return customers[Math.floor(Math.random() * customers.length)];
+    const CUSTOMERS = ['Juan Pérez', 'María García', 'Carlos López', 'Ana Martínez', 'Luis Rodríguez'];
+    return CUSTOMERS[Math.floor(Math.random() * CUSTOMERS.length)];
   }
 
   applyFilters() {

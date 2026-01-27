@@ -40,3 +40,8 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Tauri / Rust
+/src-tauri/target
+/src-tauri/WixTools
+/src-tauri/Cargo.lock

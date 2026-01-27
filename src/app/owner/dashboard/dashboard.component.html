@@ -150,57 +150,41 @@
 				</div>
 			</div>
 
-			<div class="top-products-section">
-				<app-section-header title="Más Vendidos Hoy"></app-section-header>
-				<div class="products-list">
-					@for (product of topProducts; track product.id) {
-						<div class="product-row" [class]="'rank-' + product.rank">
-							<div class="product-rank">{{ product.rank }}</div>
-							<div class="product-name">{{ product.name }}</div>
-							<div class="product-bar">
-								<div class="bar-fill" [style.width.%]="(product.quantity / topProducts[0].quantity) * 100"></div>
-							</div>
-							<div class="product-quantity">{{ product.quantity }}</div>
-						</div>
-					}
-				</div>
+			<!-- Cards de Estado Rápido -->
+			<div class="status-cards-section">
+				<app-info-cards [cards]="statusCards"></app-info-cards>
+			</div>
+
+			<!-- Tabla de Productos con Gráfico Visual -->
+			<div class="products-table-section">
+				<app-top-products-chart
+					[products]="topProductsData"
+					title="Más Vendidos Hoy">
+				</app-top-products-chart>
+			</div>
+
+			<!-- Tabla de Órdenes Recientes -->
+			<div class="recent-orders-section">
+				<app-data-table
+					[data]="recentOrders"
+					[columns]="orderColumns"
+					title="Órdenes Recientes"
+					emptyIcon="inbox"
+					emptyTitle="Sin órdenes"
+					emptySubtitle="No hay órdenes registradas">
+				</app-data-table>
 			</div>
 		</div>
-		}
+	}
 
-		@if (activeTab === 'movimientos') {
-			<div class="tab-content">
-				<p class="coming-soon">Contenido de Movimientos próximamente...</p>
-			</div>
-		}
-
-		@if (activeTab === 'usuarios') {
-			<div class="tab-content">
-				<p class="coming-soon">Contenido de Usuarios próximamente...</p>
-			</div>
-		}
-
-		@if (activeTab === 'resumen') {
-		<div class="recent-orders-section">
-			<app-section-header title="Órdenes Recientes"></app-section-header>
-			<div class="orders-table">
-				@for (order of recentOrders; track order.id) {
-					<div class="order-row" [class]="'status-' + order.status">
-						<div class="order-table-num">
-							<span>{{ order.tableNumber }}</span>
-						</div>
-						<div class="order-info">
-							<div class="order-items">{{ order.itemsCount }} items</div>
-							<div class="order-customer">{{ order.customerName }}</div>
-						</div>
-						<div class="order-total">{{ order.total | currency }}</div>
-						<div class="order-status" [class]="'badge-' + order.status">
-							{{ order.statusLabel }}
-						</div>
-					</div>
-				}
-			</div>
+	@if (activeTab === 'movimientos') {
+		<div class="tab-content">
+			<p class="coming-soon">Contenido de Movimientos próximamente...</p>
 		</div>
-		}
-	</div>
-</div>
+	}
+
+	@if (activeTab === 'usuarios') {
+		<div class="tab-content">
+			<p class="coming-soon">Contenido de Usuarios próximamente...</p>
+		</div>
+	}

@@ -41,38 +41,11 @@
     </div>
 
     <!-- Period Summary Chart -->
-    <div class="chart-card">
-      <app-section-header [title]="'Ingresos por ' + (periodType === 'day' ? 'Día' : periodType === 'month' ? 'Mes' : 'Año')"></app-section-header>
-
-      <div class="chart-container">
-        @if (periodSummaries.length > 0) {
-          <div class="bar-chart">
-            @for (summary of periodSummaries; track summary.period) {
-              <div class="bar-item">
-                <div class="bar-wrapper">
-                  <div
-                    class="bar-fill"
-                    [style.height.%]="summary.percentage"
-                    [title]="formatCurrency(summary.total)">
-                  </div>
-                </div>
-                <div class="bar-info">
-                  <div class="bar-period">{{ summary.period }}</div>
-                  <div class="bar-value">{{ formatCurrency(summary.total) }}</div>
-                  <div class="bar-orders">{{ summary.orders }} órdenes</div>
-                </div>
-              </div>
-            }
-          </div>
-        } @else {
-          <app-empty-state
-            icon="inbox"
-            title="No hay datos para mostrar"
-            subtitle="Ajusta los filtros para ver resultados">
-          </app-empty-state>
-        }
-      </div>
-    </div>
+    <app-bar-chart
+      [data]="chartData"
+      [title]="'Ingresos por ' + (periodType === 'day' ? 'Día' : periodType === 'month' ? 'Mes' : 'Año')"
+      emptyMessage="Ajusta los filtros para ver resultados">
+    </app-bar-chart>
 
     <!-- Detailed Table -->
     <app-income-table [records]="filteredRecords"></app-income-table>

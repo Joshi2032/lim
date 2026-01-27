@@ -1,8 +1,11 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { Component, OnInit, Input, TemplateRef, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { StatCardComponent, StatVariant } from '../../shared/stat-card/stat-card.component';
 import { SectionHeaderComponent } from '../../shared/section-header/section-header.component';
+import { DataTableComponent, DataTableColumn } from '../../shared/data-table/data-table.component';
+import { InfoCardsComponent, InfoCard } from '../../shared/info-cards/info-cards.component';
+import { TopProductsChartComponent, TopProduct } from '../../shared/top-products-chart/top-products-chart.component';
 
 export interface Product {
   id: string;
@@ -40,7 +43,7 @@ interface StatCardData {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, CurrencyPipe, StatCardComponent, SectionHeaderComponent],
+  imports: [CommonModule, SidebarComponent, StatCardComponent, SectionHeaderComponent, DataTableComponent, InfoCardsComponent, TopProductsChartComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -59,6 +62,16 @@ export class DashboardComponent implements OnInit {
   areaPath = '';
   yTicks: Array<{ value: number; y: number }> = [];
   chartMaxValue = 0;
+
+// Para tabla de órdenes
+  orderColumns: DataTableColumn[] = [];
+
+  // Para productos más vendidos con gráfico visual
+  topProductsData: TopProduct[] = [];
+
+  // Para tarjetas de información
+  statusCards: InfoCard[] = [];
+
   private readonly chartXStart = 100;
   private readonly chartXEnd = 1017;
   private readonly chartYBase = 300;
@@ -98,7 +111,18 @@ export class DashboardComponent implements OnInit {
   ];
 
   ngOnInit() {
+    this.initializeTableColumns();
     this.loadData();
+  }
+
+  private initializeTableColumns() {
+    this.orderColumns = [
+      { key: 'tableNumber', header: 'Mesa', width: '80px', align: 'center' },
+      { key: 'customerName', header: 'Cliente', align: 'left' },
+      { key: 'itemsCount', header: 'Artículos', width: '100px', align: 'center' },
+      { key: 'total', header: 'Total', width: '100px', align: 'right' },
+      { key: 'statusLabel', header: 'Estado', width: '120px', align: 'center' }
+    ];
   }
 
   loadData() {
@@ -188,6 +212,14 @@ export class DashboardComponent implements OnInit {
       { id: '5', name: 'Philadelphia Roll', quantity: 19, rank: 5 }
     ];
 
+    // Mapear productos para el gráfico visual
+    this.topProductsData = this.topProducts.map(p => ({
+      id: p.id,
+      rank: p.rank,
+      name: p.name,
+      quantity: p.quantity
+    }));
+
     this.recentOrders = [
       {
         id: '1',
@@ -206,6 +238,43 @@ export class DashboardComponent implements OnInit {
         total: 1471,
         status: 'pendiente',
         statusLabel: 'Pendiente'
+      }
+    ];
+
+    // Inicializar tarjetas de estado
+    this.statusCards = [
+      {
+        id: 'orders-today',
+        title: 'Órdenes Hoy',
+        value: this.recentOrders.length,
+        description: 'Órdenes activas',
+        icon: '📋',
+        color: 'blue',
+        badge: '+2'
+      },
+      {
+        id: 'kitchen-active',
+        title: 'En Cocina',
+        value: this.recentOrders.filter(o => o.status === 'preparando').length,
+        description: 'Preparando',
+        icon: '🍳',
+        color: 'amber'
+      },
+      {
+        id: 'top-product',
+        title: 'Top Producto',
+        value: this.topProducts[0]?.name || 'N/A',
+        description: this.topProducts[0]?.quantity + ' unidades',
+        icon: '⭐',
+        color: 'green'
+      },
+      {
+        id: 'revenue-today',
+        title: 'Ingresos Hoy',
+        value: '$' + this.recentOrders.reduce((sum, o) => sum + o.total, 0).toLocaleString(),
+        description: this.recentOrders.length + ' transacciones',
+        icon: '💰',
+        color: 'red'
       }
     ];
   }

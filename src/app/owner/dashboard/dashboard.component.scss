@@ -512,3 +512,26 @@
 	margin-left: 0;
 	padding: 0;
 }
+/* Secciones de componentes reutilizables */
+.status-cards-section {
+	margin-bottom: 32px;
+	padding: 24px;
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 12px;
+}
+
+.products-table-section {
+	margin-bottom: 32px;
+	padding: 24px;
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 12px;
+}
+
+.recent-orders-section {
+	padding: 24px;
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 12px;
+}

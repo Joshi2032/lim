@@ -2,11 +2,10 @@ import { Component, OnInit, Input, ChangeDetectionStrategy } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
-import { SectionHeaderComponent } from '../../shared/section-header/section-header.component';
 import { StatCardComponent, StatVariant } from '../../shared/stat-card/stat-card.component';
-import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { IncomeFiltersComponent, PeriodType, OrderType } from '../../shared/income-filters/income-filters.component';
 import { IncomeTableComponent, IncomeRecord } from '../../shared/income-table/income-table.component';
+import { BarChartComponent, BarChartData } from '../../shared/bar-chart/bar-chart.component';
 
 @Component({
   selector: 'app-income-report',
@@ -15,11 +14,10 @@ import { IncomeTableComponent, IncomeRecord } from '../../shared/income-table/in
     CommonModule,
     SidebarComponent,
     PageHeaderComponent,
-    SectionHeaderComponent,
     StatCardComponent,
-    EmptyStateComponent,
     IncomeFiltersComponent,
-    IncomeTableComponent
+    IncomeTableComponent,
+    BarChartComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './income-report.component.html',
@@ -39,6 +37,7 @@ export class IncomeReportComponent implements OnInit {
   incomeRecords: IncomeRecord[] = [];
   filteredRecords: IncomeRecord[] = [];
   periodSummaries: Array<{ period: string; total: number; orders: number; average: number; percentage: number }> = [];
+  chartData: BarChartData[] = [];
 
   // Stats
   totalIncome: number = 0;
@@ -271,6 +270,15 @@ export class IncomeReportComponent implements OnInit {
       }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 10); // Top 10 períodos
+
+    // Actualizar datos del gráfico
+    this.chartData = this.periodSummaries.map(summary => ({
+      label: summary.period,
+      value: summary.total,
+      percentage: summary.percentage,
+      subtitle: `${summary.orders} órdenes`,
+      color: '#22c55e'
+    }));
   }
 
   getPeriodKey(date: Date): string {

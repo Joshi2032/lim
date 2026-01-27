@@ -1,0 +1,82 @@
+<div class="assignments-container">
+	@if (!embedded) {
+		<app-sidebar
+			[menuItems]="sidebarItems"
+			[currentUser]="currentUser"
+			[cartCount]="cartCount">
+		</app-sidebar>
+	}
+
+	<div class="assignments-content" [class.embedded]="embedded">
+		<app-page-header
+			title="Asignaciones de Pedidos"
+			japaneseName="割り当て"
+			subtitle="Asigna clientes, pedidos y repartidores"
+			[action]="headerAction"
+			(actionClick)="openAssignmentModal()">
+		</app-page-header>
+
+		<!-- Tabla de asignaciones -->
+		<app-data-table
+			[data]="assignments"
+			[columns]="assignmentColumns"
+			title="Asignaciones"
+			emptyIcon="inbox"
+			emptyTitle="No hay asignaciones registradas"
+			emptyDescription="Crea la primera asignación de un pedido">
+		</app-data-table>
+	</div>
+</div>
+
+<!-- Modal de nueva asignación -->
+<app-modal
+	[isOpen]="showAssignmentModal"
+	title="Nueva Asignación"
+	[showFooter]="true"
+	(close)="closeAssignmentModal()">
+	<div class="assignment-form">
+		<div class="form-group">
+			<label class="form-label">Cliente *</label>
+			<select [(ngModel)]="assignmentForm.customerId" class="form-input">
+				<option value="">Selecciona un cliente</option>
+				@for (customer of customers; track customer.id) {
+					<option [value]="customer.id">{{ customer.name }} - {{ customer.phone }}</option>
+				}
+			</select>
+		</div>
+
+		<div class="form-group">
+			<label class="form-label">Pedido *</label>
+			<select [(ngModel)]="assignmentForm.orderId" class="form-input">
+				<option value="">Selecciona un pedido</option>
+				@for (order of orders; track order.id) {
+					<option [value]="order.id">{{ order.number }} - ${{ order.total }} ({{ order.items }} ítems)</option>
+				}
+			</select>
+		</div>
+
+		<div class="form-group">
+			<label class="form-label">Repartidor *</label>
+			<select [(ngModel)]="assignmentForm.deliveryPersonId" class="form-input">
+				<option value="">Selecciona un repartidor</option>
+				@for (person of deliveryPersons; track person.id) {
+					<option [value]="person.id">{{ person.name }} - {{ person.vehicle }}</option>
+				}
+			</select>
+		</div>
+
+		<div class="form-group">
+			<label class="form-label">Notas (opcional)</label>
+			<textarea
+				[(ngModel)]="assignmentForm.notes"
+				placeholder="Instrucciones especiales..."
+				class="form-input form-textarea"
+				rows="3"></textarea>
+		</div>
+
+		<div class="modal-actions">
+			<button class="btn-cancel" (click)="closeAssignmentModal()">Cancelar</button>
+			<button class="btn-confirm" (click)="saveAssignment()">Guardar Asignación</button>
+		</div>
+	</div>
+</app-modal>

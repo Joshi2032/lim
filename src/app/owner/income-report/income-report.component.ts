@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
@@ -75,6 +75,8 @@ export class IncomeReportComponent implements OnInit {
     { id: 'productos', label: 'Productos', icon: '🍱', route: '/productos' },
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
+
+  constructor(private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.setDefaultDates();
@@ -245,6 +247,7 @@ export class IncomeReportComponent implements OnInit {
     this.averageOrder = this.totalIncome / this.totalOrders;
     this.maxOrder = Math.max(...this.filteredRecords.map(r => r.total));
     this.minOrder = Math.min(...this.filteredRecords.map(r => r.total));
+    this.cdr.markForCheck();
   }
 
   generatePeriodSummaries() {
@@ -304,18 +307,26 @@ export class IncomeReportComponent implements OnInit {
 
   onPeriodTypeChange() {
     this.generatePeriodSummaries();
+    this.updateStatCards();
+    this.cdr.markForCheck();
   }
 
   onOrderTypeChange() {
     this.applyFilters();
+    this.updateStatCards();
+    this.cdr.markForCheck();
   }
 
   onDateChange() {
     this.applyFilters();
+    this.updateStatCards();
+    this.cdr.markForCheck();
   }
 
   onSearch() {
     this.applyFilters();
+    this.updateStatCards();
+    this.cdr.markForCheck();
   }
 
   formatCurrency(amount: number): string {

@@ -211,7 +211,7 @@
             <label class="form-label">Descripción (opcional)</label>
             <textarea
               [(ngModel)]="newCombo.description"
-              placeholder="Describe qué incluye el combo (se genera automáticamente si dejas vacío)"
+              placeholder="Describe qué incluye el combo"
               class="form-input form-textarea"
               rows="2"
               maxlength="200"></textarea>
@@ -220,13 +220,24 @@
 
           <div class="form-group">
             <label class="form-label">Precio *</label>
-            <div class="combo-price-info">
-              <div class="price-breakdown">
-                <span class="original-price">Total: ${{ getSelectedComboPrice() }}</span>
-                <span class="discount-badge">-10% descuento</span>
-                <span class="final-price">Precio final: ${{ newCombo.price }}</span>
-              </div>
+            <div class="price-input-wrapper">
+              <span class="currency">$</span>
+              <input
+                type="number"
+                [(ngModel)]="newCombo.price"
+                placeholder="0.00"
+                class="form-input price-input"
+                min="0"
+                step="0.01">
             </div>
+            @if (getSelectedComboPrice() > 0) {
+              <div class="combo-price-info">
+                <div class="price-breakdown">
+                  <span class="original-price">Total items: ${{ getSelectedComboPrice() }}</span>
+                  <span class="discount-badge">Precio personalizado</span>
+                </div>
+              </div>
+            }
           </div>
 
           <button class="btn-submit" (click)="addItem()">

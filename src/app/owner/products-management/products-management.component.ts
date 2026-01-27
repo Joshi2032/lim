@@ -311,10 +311,11 @@ export class ProductsManagementComponent implements OnInit {
 
   toggleComboItem(itemId: string): void {
     this.selectedComboItems[itemId] = !this.selectedComboItems[itemId];
-    this.updateComboPrice();
+    // El precio ahora se establece manualmente por el usuario
   }
 
   private updateComboPrice(): void {
+    // Función mantenida para compatibilidad, pero ya no se usa automáticamente
     const selectedItems = this.getSelectedMenuItems();
     if (selectedItems.length > 0) {
       const totalPrice = selectedItems.reduce((sum, item) => sum + item.price, 0);

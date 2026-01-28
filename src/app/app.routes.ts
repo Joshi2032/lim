@@ -7,6 +7,7 @@ export const routes: Routes = [
 	{ path: 'mesas', loadComponent: () => import('./menu/tables/tables.component').then(m => m.TablesComponent) },
 	{ path: 'cocina', loadComponent: () => import('./menu/kitchen/kitchen.component').then(m => m.KitchenComponent) },
 	{ path: 'recogida', loadComponent: () => import('./menu/pickup/pickup.component').then(m => m.PickupComponent) },
+	{ path: 'recogida/nuevo', loadComponent: () => import('./menu/pickup-registration/pickup-registration.component').then(m => m.PickupRegistrationComponent) },
 	{ path: 'clientes', loadComponent: () => import('./orders/customers/customers.component').then(m => m.CustomersComponent) },
 	{ path: 'entregas', loadComponent: () => import('./orders/delivery/delivery.component').then(m => m.DeliveryComponent) },
 	{ path: 'pedidos', loadComponent: () => import('./orders/orders.component').then(m => m.OrdersComponent) },

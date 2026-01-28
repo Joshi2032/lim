@@ -9,7 +9,9 @@
 		<app-page-header
 			title="Recogida en Local"
 			japaneseName="持ち帰り"
-			subtitle="Gestión de pedidos para llevar">
+			subtitle="Gestión de pedidos para llevar"
+			[action]="headerAction"
+			(actionClick)="onHeaderActionClick()">
 		</app-page-header>
 
 		<app-stats-grid [stats]="pickupStats"></app-stats-grid>

@@ -1,0 +1,169 @@
+<div class="pickup-registration-container">
+	<app-sidebar
+		[menuItems]="sidebarItems"
+		[currentUser]="currentUser"
+		[cartCount]="0">
+	</app-sidebar>
+
+	<div class="pickup-registration-content">
+		<app-page-header
+			title="Registrar Pedido de Recogida"
+			japaneseName="持ち帰り登録"
+			subtitle="Crear nuevo pedido para llevar"
+			[action]="headerAction"
+			(actionClick)="onHeaderActionClick()">
+		</app-page-header>
+
+		<div class="registration-form">
+			<div class="form-section">
+				<h3 class="section-title">Datos del Cliente</h3>
+				<div class="form-grid">
+					<div class="form-group">
+						<label for="customerName">Nombre Completo *</label>
+						<input
+							id="customerName"
+							type="text"
+							[(ngModel)]="order.customerName"
+							placeholder="Ej: María García"
+							required>
+					</div>
+
+					<div class="form-group">
+						<label for="customerPhone">Teléfono *</label>
+						<input
+							id="customerPhone"
+							type="tel"
+							[(ngModel)]="order.customerPhone"
+							placeholder="Ej: 555-1234"
+							required>
+					</div>
+
+					<div class="form-group">
+						<label for="pickupTime">Hora de Recogida *</label>
+						<input
+							id="pickupTime"
+							type="time"
+							[(ngModel)]="order.pickupTime"
+							required>
+					</div>
+				</div>
+			</div>
+
+			<div class="form-section">
+				<h3 class="section-title">Productos</h3>
+
+				<div class="add-item-section">
+					<div class="add-item-controls">
+						<select [(ngModel)]="selectedItem" class="item-select">
+							<option value="">Selecciona un producto</option>
+							@for (item of availableItems; track item.id) {
+								<option [value]="item.id">
+									{{ item.name }} - ${{ item.price.toFixed(2) }}
+								</option>
+							}
+						</select>
+
+						<input
+							type="number"
+							[(ngModel)]="selectedQuantity"
+							min="1"
+							class="quantity-input"
+							placeholder="Cant.">
+
+						<button
+							type="button"
+							class="add-item-btn"
+							(click)="addItemToOrder()"
+							[disabled]="!selectedItem">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+							Agregar
+						</button>
+					</div>
+				</div>
+
+				<div class="items-list">
+					@if (order.items.length > 0) {
+						<div class="items-table">
+							<div class="table-header">
+								<div class="col-name">Producto</div>
+								<div class="col-quantity">Cantidad</div>
+								<div class="col-price">Precio Unit.</div>
+								<div class="col-total">Subtotal</div>
+								<div class="col-actions">Acciones</div>
+							</div>
+							@for (item of order.items; track item.id) {
+								<div class="table-row">
+									<div class="col-name">{{ item.name }}</div>
+									<div class="col-quantity">
+										<input
+											type="number"
+											[value]="item.quantity"
+											(input)="updateItemQuantity(item.id, +$any($event.target).value)"
+											min="1"
+											class="quantity-edit">
+									</div>
+									<div class="col-price">${{ item.price.toFixed(2) }}</div>
+									<div class="col-total">${{ (item.price * item.quantity).toFixed(2) }}</div>
+									<div class="col-actions">
+										<button
+											type="button"
+											class="remove-btn"
+											(click)="removeItem(item.id)"
+											title="Eliminar">
+											<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+												<path d="M3 6H5H21M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+											</svg>
+										</button>
+									</div>
+								</div>
+							}
+						</div>
+
+						<div class="total-section">
+							<div class="total-label">Total:</div>
+							<div class="total-amount">${{ getTotal().toFixed(2) }}</div>
+						</div>
+					} @else {
+						<div class="empty-items">
+							<svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.7 15.3C4.24 15.76 4.56 16.5 5.2 16.5H17M17 16.5C15.89 16.5 15 17.39 15 18.5C15 19.61 15.89 20.5 17 20.5C18.11 20.5 19 19.61 19 18.5C19 17.39 18.11 16.5 17 16.5ZM9 18.5C9 19.61 8.11 20.5 7 20.5C5.89 20.5 5 19.61 5 18.5C5 17.39 5.89 16.5 7 16.5C8.11 16.5 9 17.39 9 18.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+							<p>No hay productos agregados</p>
+							<p class="hint">Selecciona productos del menú para agregarlos al pedido</p>
+						</div>
+					}
+				</div>
+			</div>
+
+			<div class="form-section">
+				<h3 class="section-title">Notas Adicionales</h3>
+				<textarea
+					[(ngModel)]="order.notes"
+					placeholder="Ej: Sin cebollín, extra salsa de soya..."
+					rows="4"
+					class="notes-textarea"></textarea>
+			</div>
+
+			<div class="form-actions">
+				<button
+					type="button"
+					class="btn-secondary"
+					(click)="cancel()">
+					Cancelar
+				</button>
+				<button
+					type="button"
+					class="btn-primary"
+					(click)="submitOrder()"
+					[disabled]="!isFormValid()">
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+					Registrar Pedido
+				</button>
+			</div>
+		</div>
+	</div>
+</div>

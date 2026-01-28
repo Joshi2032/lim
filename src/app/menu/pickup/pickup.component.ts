@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { KitchenOrderComponent, Order, OrderStatus } from '../kitchen-order/kitchen-order.component';
 import { MovementsService } from '../../shared/movements/movements.service';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
-import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
+import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stats-grid.component';
 
 @Component({
@@ -23,6 +24,11 @@ export class PickupComponent implements OnInit {
   ];
   orders: Order[] = [];
   cartCount: number = 0;
+
+  headerAction: PageAction = {
+    label: 'Nuevo Pedido',
+    icon: '➕'
+  };
 
   get pickupStats(): SimpleStatItem[] {
     return [
@@ -51,7 +57,7 @@ export class PickupComponent implements OnInit {
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
 
-  constructor(private movements: MovementsService) {}
+  constructor(private movements: MovementsService, private router: Router) {}
 
   ngOnInit() {
     this.loadOrders();
@@ -163,5 +169,9 @@ export class PickupComponent implements OnInit {
         console.log(`Notificar a cliente: Pedido ${orderId} listo para recoger`);
       }
     }
+  }
+
+  onHeaderActionClick() {
+    this.router.navigate(['/recogida/nuevo']);
   }
 }

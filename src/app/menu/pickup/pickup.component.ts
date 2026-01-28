@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
@@ -12,7 +12,8 @@ import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stat
   selector: 'app-pickup',
   imports: [CommonModule, SidebarComponent, KitchenOrderComponent, FilterChipsComponent, PageHeaderComponent, StatsGridComponent],
   templateUrl: './pickup.component.html',
-  styleUrl: './pickup.component.scss'
+  styleUrl: './pickup.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PickupComponent implements OnInit {
   selectedStatus: 'all' | OrderStatus = 'all';
@@ -24,6 +25,7 @@ export class PickupComponent implements OnInit {
   ];
   orders: Order[] = [];
   cartCount: number = 0;
+  private _pickupStatsMemoized: SimpleStatItem[] | null = null;
 
   headerAction: PageAction = {
     label: 'Nuevo Pedido',
@@ -31,11 +33,13 @@ export class PickupComponent implements OnInit {
   };
 
   get pickupStats(): SimpleStatItem[] {
-    return [
+    if (this._pickupStatsMemoized) return this._pickupStatsMemoized;
+    this._pickupStatsMemoized = [
       { value: this.getOrdersByStatus('pendiente').length, label: 'Pendientes', status: 'pendiente' },
       { value: this.getOrdersByStatus('preparando').length, label: 'Preparando', status: 'preparando' },
       { value: this.getOrdersByStatus('listo').length, label: 'Listos', status: 'listo' }
     ];
+    return this._pickupStatsMemoized;
   }
 
   currentUser: User = {
@@ -147,28 +151,19 @@ export class PickupComponent implements OnInit {
 
   onStatusFilterChange(statusId: string | number) {
     this.selectedStatus = statusId.toString() as 'all' | OrderStatus;
+    this._pickupStatsMemoized = null; // Invalidar caché
   }
 
   onOrderStatusChange(orderId: string, newStatus: OrderStatus) {
     const order = this.orders.find(o => o.id === orderId);
     if (order) {
       order.status = newStatus;
-
-      // Registrar el cambio de estado
-      this.movements.log({
-        title: `Pedido ${orderId} actualizado`,
-        description: `Estado cambiado a ${newStatus}`,
-        section: 'cocina',
-        status: 'info',
-        actor: 'Sistema',
-        role: 'Automatizado'
-      });
-
-      // Si el pedido está listo, notificar al cliente (simulado)
-      if (newStatus === 'listo') {
-        console.log(`Notificar a cliente: Pedido ${orderId} listo para recoger`);
-      }
+      this._pickupStatsMemoized = null; // Invalidar caché
     }
+  }
+
+  trackByOrderId(_index: number, order: Order): string {
+    return order.id;
   }
 
   onHeaderActionClick() {

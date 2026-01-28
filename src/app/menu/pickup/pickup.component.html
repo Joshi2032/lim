@@ -27,7 +27,7 @@
 
 		<div class="orders-grid">
 			@if (getFilteredOrders().length > 0) {
-				@for (order of getFilteredOrders(); track order.id) {
+				@for (order of getFilteredOrders(); track trackByOrderId($index, order)) {
 					<app-kitchen-order
 						[id]="order.id"
 						[tableNumber]="order.tableNumber"

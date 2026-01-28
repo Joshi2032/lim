@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -26,7 +26,8 @@ interface PickupOrder {
   selector: 'app-pickup-registration',
   imports: [CommonModule, FormsModule, SidebarComponent, PageHeaderComponent],
   templateUrl: './pickup-registration.component.html',
-  styleUrl: './pickup-registration.component.scss'
+  styleUrl: './pickup-registration.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PickupRegistrationComponent implements OnInit {
   order: PickupOrder = {
@@ -39,6 +40,7 @@ export class PickupRegistrationComponent implements OnInit {
 
   availableItems: MenuItem[] = [];
   selectedItem: string = '';
+  private _totalMemoized: number | null = null;
   selectedQuantity: number = 1;
 
   currentUser: User = {
@@ -121,22 +123,27 @@ export class PickupRegistrationComponent implements OnInit {
     }
 
     this.selectedItem = '';
+    this._totalMemoized = null; // Invalidar caché
     this.selectedQuantity = 1;
   }
 
   removeItem(itemId: string) {
     this.order.items = this.order.items.filter(i => i.id !== itemId);
+    this._totalMemoized = null; // Invalidar caché
   }
 
   updateItemQuantity(itemId: string, quantity: number) {
     const item = this.order.items.find(i => i.id === itemId);
     if (item) {
       item.quantity = Math.max(1, quantity);
+      this._totalMemoized = null; // Invalidar caché
     }
   }
 
   getTotal(): number {
-    return this.order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    if (this._totalMemoized !== null) return this._totalMemoized;
+    this._totalMemoized = this.order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    return this._totalMemoized;
   }
 
   isFormValid(): boolean {
@@ -149,7 +156,6 @@ export class PickupRegistrationComponent implements OnInit {
   submitOrder() {
     if (!this.isFormValid()) return;
 
-    // Registrar movimiento
     this.movements.log({
       title: 'Nuevo pedido de recogida',
       description: `Pedido para ${this.order.customerName}`,
@@ -159,10 +165,6 @@ export class PickupRegistrationComponent implements OnInit {
       role: this.currentUser.role
     });
 
-    // Simular envío al backend
-    console.log('Pedido registrado:', this.order);
-
-    // Redireccionar al módulo de recogida
     this.router.navigate(['/recogida']);
   }
 
@@ -172,5 +174,9 @@ export class PickupRegistrationComponent implements OnInit {
 
   onHeaderActionClick() {
     this.router.navigate(['/recogida']);
+  }
+
+  trackByItemId(_index: number, item: MenuItem): string {
+    return item.id;
   }
 }

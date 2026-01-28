@@ -56,7 +56,7 @@
 					<div class="add-item-controls">
 						<select [(ngModel)]="selectedItem" class="item-select">
 							<option value="">Selecciona un producto</option>
-							@for (item of availableItems; track item.id) {
+							@for (item of availableItems; track trackByItemId($index, item)) {
 								<option [value]="item.id">
 									{{ item.name }} - ${{ item.price.toFixed(2) }}
 								</option>
@@ -93,7 +93,7 @@
 								<div class="col-total">Subtotal</div>
 								<div class="col-actions">Acciones</div>
 							</div>
-							@for (item of order.items; track item.id) {
+							@for (item of order.items; track trackByItemId($index, item)) {
 								<div class="table-row">
 									<div class="col-name">{{ item.name }}</div>
 									<div class="col-quantity">

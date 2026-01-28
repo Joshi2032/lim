@@ -42,6 +42,7 @@ export class KitchenComponent implements OnInit {
     { id: 'menu', label: 'Menú', icon: '🍜', route: '/menu' },
     { id: 'mesas', label: 'Mesas', icon: '🪑', route: '/mesas' },
     { id: 'cocina', label: 'Cocina', icon: '🍳', route: '/cocina', active: true },
+    { id: 'recogida', label: 'Recogida', icon: '🛍️', route: '/recogida' },
     { id: 'clientes', label: 'Clientes', icon: '👥', route: '/clientes' },
     { id: 'entregas', label: 'Entregas', icon: '🚚', route: '/entregas' },
     { id: 'pedidos', label: 'Pedidos', icon: '🧾', route: '/pedidos' },

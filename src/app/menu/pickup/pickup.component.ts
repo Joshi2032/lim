@@ -139,8 +139,8 @@ export class PickupComponent implements OnInit {
     return this.orders.filter(order => order.status === status);
   }
 
-  onStatusFilterChange(statusId: string) {
-    this.selectedStatus = statusId as 'all' | OrderStatus;
+  onStatusFilterChange(statusId: string | number) {
+    this.selectedStatus = statusId.toString() as 'all' | OrderStatus;
   }
 
   onOrderStatusChange(orderId: string, newStatus: OrderStatus) {
@@ -149,12 +149,13 @@ export class PickupComponent implements OnInit {
       order.status = newStatus;
 
       // Registrar el cambio de estado
-      this.movements.addMovement({
-        type: 'state_change',
-        description: `Pedido de recogida ${orderId} cambió a ${newStatus}`,
-        details: `Cliente: ${order.tableName}`,
-        amount: 0,
-        category: 'pickup'
+      this.movements.log({
+        title: `Pedido ${orderId} actualizado`,
+        description: `Estado cambiado a ${newStatus}`,
+        section: 'cocina',
+        status: 'info',
+        actor: 'Sistema',
+        role: 'Automatizado'
       });
 
       // Si el pedido está listo, notificar al cliente (simulado)

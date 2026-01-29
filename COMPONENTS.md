@@ -1,4 +1,4 @@
-# Componentes Reutilizables - Sakura Restaurant
+# Componentes Reutilizables - Casa Lim Restaurant
 
 ## 📋 Resumen
 

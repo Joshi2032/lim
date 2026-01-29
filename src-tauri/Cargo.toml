@@ -1,8 +1,8 @@
 [package]
-name = "sakura"
+name = "casalim"
 version = "0.1.0"
-description = "Sakura - Sistema de Gestión de Restaurante"
-authors = ["Sakura Team"]
+description = "Casa Lim - Sistema de Gestión de Restaurante"
+authors = ["Casa Lim Team"]
 license = ""
 repository = ""
 edition = "2021"

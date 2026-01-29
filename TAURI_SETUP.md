@@ -1,4 +1,4 @@
-# Sakura - Sistema de Gestión con Tauri
+# Casa Lim - Sistema de Gestión con Tauri
 
 ## Instalación y Configuración
 

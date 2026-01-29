@@ -1,4 +1,4 @@
-# Guía Rápida: Sakura como Aplicación de Escritorio
+# Guía Rápida: Casa Lim como Aplicación de Escritorio
 
 ## Inicio Rápido
 

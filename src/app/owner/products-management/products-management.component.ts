@@ -60,7 +60,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
     japaneseName: '',
     description: '',
     price: 0,
-    category: 1
+    category: 0
   };
 
   private readonly DEFAULT_COMBO: ProductForm = {
@@ -289,16 +289,24 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.newItem.category || this.newItem.category === 0 || isNaN(this.newItem.category)) {
+      alert('Por favor selecciona una categoría válida');
+      return;
+    }
+
     if (this.isSubmitting) return;
     this.isSubmitting = true;
 
     try {
+      const categoryId = String(this.newItem.category);
+      console.log('🔍 Saving with category ID:', categoryId, 'Type:', typeof categoryId);
+
       if (this.editingId) {
         await this.supabase.updateMenuItem(this.editingId, {
           name: this.newItem.name,
           description: this.newItem.description,
           price: this.newItem.price,
-          category_id: String(this.newItem.category),
+          category_id: categoryId,
           image_url: this.itemImagePreview || undefined
         });
         console.log('✅ Menu item updated');
@@ -307,7 +315,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
           name: this.newItem.name,
           description: this.newItem.description,
           price: this.newItem.price,
-          category_id: String(this.newItem.category),
+          category_id: categoryId,
           image_url: this.itemImagePreview || undefined,
           available: true
         });

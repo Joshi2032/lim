@@ -49,7 +49,7 @@ export interface Customer {
 }
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class SupabaseService {
   private ordersSubject = new BehaviorSubject<Order[]>([]);

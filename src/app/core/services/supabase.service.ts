@@ -61,6 +61,7 @@ export class SupabaseService {
 
   async createOrder(orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'>) {
     try {
+      console.log('Creating order:', orderData);
       const { data, error } = await supabase
         .from('orders')
         .insert([
@@ -81,7 +82,11 @@ export class SupabaseService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error creating order:', error);
+        throw error;
+      }
+      console.log('Order created:', data);
       return data as Order;
     } catch (error) {
       console.error('Error creating order:', error);
@@ -96,8 +101,12 @@ export class SupabaseService {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error('Supabase error fetching orders:', error);
+        throw error;
+      }
+      console.log('Orders loaded:', (data || []).length, data);
+      return (data || []) as Order[];
     } catch (error) {
       console.error('Error fetching orders:', error);
       return [];
@@ -128,8 +137,12 @@ export class SupabaseService {
         .eq('order_type', orderType)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error(`Supabase error fetching orders with type ${orderType}:`, error);
+        throw error;
+      }
+      console.log(`Orders of type ${orderType} loaded:`, (data || []).length, data);
+      return (data || []) as Order[];
     } catch (error) {
       console.error(`Error fetching orders with type ${orderType}:`, error);
       return [];
@@ -167,12 +180,17 @@ export class SupabaseService {
 
   async addOrderItems(items: Array<Omit<OrderItem, 'id'>>) {
     try {
+      console.log('Adding order items:', items);
       const { data, error } = await supabase
         .from('order_items')
         .insert(items)
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error adding order items:', error);
+        throw error;
+      }
+      console.log('Order items added:', data);
       return data;
     } catch (error) {
       console.error('Error adding order items:', error);
@@ -205,8 +223,13 @@ export class SupabaseService {
         .eq('available', true)
         .order('name');
 
-      if (error) throw error;
-      const items = data || [];
+      if (error) {
+        console.error('Supabase error fetching menu items:', error);
+        throw error;
+      }
+
+      const items = (data || []) as MenuItem[];
+      console.log('Menu items loaded:', items.length, items);
       this.menuItemsSubject.next(items);
       return items;
     } catch (error) {

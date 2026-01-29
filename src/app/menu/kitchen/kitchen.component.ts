@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { KitchenOrderComponent, Order, OrderStatus } from '../kitchen-order/kitchen-order.component';
@@ -6,14 +6,17 @@ import { MovementsService } from '../../shared/movements/movements.service';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stats-grid.component';
+import { SupabaseService, Order as SupabaseOrder } from '../../core/services/supabase.service';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 @Component({
   selector: 'app-kitchen',
   imports: [CommonModule, SidebarComponent, KitchenOrderComponent, FilterChipsComponent, PageHeaderComponent, StatsGridComponent],
   templateUrl: './kitchen.component.html',
-  styleUrl: './kitchen.component.scss'
+  styleUrl: './kitchen.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class KitchenComponent implements OnInit {
+export class KitchenComponent implements OnInit, OnDestroy {
   selectedStatus: 'all' | OrderStatus = 'all';
   statusOptions: FilterOption[] = [
     { id: 'all', label: 'Todos' },
@@ -23,13 +26,22 @@ export class KitchenComponent implements OnInit {
   ];
   orders: Order[] = [];
   cartCount: number = 0;
+  private _kitchenStatsMemoized: SimpleStatItem[] | null = null;
+  private kitchenOrdersSubscription: RealtimeChannel | null = null;
+
+  headerAction: PageAction = {
+    label: 'Nuevo Pedido',
+    icon: '➕'
+  };
 
   get kitchenStats(): SimpleStatItem[] {
-    return [
+    if (this._kitchenStatsMemoized) return this._kitchenStatsMemoized;
+    this._kitchenStatsMemoized = [
       { value: this.getOrdersByStatus('pendiente').length, label: 'Pendientes', status: 'pendiente' },
       { value: this.getOrdersByStatus('preparando').length, label: 'Preparando', status: 'preparando' },
       { value: this.getOrdersByStatus('listo').length, label: 'Listos', status: 'listo' }
     ];
+    return this._kitchenStatsMemoized || [];
   }
 
   currentUser: User = {
@@ -51,79 +63,75 @@ export class KitchenComponent implements OnInit {
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
 
-  constructor(private movements: MovementsService) {}
+  constructor(
+    private movements: MovementsService,
+    private supabase: SupabaseService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
-    this.loadOrders();
+    this.loadKitchenOrders();
+    this.subscribeToKitchenOrdersChanges();
   }
 
-  loadOrders() {
-    // Mock data - En producción vendrá del backend
-    const now = new Date();
-    const time1 = new Date(now.getTime() - 129 * 60000); // 129 minutos atrás
-    const time2 = new Date(now.getTime() - 119 * 60000); // 119 minutos atrás
-    const time3 = new Date(now.getTime() - 109 * 60000); // 109 minutos atrás
-    const time4 = new Date(now.getTime() - 45 * 60000);  // 45 minutos atrás
-    const time5 = new Date(now.getTime() - 25 * 60000);  // 25 minutos atrás
+  ngOnDestroy() {
+    if (this.kitchenOrdersSubscription) {
+      this.kitchenOrdersSubscription.unsubscribe();
+    }
+  }
 
-    this.orders = [
-      {
-        id: '1',
-        tableNumber: 9,
-        tableName: 'Mesa 9',
-        items: [
-          { id: '1', name: 'Philadelphia Roll', quantity: 2 },
-          { id: '2', name: 'Nigiri de Salmón', quantity: 2 }
-        ],
-        status: 'pendiente',
-        startTime: time1,
-        notes: 'Sin picante'
-      },
-      {
-        id: '2',
-        tableNumber: 2,
-        tableName: 'Mesa 2',
-        items: [
-          { id: '1', name: 'Tempura', quantity: 1 },
-          { id: '2', name: 'Gyoza', quantity: 3 }
-        ],
-        status: 'preparando',
-        startTime: time2
-      },
-      {
-        id: '3',
-        tableNumber: 5,
-        tableName: 'Mesa 5',
-        items: [
-          { id: '1', name: 'Ramen Tonkotsu', quantity: 2 },
-          { id: '2', name: 'Edamame', quantity: 1 }
-        ],
-        status: 'listo',
-        startTime: time3
-      },
-      {
-        id: '4',
-        tableNumber: 12,
-        tableName: 'Mesa 12',
-        items: [
-          { id: '1', name: 'Bibimbap', quantity: 1 }
-        ],
-        status: 'pendiente',
-        startTime: time4,
-        notes: 'Alérgico a frutos secos'
-      },
-      {
-        id: '5',
-        tableNumber: 7,
-        tableName: 'Mesa 7',
-        items: [
-          { id: '1', name: 'Donburi de Pollo', quantity: 2 },
-          { id: '2', name: 'Miso Soup', quantity: 2 }
-        ],
-        status: 'preparando',
-        startTime: time5
-      }
-    ];
+  async loadKitchenOrders() {
+    try {
+      // Kitchen ve TODAS las órdenes (pickup, delivery, dine-in)
+      const supabaseOrders = await this.supabase.getOrders();
+      this.orders = this.mapSupabaseOrdersToOrders(supabaseOrders);
+      this._kitchenStatsMemoized = null;
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('Error loading kitchen orders:', error);
+    }
+  }
+
+  private subscribeToKitchenOrdersChanges() {
+    this.kitchenOrdersSubscription = this.supabase.subscribeToOrders((orders) => {
+      this.orders = this.mapSupabaseOrdersToOrders(orders);
+      this._kitchenStatsMemoized = null;
+      this.cdr.markForCheck();
+    });
+  }
+
+  private mapSupabaseOrdersToOrders(supabaseOrders: SupabaseOrder[]): Order[] {
+    return supabaseOrders.map(so => ({
+      id: so.id,
+      tableNumber: so.table_number || 0,
+      tableName: this.getTableName(so),
+      items: [],
+      status: this.mapSupabaseStatus(so.status),
+      startTime: new Date(so.created_at),
+      notes: so.notes || ''
+    }));
+  }
+
+  private getTableName(order: SupabaseOrder): string {
+    if (order.order_type === 'dine-in' && order.table_number) {
+      return `Mesa ${order.table_number}`;
+    } else if (order.order_type === 'pickup') {
+      return `Recogida: ${order.customer_name}`;
+    } else if (order.order_type === 'delivery') {
+      return `Entrega: ${order.customer_name}`;
+    }
+    return order.customer_name;
+  }
+
+  private mapSupabaseStatus(status: SupabaseOrder['status']): OrderStatus {
+    const statusMap: Record<string, OrderStatus> = {
+      'pending': 'pendiente',
+      'preparing': 'preparando',
+      'ready': 'listo',
+      'completed': 'listo',
+      'cancelled': 'pendiente'
+    };
+    return statusMap[status] || 'pendiente';
   }
 
   getOrdersByStatus(status: OrderStatus): Order[] {
@@ -158,6 +166,13 @@ export class KitchenComponent implements OnInit {
     const order = this.orders.find(o => o.id === orderId);
     if (order) {
       order.status = newStatus;
+      this._kitchenStatsMemoized = null; // Invalidar caché
+
+      // Actualizar en Supabase
+      const supabaseStatus = this.mapOrderStatusToSupabase(newStatus);
+      this.supabase.updateOrderStatus(orderId, supabaseStatus).catch(error => {
+        console.error('Error updating order status:', error);
+      });
 
       this.movements.log({
         title: `Orden ${newStatus === 'listo' ? 'lista' : 'actualizada'}`,
@@ -167,17 +182,24 @@ export class KitchenComponent implements OnInit {
         actor: this.currentUser.name,
         role: this.currentUser.role
       });
-
-      // Si se marca como "servido", podría removerse después de un tiempo
-      if (newStatus === 'servido') {
-        setTimeout(() => {
-          this.orders = this.orders.filter(o => o.id !== orderId);
-        }, 3000);
-      }
     }
+  }
+
+  private mapOrderStatusToSupabase(orderStatus: OrderStatus): SupabaseOrder['status'] {
+    const statusMap: Record<OrderStatus, SupabaseOrder['status']> = {
+      'pendiente': 'pending',
+      'preparando': 'preparing',
+      'listo': 'ready',
+      'servido': 'completed'
+    };
+    return statusMap[orderStatus] || 'pending';
   }
 
   onStatusFilterChange(statusId: any) {
     this.selectedStatus = statusId as 'all' | OrderStatus;
+  }
+
+  trackByOrderId(_index: number, order: Order): string {
+    return order.id;
   }
 }

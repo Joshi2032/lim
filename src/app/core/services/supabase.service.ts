@@ -1053,6 +1053,26 @@ export class SupabaseService {
     }
   }
 
+  async deleteEmployee(employeeId: string): Promise<void> {
+    try {
+      console.log('🗑️ Deleting employee:', employeeId);
+      const { error } = await supabase
+        .from('employees')
+        .delete()
+        .eq('id', employeeId);
+
+      if (error) {
+        console.error('❌ Error deleting employee:', error);
+        throw error;
+      }
+
+      console.log('✅ Employee deleted');
+    } catch (error) {
+      console.error('❌ Error in deleteEmployee:', error);
+      throw error;
+    }
+  }
+
   // ==================== REAL-TIME SUBSCRIPTIONS ====================
 
   subscribeToOrders(callback: (orders: Order[]) => void) {

@@ -78,23 +78,40 @@ export class UsersComponent implements OnInit {
   ];
 
   ngOnInit() {
-    this.loadUsers();
+    this.loadUsersFromSupabase();
     this.updateRoleStats();
   }
 
-  loadUsers() {
-    // Mock data - En producción vendrá del backend
-    this.users = [
-      {
-        id: '1',
-        name: 'Josue',
-        email: 'joshi.c2032@gmail.com',
-        phone: '55 1234 5678',
-        roleId: 'duena',
-        initials: 'J',
-        status: 'activo'
-      }
-    ];
+  async loadUsersFromSupabase() {
+    try {
+      console.log('📋 Loading employees from Supabase...');
+      const employees = await this.supabase.getEmployees();
+      this.users = employees.map(emp => {
+        // Map role from employee role to UserRole
+        const roleMap: Record<string, UserRole> = {
+          'admin': 'duena',
+          'chef': 'chef',
+          'waiter': 'mesero',
+          'delivery': 'repartidor',
+          'cashier': 'cajero'
+        };
+
+        return {
+          id: emp.id,
+          name: emp.full_name,
+          email: emp.email,
+          phone: emp.phone,
+          roleId: roleMap[emp.role] || 'mesero',
+          initials: this.generateInitials(emp.full_name),
+          status: emp.active ? 'activo' : 'inactivo'
+        };
+      });
+      console.log('✅ Employees loaded:', this.users);
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('❌ Error loading employees:', error);
+      alert('Error al cargar empleados: ' + (error as any).message);
+    }
   }
 
   updateRoleStats() {
@@ -126,38 +143,54 @@ export class UsersComponent implements OnInit {
   }
 
   saveUser(formData: UserFormData) {
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
+
     if (this.userBeingEdited) {
       // Modo edición
-      const userIndex = this.users.findIndex(u => u.id === this.userBeingEdited!.id);
-      if (userIndex !== -1) {
-        this.users[userIndex] = {
-          ...this.users[userIndex],
-          name: formData.name,
-          email: formData.email,
-          roleId: formData.roleId as UserRole,
-          initials: this.generateInitials(formData.name)
-        };
-
-        this.movements.log({
-          title: 'Usuario actualizado',
-          description: `${formData.name} ahora es ${this.getRoleLabel(formData.roleId as UserRole)}`,
-          section: 'usuarios',
-          status: 'success',
-          actor: this.currentUser.name,
-          role: this.currentUser.role
-        });
-      }
+      this.updateUserInSupabase(formData);
     } else {
       // Modo creación
-      const newUser: UserEmployee = {
-        id: Date.now().toString(),
-        name: formData.name,
-        email: formData.email,
-        roleId: formData.roleId as UserRole,
-        initials: this.generateInitials(formData.name),
-        status: 'activo'
+      this.createUserInSupabase(formData);
+    }
+  }
+
+  private async createUserInSupabase(formData: UserFormData) {
+    try {
+      console.log('📝 Creating employee:', formData.name);
+
+      // Map UserRole to Employee role
+      const roleMap: Record<UserRole, string> = {
+        'duena': 'admin',
+        'chef': 'chef',
+        'mesero': 'waiter',
+        'repartidor': 'delivery',
+        'cajero': 'cashier',
+        'encargado': 'admin'
       };
+
+      const newEmployee = {
+        full_name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        role: roleMap[formData.roleId as UserRole],
+        active: true
+      };
+
+      const createdEmployee = await this.supabase.createEmployee(newEmployee);
+
+      const newUser: UserEmployee = {
+        id: createdEmployee.id,
+        name: createdEmployee.full_name,
+        email: createdEmployee.email,
+        phone: createdEmployee.phone,
+        roleId: formData.roleId as UserRole,
+        initials: this.generateInitials(createdEmployee.full_name),
+        status: createdEmployee.active ? 'activo' : 'inactivo'
+      };
+
       this.users.push(newUser);
+      console.log('✅ Employee created:', newUser);
 
       this.movements.log({
         title: 'Usuario creado',
@@ -167,10 +200,66 @@ export class UsersComponent implements OnInit {
         actor: this.currentUser.name,
         role: this.currentUser.role
       });
+    } catch (error) {
+      console.error('❌ Error creating employee:', error);
+      alert('Error al crear usuario: ' + (error as any).message);
+    } finally {
+      this.isSubmitting = false;
+      this.updateRoleStats();
+      this.closeUserForm();
     }
+  }
 
-    this.updateRoleStats();
-    this.closeUserForm();
+  private async updateUserInSupabase(formData: UserFormData) {
+    if (!this.userBeingEdited) return;
+
+    try {
+      console.log('✏️ Updating employee:', formData.name);
+
+      // Map UserRole to Employee role
+      const roleMap: Record<UserRole, string> = {
+        'duena': 'admin',
+        'chef': 'chef',
+        'mesero': 'waiter',
+        'repartidor': 'delivery',
+        'cajero': 'cashier',
+        'encargado': 'admin'
+      };
+
+      const updateData = {
+        full_name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        role: roleMap[formData.roleId as UserRole]
+      if (userIndex !== -1) {
+        this.users[userIndex] = {
+          ...this.users[userIndex],
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          roleId: formData.roleId as UserRole,
+          initials: this.generateInitials(formData.name)
+        };
+      }
+
+      console.log('✅ Employee updated');
+
+      this.movements.log({
+        title: 'Usuario actualizado',
+        description: `${formData.name} ahora es ${this.getRoleLabel(formData.roleId as UserRole)}`,
+        section: 'usuarios',
+        status: 'success',
+        actor: this.currentUser.name,
+        role: this.currentUser.role
+      });
+    } catch (error) {
+      console.error('❌ Error updating employee:', error);
+      alert('Error al actualizar usuario: ' + (error as any).message);
+    } finally {
+      this.isSubmitting = false;
+      this.updateRoleStats();
+      this.closeUserForm();
+    }
   }
 
   private generateInitials(name: string): string {
@@ -182,17 +271,33 @@ export class UsersComponent implements OnInit {
       .slice(0, 2);
   }
 
-  deleteUser(userId: string) {
-    this.users = this.users.filter(u => u.id !== userId);
-    this.updateRoleStats();
+  async deleteUser(userId: string) {
+    if (!confirm('¿Está seguro de que desea eliminar este usuario?')) return;
 
-    this.movements.log({
-      title: 'Usuario eliminado',
-      description: `Usuario con id ${userId} removido`,
-      section: 'usuarios',
-      status: 'warning',
-      actor: this.currentUser.name,
-      role: this.currentUser.role
-    });
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
+
+    try {
+      console.log('🗑️ Deleting employee:', userId);
+      await this.supabase.deleteEmployee(userId);
+
+      this.users = this.users.filter(u => u.id !== userId);
+      console.log('✅ Employee deleted');
+
+      this.movements.log({
+        title: 'Usuario eliminado',
+        description: `Usuario con id ${userId} removido`,
+        section: 'usuarios',
+        status: 'warning',
+        actor: this.currentUser.name,
+        role: this.currentUser.role
+      });
+    } catch (error) {
+      console.error('❌ Error deleting employee:', error);
+      alert('Error al eliminar usuario: ' + (error as any).message);
+    } finally {
+      this.isSubmitting = false;
+      this.updateRoleStats();
+    }
   }
 }

@@ -10,7 +10,7 @@ import { SearchInputComponent } from '../../shared/search-input/search-input.com
 import { IconButtonComponent } from '../../shared/icon-button/icon-button.component';
 import { CustomerItemComponent, CustomerItemData } from '../../shared/customer-item/customer-item.component';
 import { AddressCardComponent, AddressData } from '../../shared/address-card/address-card.component';
-import { SupabaseService, Customer as SupabaseCustomer } from '../../core/services/supabase.service';
+import { SupabaseService, Customer as SupabaseCustomer, CustomerAddress as SupabaseAddress } from '../../core/services/supabase.service';
 
 export interface Address {
 	id: string;
@@ -126,7 +126,10 @@ export class CustomersComponent implements OnInit {
       const supabaseCustomers = await this.supabase.getCustomers();
       console.log('✅ Customers loaded:', supabaseCustomers);
 
-      this.customers = supabaseCustomers.map(c => this.mapSupabaseCustomerToLocal(c));
+      // Mapear clientes con sus direcciones
+      this.customers = await Promise.all(
+        supabaseCustomers.map(c => this.mapSupabaseCustomerToLocal(c))
+      );
       this.filteredCustomers = this.customers;
       this.cdr.markForCheck();
     } catch (error) {
@@ -135,7 +138,7 @@ export class CustomersComponent implements OnInit {
     }
   }
 
-  private mapSupabaseCustomerToLocal(supabaseCustomer: SupabaseCustomer): Customer {
+  private async mapSupabaseCustomerToLocal(supabaseCustomer: SupabaseCustomer): Promise<Customer> {
     const initials = supabaseCustomer.name
       .split(' ')
       .slice(0, 2)
@@ -143,14 +146,36 @@ export class CustomersComponent implements OnInit {
       .join('')
       .toUpperCase();
 
+    // Cargar direcciones del cliente
+    let addresses: Address[] = [];
+    try {
+      const supabaseAddresses = await this.supabase.getCustomerAddresses(supabaseCustomer.id.toString());
+      addresses = supabaseAddresses.map(a => this.mapSupabaseAddressToLocal(a));
+    } catch (error) {
+      console.error('Error loading addresses for customer:', supabaseCustomer.id, error);
+    }
+
     return {
       id: supabaseCustomer.id.toString(),
       name: supabaseCustomer.name,
       phone: supabaseCustomer.phone || '',
       email: supabaseCustomer.email || undefined,
       initials,
-      addresses: [], // TODO: Load addresses from customer_addresses table
-      addressCount: 0
+      addresses,
+      addressCount: addresses.length
+    };
+  }
+
+  private mapSupabaseAddressToLocal(supabaseAddress: SupabaseAddress): Address {
+    return {
+      id: supabaseAddress.id.toString(),
+      label: supabaseAddress.label,
+      street: supabaseAddress.street,
+      city: supabaseAddress.city,
+      state: supabaseAddress.state,
+      zipCode: supabaseAddress.zip_code,
+      reference: supabaseAddress.reference,
+      isDefault: supabaseAddress.is_default
     };
   }
 
@@ -229,7 +254,7 @@ export class CustomersComponent implements OnInit {
       console.log('✅ Customer created:', newCustomer);
 
       // Select the new customer
-      this.selectedCustomer = this.mapSupabaseCustomerToLocal(newCustomer);
+      this.selectedCustomer = await this.mapSupabaseCustomerToLocal(newCustomer);
     } catch (error) {
       console.error('❌ Supabase error:', error);
       throw error;
@@ -284,7 +309,7 @@ export class CustomersComponent implements OnInit {
       const customerData = {
         name: this.newCustomerForm.name.trim(),
         phone: this.newCustomerForm.phone.trim(),
-        email: this.newCustomerForm.email?.trim() || null
+        email: this.newCustomerForm.email?.trim() || undefined
       };
 
       await this.supabase.updateCustomer(
@@ -370,42 +395,63 @@ export class CustomersComponent implements OnInit {
       return;
     }
 
-    const customerIndex = this.customers.findIndex(c => c.id === this.selectedCustomer!.id);
-    if (customerIndex === -1) return;
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
 
-    if (this.editingAddress) {
-      // Editar dirección existente
-      const addressIndex = this.customers[customerIndex].addresses.findIndex(a => a.id === this.editingAddress!.id);
-      if (addressIndex !== -1) {
-        // Si se marca como principal, quitar principal de las demás
-        if (this.addressForm.isDefault) {
-          this.customers[customerIndex].addresses.forEach(a => a.isDefault = false);
-        }
+    this.saveAddressToSupabase()
+      .then(() => {
+        this.closeAddressModal();
+        this.loadCustomers();
+      })
+      .catch(error => {
+        console.error('❌ Error saving address:', error);
+        alert('Error al guardar dirección: ' + error.message);
+      })
+      .finally(() => {
+        this.isSubmitting = false;
+        this.cdr.markForCheck();
+      });
+  }
 
-        this.customers[customerIndex].addresses[addressIndex] = {
-          ...this.editingAddress,
-          ...this.addressForm
-        };
+  private async saveAddressToSupabase(): Promise<void> {
+    if (!this.selectedCustomer) return;
+
+    console.log('📝 Saving address to Supabase...');
+
+    try {
+      if (this.editingAddress) {
+        // Editar dirección existente
+        await this.supabase.updateCustomerAddress(
+          this.editingAddress.id,
+          {
+            label: this.addressForm.label.trim(),
+            street: this.addressForm.street.trim(),
+            city: this.addressForm.city.trim(),
+            state: this.addressForm.state.trim(),
+            zip_code: this.addressForm.zipCode?.trim() || undefined,
+            reference: this.addressForm.reference?.trim() || undefined,
+            is_default: this.addressForm.isDefault
+          }
+        );
+        console.log('✅ Address updated');
+      } else {
+        // Crear nueva dirección
+        await this.supabase.createCustomerAddress({
+          customer_id: this.selectedCustomer.id,
+          label: this.addressForm.label.trim(),
+          street: this.addressForm.street.trim(),
+          city: this.addressForm.city.trim(),
+          state: this.addressForm.state.trim(),
+          zip_code: this.addressForm.zipCode?.trim() || undefined,
+          reference: this.addressForm.reference?.trim() || undefined,
+          is_default: this.addressForm.isDefault
+        });
+        console.log('✅ Address created');
       }
-    } else {
-      // Agregar nueva dirección
-      // Si se marca como principal, quitar principal de las demás
-      if (this.addressForm.isDefault) {
-        this.customers[customerIndex].addresses.forEach(a => a.isDefault = false);
-      }
-
-      const newAddress: Address = {
-        id: Date.now().toString(),
-        ...this.addressForm
-      };
-
-      this.customers[customerIndex].addresses.push(newAddress);
-      this.customers[customerIndex].addressCount = this.customers[customerIndex].addresses.length;
+    } catch (error) {
+      console.error('❌ Supabase error:', error);
+      throw error;
     }
-
-    this.selectedCustomer = { ...this.customers[customerIndex] };
-    this.filteredCustomers = [...this.customers];
-    this.closeAddressModal();
   }
 
   deleteAddress(addressId: string) {
@@ -414,33 +460,66 @@ export class CustomersComponent implements OnInit {
     const confirmed = confirm('¿Eliminar esta dirección?\n\nEsta acción no se puede deshacer.');
     if (!confirmed) return;
 
-    const customerIndex = this.customers.findIndex(c => c.id === this.selectedCustomer!.id);
-    if (customerIndex === -1) return;
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
 
-    this.customers[customerIndex].addresses = this.customers[customerIndex].addresses.filter(a => a.id !== addressId);
-    this.customers[customerIndex].addressCount = this.customers[customerIndex].addresses.length;
+    this.deleteAddressFromSupabase(addressId)
+      .then(() => {
+        this.loadCustomers();
+      })
+      .catch(error => {
+        console.error('❌ Error deleting address:', error);
+        alert('Error al eliminar dirección: ' + error.message);
+      })
+      .finally(() => {
+        this.isSubmitting = false;
+        this.cdr.markForCheck();
+      });
+  }
 
-    // Si se eliminó la dirección principal y quedan direcciones, marcar la primera como principal
-    if (this.customers[customerIndex].addresses.length > 0 &&
-        !this.customers[customerIndex].addresses.some(a => a.isDefault)) {
-      this.customers[customerIndex].addresses[0].isDefault = true;
+  private async deleteAddressFromSupabase(addressId: string): Promise<void> {
+    console.log('🗑️ Deleting address from Supabase...');
+
+    try {
+      await this.supabase.deleteCustomerAddress(addressId);
+      console.log('✅ Address deleted');
+    } catch (error) {
+      console.error('❌ Supabase error:', error);
+      throw error;
     }
-
-    this.selectedCustomer = { ...this.customers[customerIndex] };
-    this.filteredCustomers = [...this.customers];
   }
 
   setDefaultAddress(addressId: string) {
     if (!this.selectedCustomer) return;
 
-    const customerIndex = this.customers.findIndex(c => c.id === this.selectedCustomer!.id);
-    if (customerIndex === -1) return;
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
 
-    this.customers[customerIndex].addresses.forEach(a => {
-      a.isDefault = a.id === addressId;
-    });
+    this.setDefaultAddressInSupabase(addressId)
+      .then(() => {
+        this.loadCustomers();
+      })
+      .catch(error => {
+        console.error('❌ Error setting default address:', error);
+        alert('Error al establecer dirección principal: ' + error.message);
+      })
+      .finally(() => {
+        this.isSubmitting = false;
+        this.cdr.markForCheck();
+      });
+  }
 
-    this.selectedCustomer = { ...this.customers[customerIndex] };
-    this.filteredCustomers = [...this.customers];
+  private async setDefaultAddressInSupabase(addressId: string): Promise<void> {
+    console.log('⭐ Setting default address in Supabase...');
+
+    try {
+      await this.supabase.updateCustomerAddress(addressId, {
+        is_default: true
+      });
+      console.log('✅ Default address set');
+    } catch (error) {
+      console.error('❌ Supabase error:', error);
+      throw error;
+    }
   }
 }

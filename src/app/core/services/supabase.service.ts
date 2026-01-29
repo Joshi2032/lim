@@ -48,6 +48,20 @@ export interface Customer {
   updated_at: string;
 }
 
+export interface CustomerAddress {
+  id: string;
+  customer_id: string;
+  label: string;
+  street: string;
+  city: string;
+  state: string;
+  zip_code?: string;
+  reference?: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -357,6 +371,119 @@ export class SupabaseService {
       console.log('✅ Customer deleted successfully');
     } catch (error) {
       console.error('❌ Error in deleteCustomer:', error);
+      throw error;
+    }
+  }
+
+  // ==================== CUSTOMER ADDRESSES ====================
+
+  async getCustomerAddresses(customerId: string): Promise<CustomerAddress[]> {
+    try {
+      console.log('📋 Fetching addresses for customer:', customerId);
+      const { data, error } = await supabase
+        .from('customer_addresses')
+        .select('*')
+        .eq('customer_id', customerId)
+        .order('is_default', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error fetching addresses:', error);
+        throw error;
+      }
+
+      console.log('✅ Addresses fetched:', data?.length || 0);
+      return (data as CustomerAddress[]) || [];
+    } catch (error) {
+      console.error('❌ Error in getCustomerAddresses:', error);
+      throw error;
+    }
+  }
+
+  async createCustomerAddress(addressData: Omit<CustomerAddress, 'id' | 'created_at' | 'updated_at'>): Promise<CustomerAddress> {
+    try {
+      console.log('📝 Creating customer address:', addressData);
+
+      // Si es la dirección por defecto, quitar el default de las demás
+      if (addressData.is_default) {
+        await supabase
+          .from('customer_addresses')
+          .update({ is_default: false })
+          .eq('customer_id', addressData.customer_id);
+      }
+
+      const { data, error } = await supabase
+        .from('customer_addresses')
+        .insert([addressData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error creating address:', error);
+        throw error;
+      }
+
+      console.log('✅ Address created:', data);
+      return data as CustomerAddress;
+    } catch (error) {
+      console.error('❌ Error in createCustomerAddress:', error);
+      throw error;
+    }
+  }
+
+  async updateCustomerAddress(addressId: string, addressData: Partial<Omit<CustomerAddress, 'id' | 'customer_id' | 'created_at' | 'updated_at'>>): Promise<void> {
+    try {
+      console.log('📝 Updating address:', addressId, addressData);
+
+      // Si se está marcando como default, quitar el default de las demás
+      if (addressData.is_default) {
+        // Primero obtenemos el customer_id de esta dirección
+        const { data: addressInfo } = await supabase
+          .from('customer_addresses')
+          .select('customer_id')
+          .eq('id', addressId)
+          .single();
+
+        if (addressInfo) {
+          await supabase
+            .from('customer_addresses')
+            .update({ is_default: false })
+            .eq('customer_id', addressInfo.customer_id);
+        }
+      }
+
+      const { error } = await supabase
+        .from('customer_addresses')
+        .update(addressData)
+        .eq('id', addressId);
+
+      if (error) {
+        console.error('❌ Error updating address:', error);
+        throw error;
+      }
+
+      console.log('✅ Address updated successfully');
+    } catch (error) {
+      console.error('❌ Error in updateCustomerAddress:', error);
+      throw error;
+    }
+  }
+
+  async deleteCustomerAddress(addressId: string): Promise<void> {
+    try {
+      console.log('🗑️ Deleting address:', addressId);
+      const { error } = await supabase
+        .from('customer_addresses')
+        .delete()
+        .eq('id', addressId);
+
+      if (error) {
+        console.error('❌ Error deleting address:', error);
+        throw error;
+      }
+
+      console.log('✅ Address deleted successfully');
+    } catch (error) {
+      console.error('❌ Error in deleteCustomerAddress:', error);
       throw error;
     }
   }

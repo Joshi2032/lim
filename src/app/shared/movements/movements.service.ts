@@ -39,51 +39,6 @@ export class MovementsService {
     // Mock data removed - all data should come from real operations
     // Keep this method for backwards compatibility but it does nothing
     return;
-        section: 'cocina',
-        status: 'info',
-        actor: 'Josue',
-        role: 'Dueña',
-        timestamp: this.minutesAgo(18)
-      },
-      {
-        title: 'Combo agregado al menú',
-        description: 'Nuevo Combo Sashimi (4 piezas) con variantes',
-        section: 'menu',
-        status: 'success',
-        actor: 'Josue',
-        role: 'Dueña',
-        timestamp: this.minutesAgo(50)
-      },
-      {
-        title: 'Usuario actualizado',
-        description: 'Se editó el rol de Ana Ruiz a Encargado',
-        section: 'usuarios',
-        status: 'success',
-        actor: 'Josue',
-        role: 'Dueña',
-        timestamp: this.minutesAgo(90)
-      },
-      {
-        title: 'Entrega marcada como lista',
-        description: 'Pedido #458 para mesa 7 listo para entregar',
-        section: 'entregas',
-        status: 'info',
-        actor: 'Josue',
-        role: 'Dueña',
-        timestamp: this.minutesAgo(130)
-      },
-      {
-        title: 'Inventario advertencia',
-        description: 'Salmón ahumado bajo (restan 4 porciones)',
-        section: 'cocina',
-        status: 'warning',
-        actor: 'Sistema',
-        role: 'Automático',
-        timestamp: this.minutesAgo(160)
-      }
-    ];
-
-    demo.forEach(d => this.log(d));
   }
 
   private minutesAgo(min: number): Date {

@@ -257,30 +257,106 @@ export class SupabaseService {
 
   // ==================== CUSTOMERS ====================
 
-  async createOrGetCustomer(customerData: Omit<Customer, 'id' | 'created_at' | 'updated_at'>): Promise<Customer> {
+  async createOrGetCustomer(phone: string, name?: string, email?: string): Promise<Customer> {
     try {
-      // Try to find existing customer by email or phone
+      console.log('🔍 Checking for existing customer with phone:', phone);
+
+      // Try to find existing customer by phone
       const { data: existing } = await supabase
         .from('customers')
         .select('*')
-        .or(`email.eq.${customerData.email},phone.eq.${customerData.phone}`)
+        .eq('phone', phone)
         .single();
 
       if (existing) {
+        console.log('✅ Found existing customer:', existing);
         return existing as Customer;
       }
 
       // Create new customer
+      console.log('📝 Creating new customer...');
+      const customerData = {
+        phone,
+        name: name || 'Cliente',
+        email: email || null
+      };
+
       const { data, error } = await supabase
         .from('customers')
         .insert([customerData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error creating customer:', error);
+        throw error;
+      }
+
+      console.log('✅ Customer created:', data);
       return data as Customer;
     } catch (error) {
-      console.error('Error creating/getting customer:', error);
+      console.error('❌ Error in createOrGetCustomer:', error);
+      throw error;
+    }
+  }
+
+  async getCustomers(): Promise<Customer[]> {
+    try {
+      console.log('📋 Fetching all customers...');
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error fetching customers:', error);
+        throw error;
+      }
+
+      console.log('✅ Customers fetched:', data?.length || 0);
+      return (data as Customer[]) || [];
+    } catch (error) {
+      console.error('❌ Error in getCustomers:', error);
+      throw error;
+    }
+  }
+
+  async updateCustomer(customerId: number, customerData: Partial<Omit<Customer, 'id' | 'created_at' | 'updated_at'>>): Promise<void> {
+    try {
+      console.log('📝 Updating customer:', customerId, customerData);
+      const { error } = await supabase
+        .from('customers')
+        .update(customerData)
+        .eq('id', customerId);
+
+      if (error) {
+        console.error('❌ Error updating customer:', error);
+        throw error;
+      }
+
+      console.log('✅ Customer updated successfully');
+    } catch (error) {
+      console.error('❌ Error in updateCustomer:', error);
+      throw error;
+    }
+  }
+
+  async deleteCustomer(customerId: number): Promise<void> {
+    try {
+      console.log('🗑️ Deleting customer:', customerId);
+      const { error } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', customerId);
+
+      if (error) {
+        console.error('❌ Error deleting customer:', error);
+        throw error;
+      }
+
+      console.log('✅ Customer deleted successfully');
+    } catch (error) {
+      console.error('❌ Error in deleteCustomer:', error);
       throw error;
     }
   }

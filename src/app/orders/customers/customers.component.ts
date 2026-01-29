@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
@@ -10,6 +10,7 @@ import { SearchInputComponent } from '../../shared/search-input/search-input.com
 import { IconButtonComponent } from '../../shared/icon-button/icon-button.component';
 import { CustomerItemComponent, CustomerItemData } from '../../shared/customer-item/customer-item.component';
 import { AddressCardComponent, AddressData } from '../../shared/address-card/address-card.component';
+import { SupabaseService, Customer as SupabaseCustomer } from '../../core/services/supabase.service';
 
 export interface Address {
 	id: string;
@@ -48,9 +49,17 @@ export interface Customer {
     AddressCardComponent
   ],
   templateUrl: './customers.component.html',
-  styleUrl: './customers.component.scss'
+  styleUrl: './customers.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CustomersComponent implements OnInit {
+  private isSubmitting = false;
+
+  constructor(
+    private supabase: SupabaseService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
   @Input() embedded: boolean = false;
   headerAction: PageAction = { label: 'Nuevo Cliente', icon: '+' };
   searchQuery: string = '';
@@ -111,20 +120,38 @@ export class CustomersComponent implements OnInit {
     this.loadCustomers();
   }
 
-  loadCustomers() {
-    // Mock data - En producción vendrá del backend
-    this.customers = [
-      {
-        id: '1',
-        name: 'ssf',
-        phone: '55 1234 5678',
-        email: 'ssf@email.com',
-        initials: 'S',
-        addressCount: 0,
-        addresses: []
-      }
-    ];
-    this.filteredCustomers = this.customers;
+  async loadCustomers() {
+    try {
+      console.log('📋 Loading customers from Supabase...');
+      const supabaseCustomers = await this.supabase.getCustomers();
+      console.log('✅ Customers loaded:', supabaseCustomers);
+
+      this.customers = supabaseCustomers.map(c => this.mapSupabaseCustomerToLocal(c));
+      this.filteredCustomers = this.customers;
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('❌ Error loading customers:', error);
+      alert('Error al cargar clientes: ' + (error as any).message);
+    }
+  }
+
+  private mapSupabaseCustomerToLocal(supabaseCustomer: SupabaseCustomer): Customer {
+    const initials = supabaseCustomer.name
+      .split(' ')
+      .slice(0, 2)
+      .map(word => word[0])
+      .join('')
+      .toUpperCase();
+
+    return {
+      id: supabaseCustomer.id.toString(),
+      name: supabaseCustomer.name,
+      phone: supabaseCustomer.phone || '',
+      email: supabaseCustomer.email || undefined,
+      initials,
+      addresses: [], // TODO: Load addresses from customer_addresses table
+      addressCount: 0
+    };
   }
 
   filterCustomers() {
@@ -165,27 +192,48 @@ export class CustomersComponent implements OnInit {
       return;
     }
 
-    const initials = this.newCustomerForm.name
-      .split(' ')
-      .slice(0, 2)
-      .map(word => word[0])
-      .join('')
-      .toUpperCase();
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
 
-    const newCustomer: Customer = {
-      id: Date.now().toString(),
-      name: this.newCustomerForm.name,
-      phone: this.newCustomerForm.phone,
-      email: this.newCustomerForm.email || undefined,
-      initials,
-      addresses: [],
-      addressCount: 0
-    };
+    this.createCustomerInSupabase()
+      .then(() => {
+        this.closeNewCustomerModal();
+        this.loadCustomers();
+      })
+      .catch(error => {
+        console.error('❌ Error creating customer:', error);
+        alert('Error al crear cliente: ' + error.message);
+      })
+      .finally(() => {
+        this.isSubmitting = false;
+        this.cdr.markForCheck();
+      });
+  }
 
-    this.customers.unshift(newCustomer);
-    this.filteredCustomers = this.customers;
-    this.closeNewCustomerModal();
-    this.selectCustomer(newCustomer);
+  private async createCustomerInSupabase(): Promise<void> {
+    console.log('📝 Creating customer in Supabase...');
+
+    try {
+      const customerData = {
+        name: this.newCustomerForm.name.trim(),
+        phone: this.newCustomerForm.phone.trim(),
+        email: this.newCustomerForm.email?.trim() || null
+      };
+
+      const newCustomer = await this.supabase.createOrGetCustomer(
+        customerData.phone,
+        customerData.name,
+        customerData.email || undefined
+      );
+
+      console.log('✅ Customer created:', newCustomer);
+
+      // Select the new customer
+      this.selectedCustomer = this.mapSupabaseCustomerToLocal(newCustomer);
+    } catch (error) {
+      console.error('❌ Supabase error:', error);
+      throw error;
+    }
   }
 
   openEditCustomerModal() {
@@ -209,27 +257,46 @@ export class CustomersComponent implements OnInit {
       return;
     }
 
-    const initials = this.newCustomerForm.name
-      .split(' ')
-      .slice(0, 2)
-      .map(word => word[0])
-      .join('')
-      .toUpperCase();
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
 
-    const customerIndex = this.customers.findIndex(c => c.id === this.selectedCustomer!.id);
-    if (customerIndex !== -1) {
-      this.customers[customerIndex] = {
-        ...this.customers[customerIndex],
-        name: this.newCustomerForm.name,
-        phone: this.newCustomerForm.phone,
-        email: this.newCustomerForm.email || undefined,
-        initials
+    this.updateCustomerInSupabase()
+      .then(() => {
+        this.closeEditCustomerModal();
+        this.loadCustomers();
+      })
+      .catch(error => {
+        console.error('❌ Error updating customer:', error);
+        alert('Error al actualizar cliente: ' + error.message);
+      })
+      .finally(() => {
+        this.isSubmitting = false;
+        this.cdr.markForCheck();
+      });
+  }
+
+  private async updateCustomerInSupabase(): Promise<void> {
+    if (!this.selectedCustomer) return;
+
+    console.log('📝 Updating customer in Supabase...');
+
+    try {
+      const customerData = {
+        name: this.newCustomerForm.name.trim(),
+        phone: this.newCustomerForm.phone.trim(),
+        email: this.newCustomerForm.email?.trim() || null
       };
-      this.selectedCustomer = { ...this.customers[customerIndex] };
-      this.filteredCustomers = this.customers;
-    }
 
-    this.closeEditCustomerModal();
+      await this.supabase.updateCustomer(
+        parseInt(this.selectedCustomer.id),
+        customerData
+      );
+
+      console.log('✅ Customer updated');
+    } catch (error) {
+      console.error('❌ Supabase error:', error);
+      throw error;
+    }
   }
 
   deleteCustomer() {
@@ -238,9 +305,36 @@ export class CustomersComponent implements OnInit {
     const confirmed = confirm(`¿Eliminar cliente "${this.selectedCustomer.name}"?\n\nEsta acción no se puede deshacer.`);
     if (!confirmed) return;
 
-    this.customers = this.customers.filter(c => c.id !== this.selectedCustomer!.id);
-    this.filteredCustomers = this.customers;
-    this.selectedCustomer = null;
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
+
+    this.deleteCustomerFromSupabase()
+      .then(() => {
+        this.selectedCustomer = null;
+        this.loadCustomers();
+      })
+      .catch(error => {
+        console.error('❌ Error deleting customer:', error);
+        alert('Error al eliminar cliente: ' + error.message);
+      })
+      .finally(() => {
+        this.isSubmitting = false;
+        this.cdr.markForCheck();
+      });
+  }
+
+  private async deleteCustomerFromSupabase(): Promise<void> {
+    if (!this.selectedCustomer) return;
+
+    console.log('🗑️ Deleting customer from Supabase...');
+
+    try {
+      await this.supabase.deleteCustomer(parseInt(this.selectedCustomer.id));
+      console.log('✅ Customer deleted');
+    } catch (error) {
+      console.error('❌ Supabase error:', error);
+      throw error;
+    }
   }
 
   addAddress() {

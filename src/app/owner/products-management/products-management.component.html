@@ -114,7 +114,6 @@
             <div class="form-group">
               <label class="form-label">Categoría *</label>
               <select [(ngModel)]="newItem.category" class="form-input">
-                <option [value]="0" disabled>Selecciona una categoría</option>
                 @for (cat of categories; track cat.id) {
                   <option [ngValue]="cat.id">{{ cat.icon }} {{ cat.name }}</option>
                 }

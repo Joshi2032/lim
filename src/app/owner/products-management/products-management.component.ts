@@ -421,8 +421,17 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
   }
 
   resetForm(): void {
-    this.newItem = { ...this.DEFAULT_ITEM };
-    this.newCombo = { ...this.DEFAULT_COMBO };
+    // Set first available category as default
+    const defaultCategoryId = this.categories.length > 0 ? this.categories[0].id : 0;
+
+    this.newItem = {
+      ...this.DEFAULT_ITEM,
+      category: defaultCategoryId
+    };
+    this.newCombo = {
+      ...this.DEFAULT_COMBO,
+      category: defaultCategoryId
+    };
     this.itemImagePreview = null;
     this.comboImagePreview = null;
     this.selectedComboItems = {};

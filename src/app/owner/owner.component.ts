@@ -6,6 +6,8 @@ import { ProductsManagementComponent } from './products-management/products-mana
 import { SidebarComponent, MenuItem } from '../shared/sidebar/sidebar.component';
 import { IncomeReportComponent } from './income-report/income-report.component';
 import { SupabaseService } from '../core/services/supabase.service';
+import { MovementsComponent } from './movements/movements.component';
+import { UsersComponent } from './users/users.component';
 
 export interface StatCardData {
   title: string;
@@ -34,14 +36,24 @@ export interface RecentOrder {
 @Component({
   selector: 'app-owner',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, DashboardComponent, ProductsManagementComponent, IncomeReportComponent, PageHeaderComponent],
+  imports: [CommonModule, SidebarComponent, DashboardComponent, ProductsManagementComponent, IncomeReportComponent, PageHeaderComponent, MovementsComponent, UsersComponent],
   templateUrl: './owner.component.html',
   styleUrl: './owner.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OwnerComponent implements OnInit {
-  activeSection: 'dashboard' | 'productos' | 'ingresos' = 'dashboard';
-  
+  activeTab: 'resumen' | 'movimientos' | 'usuarios' | 'productos' | 'ingresos' = 'resumen';
+
+  tabs = [
+    { id: 'resumen', label: 'Resumen', icon: '📊' },
+    { id: 'movimientos', label: 'Movimientos', icon: '📋' },
+    { id: 'usuarios', label: 'Usuarios', icon: '👥' },
+    { id: 'productos', label: 'Productos', icon: '🍽️' },
+    { id: 'ingresos', label: 'Ingresos', icon: '💰' }
+  ];
+
+  cartCount = 0;
+
   currentUser = {
     name: 'Josue',
     role: 'Dueña',
@@ -111,6 +123,11 @@ export class OwnerComponent implements OnInit {
 
     this.topProducts = [];
     this.recentOrders = [];
+  }
+
+  setActiveTab(tabId: string) {
+    this.activeTab = tabId as 'resumen' | 'movimientos' | 'usuarios' | 'productos' | 'ingresos';
+    this.cdr.markForCheck();
   }
 
   onChartHover(event: MouseEvent, day: string, value: number) {

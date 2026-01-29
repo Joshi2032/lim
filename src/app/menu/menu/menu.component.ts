@@ -101,6 +101,9 @@ export class MenuComponent implements OnInit {
       // Cargar categorías para filtros
       await this.loadCategories();
 
+      // Cargar combos
+      await this.loadCombosFromSupabase();
+
       // Filtrar items iniciales
       this.filterItems();
 
@@ -109,6 +112,61 @@ export class MenuComponent implements OnInit {
       console.error('❌ Error loading menu:', error);
       alert('Error al cargar menú: ' + (error as any).message);
     }
+  }
+
+  async loadCombosFromSupabase() {
+    try {
+      const supabaseCombos = await this.supabase.getCombos();
+      console.log('✅ Combos loaded:', supabaseCombos);
+
+      this.combos = supabaseCombos.map(combo => ({
+        id: combo.id.toString(),
+        name: combo.name,
+        japaneseName: combo.japanese_name || '',
+        description: combo.description || '',
+        price: combo.price,
+        image: combo.image_url || '/assets/placeholder.png',
+        items: [], // Will be populated by combo items
+        category: 'combos'
+      }));
+
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('❌ Error loading combos:', error);
+    }
+  }
+
+  filterItems() {
+    if (this.selectedFilter === 'todos') {
+      this.filteredItems = [...this.menuItems];
+      this.filteredCombos = [...this.combos];
+    } else {
+      this.filteredItems = this.menuItems.filter(item => item.category === this.selectedFilter);
+      this.filteredCombos = this.combos.filter(combo => combo.category === 'combos');
+    }
+
+    if (this.searchQuery.trim()) {
+      const query = this.searchQuery.toLowerCase();
+      this.filteredItems = this.filteredItems.filter(item =>
+        item.name.toLowerCase().includes(query) ||
+        item.description.toLowerCase().includes(query)
+      );
+      this.filteredCombos = this.filteredCombos.filter(combo =>
+        combo.name.toLowerCase().includes(query) ||
+        combo.description.toLowerCase().includes(query)
+      );
+    }
+
+    this.cdr.markForCheck();
+  }
+
+  onSearch() {
+    this.filterItems();
+  }
+
+  onFilterChange(filterId: string | number) {
+    this.selectedFilter = String(filterId);
+    this.filterItems();
   }
 
   async loadCategories() {
@@ -155,6 +213,8 @@ export class MenuComponent implements OnInit {
 
   menuItems: MenuItem[] = [];
   combos: Combo[] = [];
+  filteredItems: MenuItem[] = [];
+  filteredCombos: Combo[] = [];
       japaneseName: 'ラムネ',
       description: 'Refresco japonés tradicional',
       price: 55,
@@ -485,7 +545,35 @@ export class MenuComponent implements OnInit {
   }
 
   handleLogout() {
-    console.log('Logout');
+    console.log('Logout clicked');
+    // Logout logic would go here
+  }
+
+  handleAddToCart(item: MenuItem) {
+    const existingItem = this.cartItems.find(c => c.id === item.id);
+    if (existingItem) {
+      existingItem.quantity++;
+    } else {
+      this.cartItems.push({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: 1
+      });
+    }
+    this.cartCount++;
+    this.isCartOpen = true;
+
+    this.movements.log({
+      title: 'Item agregado',
+      description: `${item.name} añadido al carrito`,
+      section: 'menu',
+      status: 'success',
+      actor: this.currentUser.name,
+      role: this.currentUser.role
+    });
+
+    this.cdr.markForCheck();
   }
 
   getMenuItemById(itemId: string): MenuItem | undefined {

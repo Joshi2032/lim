@@ -96,27 +96,27 @@ export class OwnerComponent implements OnInit {
         title: 'Órdenes hoy',
         value: 0,
         subtitle: '',
-        iconSvg: \<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"3\" y=\"6\" width=\"18\" height=\"12\" rx=\"2\" stroke=\"currentColor\" stroke-width=\"2\"/><path d=\"M3 10H21\" stroke=\"currentColor\" stroke-width=\"2\"/></svg>\,
+        iconSvg: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10H21" stroke="currentColor" stroke-width="2"/></svg>',
         trendLabel: '',
-        trendDirection: '',
+        trendDirection: undefined,
         variant: 'purple'
       },
       {
         title: 'Entregas en curso',
         value: 0,
         subtitle: '',
-        iconSvg: \<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M9 17C9 18.1046 8.10457 19 7 19C5.89543 19 5 18.1046 5 17C5 15.8954 5.89543 15 7 15C8.10457 15 9 15.8954 9 17Z\" stroke=\"currentColor\" stroke-width=\"2\"/><path d=\"M19 17C19 18.1046 18.1046 19 17 19C15.8954 19 15 18.1046 15 17C15 15.8954 15.8954 15 17 15C18.1046 15 19 15.8954 19 17Z\" stroke=\"currentColor\" stroke-width=\"2\"/><path d=\"M5 17H1V6C1 5.44772 1.44772 5 2 5H14V17M9 17H15M19 17H23V12.5L20 8H14V17\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>\,
+        iconSvg: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 17C9 18.1046 8.10457 19 7 19C5.89543 19 5 18.1046 5 17C5 15.8954 5.89543 15 7 15C8.10457 15 9 15.8954 9 17Z" stroke="currentColor" stroke-width="2"/><path d="M19 17C19 18.1046 18.1046 19 17 19C15.8954 19 15 18.1046 15 17C15 15.8954 15.8954 15 17 15C18.1046 15 19 15.8954 19 17Z" stroke="currentColor" stroke-width="2"/><path d="M5 17H1V6C1 5.44772 1.44772 5 2 5H14V17M9 17H15M19 17H23V12.5L20 8H14V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         trendLabel: '',
-        trendDirection: '',
+        trendDirection: undefined,
         variant: 'purple'
       },
       {
         title: 'Total cobrado',
-        value: '\',
+        value: '$0',
         subtitle: '',
-        iconSvg: \<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 3V21M7 7H16C17.1046 7 18 7.89543 18 9C18 10.1046 17.1046 11 16 11H9C7.89543 11 7 11.8954 7 13C7 14.1046 7.89543 15 9 15H17\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>\,
+        iconSvg: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3V21M7 7H16C17.1046 7 18 7.89543 18 9C18 10.1046 17.1046 11 16 11H9C7.89543 11 7 11.8954 7 13C7 14.1046 7.89543 15 9 15H17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         trendLabel: '',
-        trendDirection: '',
+        trendDirection: undefined,
         variant: 'amber'
       }
     ];
@@ -143,18 +143,13 @@ export class OwnerComponent implements OnInit {
 
     this.tooltipX = constrainedX;
     this.tooltipY = y - 50;
-    this.tooltipText = \\\\: \\\\;
+    this.tooltipText = `${day}: ${value}`;
     this.tooltipVisible = true;
     this.cdr.markForCheck();
   }
 
   onChartLeave() {
     this.tooltipVisible = false;
-    this.cdr.markForCheck();
-  }
-
-  setActiveTab(tabId: string) {
-    this.activeTab = tabId as 'resumen' | 'movimientos' | 'usuarios' | 'productos' | 'ingresos';
     this.cdr.markForCheck();
   }
 }

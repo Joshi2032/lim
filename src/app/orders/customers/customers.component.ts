@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, Input, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
@@ -52,8 +52,9 @@ export interface Customer {
   styleUrl: './customers.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CustomersComponent implements OnInit {
+export class CustomersComponent implements OnInit, OnDestroy {
   private isSubmitting = false;
+  private addressSubscription: any = null;
 
   constructor(
     private supabase: SupabaseService,
@@ -118,6 +119,12 @@ export class CustomersComponent implements OnInit {
 
   ngOnInit() {
     this.loadCustomers();
+  }
+
+  ngOnDestroy() {
+    if (this.addressSubscription) {
+      this.addressSubscription.unsubscribe();
+    }
   }
 
   async loadCustomers() {
@@ -194,7 +201,24 @@ export class CustomersComponent implements OnInit {
   }
 
   selectCustomer(customer: Customer) {
+    // Desuscribirse de cambios anteriores si existen
+    if (this.addressSubscription) {
+      this.addressSubscription.unsubscribe();
+    }
+
     this.selectedCustomer = { ...customer };
+
+    // Suscribirse a cambios de direcciones del cliente seleccionado
+    this.addressSubscription = this.supabase.subscribeToCustomerAddresses(
+      customer.id,
+      (addresses) => {
+        if (this.selectedCustomer && this.selectedCustomer.id === customer.id) {
+          this.selectedCustomer.addresses = addresses.map(addr => this.mapSupabaseAddressToLocal(addr));
+          this.selectedCustomer.addressCount = addresses.length;
+          this.cdr.markForCheck();
+        }
+      }
+    );
   }
 
   openNewCustomerModal() {

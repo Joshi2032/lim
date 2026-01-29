@@ -767,6 +767,22 @@ export class SupabaseService {
     }
   }
 
+  subscribeToCustomerAddresses(customerId: string, callback: (addresses: CustomerAddress[]) => void) {
+    const channel = supabase
+      .channel(`customer_addresses:${customerId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'customer_addresses', filter: `customer_id=eq.${customerId}` },
+        async () => {
+          const addresses = await this.getCustomerAddresses(customerId);
+          callback(addresses);
+        }
+      )
+      .subscribe();
+
+    return channel;
+  }
+
   // ==================== COMBOS ====================
 
   async getCombos(): Promise<Combo[]> {

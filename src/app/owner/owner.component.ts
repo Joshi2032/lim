@@ -153,6 +153,11 @@ export class OwnerComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  setActiveTab(tabId: string) {
+    this.activeTab = tabId as 'resumen' | 'movimientos' | 'usuarios' | 'productos' | 'ingresos';
+    this.cdr.markForCheck();
+  }
+
   selectSection(section: 'dashboard' | 'productos' | 'ingresos') {
     this.activeSection = section;
     this.cdr.markForCheck();

@@ -137,62 +137,6 @@ export class IncomeReportComponent implements OnInit {
   generateMockData(): IncomeRecord[] {
     // Mock data removed - data should come from Supabase
     return [];
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-
-      // 3-8 órdenes por día
-      const ordersPerDay = Math.floor(Math.random() * 6) + 3;
-
-      for (let j = 0; j < ordersPerDay; j++) {
-        const isDelivery = Math.random() > 0.6;
-        const subtotal = Math.floor(Math.random() * 800) + 200;
-        const tax = subtotal * 0.16;
-
-        records.push({
-          id: `ORD-${date.getTime()}-${j}`,
-          date: new Date(date),
-          orderNumber: `#${String(records.length + 1000).padStart(4, '0')}`,
-          type: isDelivery ? 'entrega' : 'mesa',
-          items: this.generateRandomItems(),
-          subtotal,
-          tax,
-          total: subtotal + tax,
-          paymentMethod: this.getRandomPaymentMethod(),
-          customer: isDelivery ? this.getRandomCustomer() : undefined
-        });
-      }
-    }
-
-    return records.sort((a, b) => b.date.getTime() - a.date.getTime());
-  }
-
-  generateRandomItems(): string[] {
-    const ITEMS = [
-      'Sushi Roll California', 'Ramen Tonkotsu', 'Tempura de Camarón', 'Sashimi Mix', 'Yakisoba',
-      'Gyoza', 'Edamame', 'Mochi', 'Té Verde', 'Bebida de Fruta', 'Ensalada Japonesa', 'Arroz Frito'
-    ];
-
-    const count = Math.floor(Math.random() * 4) + 1;
-    const selected: string[] = [];
-
-    for (let i = 0; i < count; i++) {
-      const item = ITEMS[Math.floor(Math.random() * ITEMS.length)];
-      if (!selected.includes(item)) {
-        selected.push(item);
-      }
-    }
-
-    return selected;
-  }
-
-  getRandomPaymentMethod(): 'efectivo' | 'tarjeta' | 'transferencia' {
-    const methods: Array<'efectivo' | 'tarjeta' | 'transferencia'> = ['efectivo', 'tarjeta', 'transferencia'];
-    return methods[Math.floor(Math.random() * methods.length)];
-  }
-
-  getRandomCustomer(): string {
-    const CUSTOMERS = ['Juan Pérez', 'María García', 'Carlos López', 'Ana Martínez', 'Luis Rodríguez'];
-    return CUSTOMERS[Math.floor(Math.random() * CUSTOMERS.length)];
   }
 
   applyFilters() {

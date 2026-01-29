@@ -1,16 +1,13 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { MovementsService } from '../../shared/movements/movements.service';
+import { SupabaseService, MenuItem, Order, OrderItem } from '../../core/services/supabase.service';
 
-interface MenuItem {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
+interface LocalMenuItem extends MenuItem {
   quantity: number;
 }
 
@@ -19,7 +16,7 @@ interface PickupOrder {
   customerPhone: string;
   pickupTime: string;
   notes: string;
-  items: MenuItem[];
+  items: LocalMenuItem[];
 }
 
 @Component({
@@ -42,6 +39,7 @@ export class PickupRegistrationComponent implements OnInit {
   selectedItem: string = '';
   private _totalMemoized: number | null = null;
   selectedQuantity: number = 1;
+  isSubmitting = false;
 
   currentUser: User = {
     name: 'Josue',
@@ -69,7 +67,9 @@ export class PickupRegistrationComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private movements: MovementsService
+    private movements: MovementsService,
+    private supabase: SupabaseService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -77,25 +77,15 @@ export class PickupRegistrationComponent implements OnInit {
     this.setDefaultPickupTime();
   }
 
-  loadMenuItems() {
-    // Mock data - En producción vendrá del backend
-    this.availableItems = [
-      { id: '1', name: 'Sushi Variado (24 pzas)', category: 'Sushi', price: 28.99, quantity: 0 },
-      { id: '2', name: 'California Roll', category: 'Sushi', price: 12.99, quantity: 0 },
-      { id: '3', name: 'Philadelphia Roll', category: 'Sushi', price: 13.99, quantity: 0 },
-      { id: '4', name: 'Nigiri Variado (10 pzas)', category: 'Sushi', price: 18.99, quantity: 0 },
-      { id: '5', name: 'Ramen Tonkotsu', category: 'Ramen', price: 15.99, quantity: 0 },
-      { id: '6', name: 'Ramen Miso', category: 'Ramen', price: 14.99, quantity: 0 },
-      { id: '7', name: 'Ramen Shoyu', category: 'Ramen', price: 14.99, quantity: 0 },
-      { id: '8', name: 'Gyoza (6 pzas)', category: 'Entradas', price: 7.99, quantity: 0 },
-      { id: '9', name: 'Edamame', category: 'Entradas', price: 5.99, quantity: 0 },
-      { id: '10', name: 'Tempura Mix', category: 'Entradas', price: 9.99, quantity: 0 },
-      { id: '11', name: 'Poke Bowl Salmón', category: 'Bowls', price: 16.99, quantity: 0 },
-      { id: '12', name: 'Poke Bowl Atún', category: 'Bowls', price: 17.99, quantity: 0 },
-      { id: '13', name: 'Mochi Assorted (6 pzas)', category: 'Postres', price: 8.99, quantity: 0 },
-      { id: '14', name: 'Té Verde', category: 'Bebidas', price: 3.99, quantity: 0 },
-      { id: '15', name: 'Ramune', category: 'Bebidas', price: 4.99, quantity: 0 }
-    ];
+  async loadMenuItems() {
+    try {
+      const items = await this.supabase.getMenuItems();
+      this.availableItems = items;
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('Error loading menu items:', error);
+      alert('Error al cargar el menú');
+    }
   }
 
   setDefaultPickupTime() {
@@ -154,18 +144,59 @@ export class PickupRegistrationComponent implements OnInit {
   }
 
   submitOrder() {
-    if (!this.isFormValid()) return;
+    if (!this.isFormValid() || this.isSubmitting) return;
 
-    this.movements.log({
-      title: 'Nuevo pedido de recogida',
-      description: `Pedido para ${this.order.customerName}`,
-      section: 'cocina',
-      status: 'success',
-      actor: this.currentUser.name,
-      role: this.currentUser.role
+    this.isSubmitting = true;
+    this.cdr.markForCheck();
+
+    this.registerOrderInSupabase().finally(() => {
+      this.isSubmitting = false;
+      this.cdr.markForCheck();
     });
+  }
 
-    this.router.navigate(['/recogida']);
+  private async registerOrderInSupabase() {
+    try {
+      // Create order in Supabase
+      const orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'> = {
+        customer_name: this.order.customerName,
+        customer_phone: this.order.customerPhone,
+        customer_email: '',
+        order_type: 'pickup',
+        status: 'pending',
+        total_price: this.getTotal(),
+        pickup_time: this.order.pickupTime,
+        notes: this.order.notes
+      };
+
+      const newOrder = await this.supabase.createOrder(orderData);
+
+      // Add order items
+      const orderItems: Array<Omit<OrderItem, 'id'>> = this.order.items.map(item => ({
+        order_id: newOrder.id,
+        menu_item_id: item.id,
+        quantity: item.quantity,
+        unit_price: item.price,
+        subtotal: item.price * item.quantity
+      }));
+
+      await this.supabase.addOrderItems(orderItems);
+
+      // Log movement
+      this.movements.log({
+        title: 'Nuevo pedido de recogida',
+        description: `Pedido #${newOrder.order_number} para ${this.order.customerName}`,
+        section: 'cocina',
+        status: 'success',
+        actor: this.currentUser.name,
+        role: this.currentUser.role
+      });
+
+      this.router.navigate(['/recogida']);
+    } catch (error) {
+      console.error('Error registering order:', error);
+      alert('Error al registrar el pedido. Intenta de nuevo.');
+    }
   }
 
   cancel() {

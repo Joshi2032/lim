@@ -1,0 +1,317 @@
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { supabase } from '../config/supabase.config';
+
+export interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category_id: string;
+  image_url?: string;
+  available: boolean;
+}
+
+export interface Order {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  customer_email?: string;
+  customer_phone?: string;
+  order_type: 'dine-in' | 'pickup' | 'delivery';
+  status: 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
+  total_price: number;
+  created_at: string;
+  updated_at: string;
+  table_number?: number;
+  delivery_address?: string;
+  pickup_time?: string;
+  notes?: string;
+}
+
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  menu_item_id: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+}
+
+export interface Customer {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SupabaseService {
+  private ordersSubject = new BehaviorSubject<Order[]>([]);
+  private menuItemsSubject = new BehaviorSubject<MenuItem[]>([]);
+
+  constructor() {}
+
+  // ==================== ORDERS ====================
+
+  async createOrder(orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'>) {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([
+          {
+            order_number: `ORD-${Date.now()}`,
+            customer_name: orderData.customer_name,
+            customer_email: orderData.customer_email || null,
+            customer_phone: orderData.customer_phone || null,
+            order_type: orderData.order_type,
+            status: orderData.status,
+            total_price: orderData.total_price,
+            table_number: orderData.table_number || null,
+            delivery_address: orderData.delivery_address || null,
+            pickup_time: orderData.pickup_time || null,
+            notes: orderData.notes || null,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as Order;
+    } catch (error) {
+      console.error('Error creating order:', error);
+      throw error;
+    }
+  }
+
+  async getOrders(): Promise<Order[]> {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      return [];
+    }
+  }
+
+  async getOrdersByStatus(status: Order['status']): Promise<Order[]> {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('status', status)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error(`Error fetching orders with status ${status}:`, error);
+      return [];
+    }
+  }
+
+  async getOrdersByType(orderType: Order['order_type']): Promise<Order[]> {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('order_type', orderType)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error(`Error fetching orders with type ${orderType}:`, error);
+      return [];
+    }
+  }
+
+  async updateOrderStatus(orderId: string, status: Order['status']) {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      throw error;
+    }
+  }
+
+  async deleteOrder(orderId: string) {
+    try {
+      const { error } = await supabase.from('orders').delete().eq('id', orderId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      throw error;
+    }
+  }
+
+  // ==================== ORDER ITEMS ====================
+
+  async addOrderItems(items: Array<Omit<OrderItem, 'id'>>) {
+    try {
+      const { data, error } = await supabase
+        .from('order_items')
+        .insert(items)
+        .select();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error adding order items:', error);
+      throw error;
+    }
+  }
+
+  async getOrderItems(orderId: string): Promise<OrderItem[]> {
+    try {
+      const { data, error } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', orderId);
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching order items:', error);
+      return [];
+    }
+  }
+
+  // ==================== MENU ITEMS ====================
+
+  async getMenuItems(): Promise<MenuItem[]> {
+    try {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('*')
+        .eq('available', true)
+        .order('name');
+
+      if (error) throw error;
+      const items = data || [];
+      this.menuItemsSubject.next(items);
+      return items;
+    } catch (error) {
+      console.error('Error fetching menu items:', error);
+      return [];
+    }
+  }
+
+  async getMenuItemsByCategory(categoryId: string): Promise<MenuItem[]> {
+    try {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('*')
+        .eq('category_id', categoryId)
+        .eq('available', true)
+        .order('name');
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching menu items by category:', error);
+      return [];
+    }
+  }
+
+  // ==================== CUSTOMERS ====================
+
+  async createOrGetCustomer(customerData: Omit<Customer, 'id' | 'created_at' | 'updated_at'>): Promise<Customer> {
+    try {
+      // Try to find existing customer by email or phone
+      const { data: existing } = await supabase
+        .from('customers')
+        .select('*')
+        .or(`email.eq.${customerData.email},phone.eq.${customerData.phone}`)
+        .single();
+
+      if (existing) {
+        return existing as Customer;
+      }
+
+      // Create new customer
+      const { data, error } = await supabase
+        .from('customers')
+        .insert([customerData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as Customer;
+    } catch (error) {
+      console.error('Error creating/getting customer:', error);
+      throw error;
+    }
+  }
+
+  // ==================== REAL-TIME SUBSCRIPTIONS ====================
+
+  subscribeToOrders(callback: (orders: Order[]) => void) {
+    const subscription = supabase
+      .from('orders')
+      .on('*', (payload) => {
+        this.getOrders().then(callback);
+      })
+      .subscribe();
+
+    return subscription;
+  }
+
+  subscribeToPickupOrders(callback: (orders: Order[]) => void) {
+    const subscription = supabase
+      .from('orders')
+      .on('*', (payload) => {
+        this.getOrdersByType('pickup').then(callback);
+      })
+      .subscribe();
+
+    return subscription;
+  }
+
+  subscribeToMenuItems(callback: (items: MenuItem[]) => void) {
+    const subscription = supabase
+      .from('menu_items')
+      .on('*', (payload) => {
+        this.getMenuItems().then(callback);
+      })
+      .subscribe();
+
+    return subscription;
+  }
+
+  // ==================== OBSERVABLES ====================
+
+  getOrders$(): Observable<Order[]> {
+    return this.ordersSubject.asObservable();
+  }
+
+  getMenuItems$(): Observable<MenuItem[]> {
+    return this.menuItemsSubject.asObservable();
+  }
+
+  updateOrders(orders: Order[]) {
+    this.ordersSubject.next(orders);
+  }
+
+  updateMenuItems(items: MenuItem[]) {
+    this.menuItemsSubject.next(items);
+  }
+}

@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
@@ -6,37 +6,39 @@ import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stat
 import { DataTableComponent, DataTableColumn } from '../../shared/data-table/data-table.component';
 import { FilterBarComponent, FilterField, FilterOption } from '../../shared/filter-bar/filter-bar.component';
 import { MovementsService } from '../../shared/movements/movements.service';
+import { SupabaseService, Order as SupabaseOrder } from '../../core/services/supabase.service';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 export type DeliveryStatus = 'pendiente' | 'enCurso' | 'entregada';
 
 export interface Delivery {
-	id: string;
-	customerName: string;
-	phone: string;
-	address: string;
-	orderNumber: string;
-	total: number;
-	status: DeliveryStatus;
-	notes?: string;
+  id: string;
+  customerName: string;
+  phone: string;
+  address: string;
+  orderNumber: string;
+  total: number;
+  status: DeliveryStatus;
+  notes?: string;
 }
 
 @Component({
   selector: 'app-delivery',
   imports: [CommonModule, SidebarComponent, PageHeaderComponent, StatsGridComponent, DataTableComponent, FilterBarComponent],
   templateUrl: './delivery.component.html',
-  styleUrl: './delivery.component.scss'
+  styleUrl: './delivery.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DeliveryComponent implements OnInit {
+export class DeliveryComponent implements OnInit, OnDestroy {
   @Input() embedded: boolean = false;
   selectedStatus: DeliveryStatus = 'pendiente';
   deliveries: Delivery[] = [];
   cartCount: number = 0;
+  private _deliveryStatsMemoized: SimpleStatItem[] | null = null;
+  private deliveryOrdersSubscription: RealtimeChannel | null = null;
 
-  // Para tabla de entregas
   deliveryColumns: DataTableColumn[] = [];
   deliveryTableData: any[] = [];
-
-  // Para filtros
   filterFields: FilterField[] = [];
 
   statusOptions: FilterOption[] = [
@@ -46,11 +48,13 @@ export class DeliveryComponent implements OnInit {
   ];
 
   get deliveryStats(): SimpleStatItem[] {
-    return [
+    if (this._deliveryStatsMemoized) return this._deliveryStatsMemoized;
+    this._deliveryStatsMemoized = [
       { value: this.getDeliveriesByStatus('pendiente').length, label: 'Pendientes', status: 'pendiente' },
       { value: this.getDeliveriesByStatus('enCurso').length, label: 'En Curso', status: 'enCurso' },
       { value: this.getDeliveriesByStatus('entregada').length, label: 'Entregadas Hoy', status: 'entregada' }
     ];
+    return this._deliveryStatsMemoized || [];
   }
 
   currentUser: User = {
@@ -72,85 +76,123 @@ export class DeliveryComponent implements OnInit {
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
 
-  constructor(private movements: MovementsService) {}
+  constructor(
+    private movements: MovementsService,
+    private supabase: SupabaseService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
     this.initializeTableColumns();
     this.initializeFilters();
     this.loadDeliveries();
+    this.subscribeToDeliveryChanges();
   }
 
-  private initializeTableColumns() {
+  ngOnDestroy() {
+    if (this.deliveryOrdersSubscription) {
+      this.deliveryOrdersSubscription.unsubscribe();
+    }
+  }
+
+  async loadDeliveries() {
+    try {
+      const supabaseOrders = await this.supabase.getOrdersByType('delivery');
+      this.deliveries = this.mapSupabaseOrdersToDeliveries(supabaseOrders);
+      this.updateTableData();
+      this._deliveryStatsMemoized = null;
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('Error loading delivery orders:', error);
+    }
+  }
+
+  private subscribeToDeliveryChanges() {
+    this.deliveryOrdersSubscription = this.supabase.subscribeToOrders((orders) => {
+      const deliveryOrders = orders.filter(o => o.order_type === 'delivery');
+      this.deliveries = this.mapSupabaseOrdersToDeliveries(deliveryOrders);
+      this.updateTableData();
+      this._deliveryStatsMemoized = null;
+      this.cdr.markForCheck();
+    });
+  }
+
+  private mapSupabaseOrdersToDeliveries(supabaseOrders: SupabaseOrder[]): Delivery[] {
+    return supabaseOrders.map(so => ({
+      id: so.id,
+      customerName: so.customer_name,
+      phone: so.customer_phone || '',
+      address: so.delivery_address || '',
+      orderNumber: so.order_number,
+      total: so.total_price,
+      status: this.mapSupabaseStatusToDelivery(so.status),
+      notes: so.notes
+    }));
+  }
+
+  private mapSupabaseStatusToDelivery(status: SupabaseOrder['status']): DeliveryStatus {
+    const statusMap: Record<string, DeliveryStatus> = {
+      'pending': 'pendiente',
+      'preparing': 'pendiente',
+      'ready': 'enCurso',
+      'completed': 'entregada',
+      'cancelled': 'pendiente'
+    };
+    return statusMap[status] || 'pendiente';
+  }
+
+  private mapDeliveryStatusToSupabase(status: DeliveryStatus): SupabaseOrder['status'] {
+    const statusMap: Record<DeliveryStatus, SupabaseOrder['status']> = {
+      'pendiente': 'pending',
+      'enCurso': 'ready',
+      'entregada': 'completed'
+    };
+    return statusMap[status] || 'pending';
+  }
+
+  initializeTableColumns() {
     this.deliveryColumns = [
-      { key: 'orderNumber', header: 'Orden', width: '100px', align: 'center' },
-      { key: 'customerName', header: 'Cliente', align: 'left' },
-      { key: 'phone', header: 'Teléfono', width: '140px', align: 'center' },
-      { key: 'address', header: 'Dirección', align: 'left' },
-      { key: 'total', header: 'Total', width: '100px', align: 'right' },
-      { key: 'status', header: 'Estado', width: '120px', align: 'center' }
+      { key: 'orderNumber', label: 'Nº Pedido', sortable: true },
+      { key: 'customerName', label: 'Cliente', sortable: true },
+      { key: 'phone', label: 'Teléfono', sortable: false },
+      { key: 'address', label: 'Dirección', sortable: false },
+      { key: 'total', label: 'Total', sortable: true, type: 'currency' },
+      { key: 'status', label: 'Estado', sortable: true, type: 'badge' },
+      { key: 'actions', label: 'Acciones', sortable: false, type: 'actions' }
     ];
   }
 
-  private initializeFilters() {
+  initializeFilters() {
     this.filterFields = [
       {
-        name: 'status',
+        key: 'status',
         label: 'Estado',
         type: 'select',
-        options: this.statusOptions,
-        gridSpan: 2
+        options: this.statusOptions
       },
       {
-        name: 'search',
+        key: 'search',
         label: 'Buscar',
-        type: 'search',
-        placeholder: 'Cliente, teléfono u orden',
-        gridSpan: 2
+        type: 'text',
+        placeholder: 'Buscar por cliente o dirección...'
       }
     ];
   }
 
-  loadDeliveries() {
-    // Mock data - En producción vendrá del backend
-    this.deliveries = [];
-    this.updateTableData();
-  }
-
-  private updateTableData() {
-    this.deliveryTableData = this.deliveries.map(d => ({
-      ...d,
-      status: this.getStatusLabel(d.status)
+  updateTableData() {
+    this.deliveryTableData = this.deliveries.map(delivery => ({
+      ...delivery,
+      total: `$${delivery.total.toFixed(2)}`,
+      statusBadge: {
+        text: this.getStatusLabel(delivery.status),
+        variant: this.getStatusVariant(delivery.status)
+      },
+      actions: [
+        { label: 'Asignar', action: 'assign', icon: '👤' },
+        { label: 'En Curso', action: 'start', icon: '🚚', show: delivery.status === 'pendiente' },
+        { label: 'Entregado', action: 'complete', icon: '✅', show: delivery.status === 'enCurso' }
+      ]
     }));
-  }
-
-  onFilterChange(filters: Record<string, any>) {
-    let filtered = this.deliveries;
-
-    if (filters['status'] && filters['status'] !== '') {
-      filtered = filtered.filter(d => d.status === filters['status']);
-    }
-
-    if (filters['search'] && filters['search'].trim()) {
-      const search = filters['search'].toLowerCase();
-      filtered = filtered.filter(d =>
-        d.customerName.toLowerCase().includes(search) ||
-        d.phone.includes(search) ||
-        d.orderNumber.includes(search)
-      );
-    }
-
-    this.deliveryTableData = filtered.map(d => ({
-      ...d,
-      status: this.getStatusLabel(d.status)
-    }));
-  }
-
-  getDeliveriesByStatus(status: DeliveryStatus): Delivery[] {
-    return this.deliveries.filter(delivery => delivery.status === status);
-  }
-
-  getFilteredDeliveries(): Delivery[] {
-    return this.getDeliveriesByStatus(this.selectedStatus);
   }
 
   getStatusLabel(status: DeliveryStatus): string {
@@ -159,26 +201,78 @@ export class DeliveryComponent implements OnInit {
       'enCurso': 'En Curso',
       'entregada': 'Entregada'
     };
-    return labels[status];
+    return labels[status] || status;
   }
 
-  updateDeliveryStatus(deliveryId: string, newStatus: DeliveryStatus) {
-    const delivery = this.deliveries.find(d => d.id === deliveryId);
-    if (delivery) {
-      delivery.status = newStatus;
+  getStatusVariant(status: DeliveryStatus): string {
+    const variants: Record<DeliveryStatus, string> = {
+      'pendiente': 'warning',
+      'enCurso': 'info',
+      'entregada': 'success'
+    };
+    return variants[status] || 'default';
+  }
 
-      this.movements.log({
-        title: `Entrega ${this.getStatusLabel(newStatus)}`,
-        description: `${delivery.customerName} · Pedido ${delivery.orderNumber} ahora ${this.getStatusLabel(newStatus)}`,
-        section: 'entregas',
-        status: newStatus === 'entregada' ? 'success' : 'info',
-        actor: this.currentUser.name,
-        role: this.currentUser.role
-      });
+  getDeliveriesByStatus(status: DeliveryStatus): Delivery[] {
+    return this.deliveries.filter(d => d.status === status);
+  }
+
+  onFilterChange(filters: any) {
+    console.log('Filters changed:', filters);
+    // Implementar lógica de filtrado si es necesario
+  }
+
+  onTableAction(event: { action: string; row: any }) {
+    const delivery = this.deliveries.find(d => d.id === event.row.id);
+    if (!delivery) return;
+
+    switch (event.action) {
+      case 'assign':
+        this.assignDelivery(delivery);
+        break;
+      case 'start':
+        this.startDelivery(delivery);
+        break;
+      case 'complete':
+        this.completeDelivery(delivery);
+        break;
     }
   }
 
-  onStatusFilterChange(statusId: any) {
-    this.selectedStatus = statusId as DeliveryStatus;
+  assignDelivery(delivery: Delivery) {
+    console.log('Assign delivery:', delivery);
+    // Implementar asignación de repartidor
+  }
+
+  async startDelivery(delivery: Delivery) {
+    try {
+      await this.supabase.updateOrderStatus(delivery.id, 'ready');
+      this.movements.log({
+        title: 'Entrega iniciada',
+        description: `Pedido ${delivery.orderNumber} en camino`,
+        section: 'entregas',
+        status: 'info',
+        actor: this.currentUser.name,
+        role: this.currentUser.role
+      });
+    } catch (error) {
+      console.error('Error starting delivery:', error);
+    }
+  }
+
+  async completeDelivery(delivery: Delivery) {
+    try {
+      await this.supabase.updateOrderStatus(delivery.id, 'completed');
+      this.movements.log({
+        title: 'Entrega completada',
+        description: `Pedido ${delivery.orderNumber} entregado a ${delivery.customerName}`,
+        section: 'entregas',
+        status: 'success',
+        actor: this.currentUser.name,
+        role: this.currentUser.role
+      });
+    } catch (error) {
+      console.error('Error completing delivery:', error);
+    }
   }
 }

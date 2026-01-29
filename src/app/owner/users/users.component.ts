@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { UserCardComponent } from '../../shared/user-card/user-card.component';
@@ -6,6 +6,7 @@ import { UserFormComponent, UserFormData, RoleOption } from '../../shared/user-f
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { MovementsService } from '../../shared/movements/movements.service';
+import { SupabaseService } from '../../core/services/supabase.service';
 
 export type UserRole = 'duena' | 'encargado' | 'chef' | 'mesero' | 'cajero' | 'repartidor';
 
@@ -28,9 +29,11 @@ export interface RoleStat extends RoleOption {
   standalone: true,
   imports: [CommonModule, SidebarComponent, UserCardComponent, UserFormComponent, PageHeaderComponent, EmptyStateComponent],
   templateUrl: './users.component.html',
-  styleUrl: './users.component.scss'
+  styleUrl: './users.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UsersComponent implements OnInit {
+  private isSubmitting = false;
   @Input() embedded: boolean = false;
   users: UserEmployee[] = [];
   cartCount: number = 0;
@@ -59,7 +62,11 @@ export class UsersComponent implements OnInit {
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios', active: true }
   ];
 
-  constructor(private movements: MovementsService) {}
+  constructor(
+    private movements: MovementsService,
+    private supabase: SupabaseService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   roleStats: RoleStat[] = [
     { id: 'duena', label: 'Dueña', icon: '👑', count: 0 },

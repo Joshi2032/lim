@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, TemplateRef, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, TemplateRef, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { StatCardComponent, StatVariant } from '../../shared/stat-card/stat-card.component';
@@ -6,6 +6,8 @@ import { SectionHeaderComponent } from '../../shared/section-header/section-head
 import { DataTableComponent, DataTableColumn } from '../../shared/data-table/data-table.component';
 import { InfoCardsComponent, InfoCard } from '../../shared/info-cards/info-cards.component';
 import { TopProductsChartComponent, TopProduct } from '../../shared/top-products-chart/top-products-chart.component';
+import { SupabaseService, Order as SupabaseOrder } from '../../core/services/supabase.service';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface Product {
   id: string;
@@ -45,9 +47,11 @@ interface StatCardData {
   standalone: true,
   imports: [CommonModule, SidebarComponent, StatCardComponent, SectionHeaderComponent, DataTableComponent, InfoCardsComponent, TopProductsChartComponent],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss'
+  styleUrl: './dashboard.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
+  private subscription: RealtimeChannel | null = null;
   @Input() embedded: boolean = false;
   cartCount: number = 0;
   statCards: StatCardData[] = [];
@@ -111,9 +115,231 @@ export class DashboardComponent implements OnInit {
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
 
+  constructor(
+    private supabase: SupabaseService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
   ngOnInit() {
     this.initializeTableColumns();
-    this.loadData();
+    this.loadDataFromSupabase();
+    this.subscribeToOrderChanges();
+  }
+
+  ngOnDestroy() {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+  }
+
+  subscribeToOrderChanges() {
+    this.subscription = this.supabase.subscribeToOrders((orders) => {
+      console.log('🔄 Orders updated via subscription, refreshing dashboard...');
+      this.loadDataFromSupabase();
+    });
+  }
+
+  async loadDataFromSupabase() {
+    try {
+      console.log('📋 Loading dashboard data from Supabase...');
+
+      const orders = await this.supabase.getOrders();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Filtrar órdenes de hoy
+      const todayOrders = orders.filter(o => {
+        const orderDate = new Date(o.created_at);
+        orderDate.setHours(0, 0, 0, 0);
+        return orderDate.getTime() === today.getTime();
+      });
+
+      // Calcular estadísticas
+      const totalRevenue = todayOrders.reduce((sum, o) => sum + o.total_price, 0);
+      const activeOrders = todayOrders.filter(o => o.status !== 'completed' && o.status !== 'cancelled');
+      const kitchenOrders = todayOrders.filter(o => o.status === 'preparing');
+      const deliveryOrders = orders.filter(o => o.order_type === 'delivery' && o.status !== 'completed');
+      const avgTicket = todayOrders.length > 0 ? totalRevenue / todayOrders.length : 0;
+
+      // Actualizar stats
+      this.updateStatCards(totalRevenue, todayOrders.length, avgTicket, kitchenOrders.length, activeOrders.length, deliveryOrders.length);
+
+      // Cargar órdenes recientes
+      this.loadRecentOrders(orders);
+
+      // Cargar productos más vendidos
+      await this.loadTopProducts(orders);
+
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('❌ Error loading dashboard data:', error);
+    }
+  }
+
+  updateStatCards(revenue: number, ordersCount: number, avgTicket: number, kitchenCount: number, activeCount: number, deliveryCount: number) {
+    this.statCards = [
+      {
+        title: 'Ingresos del Día',
+        value: '$' + revenue.toFixed(2),
+        subtitle: '',
+        trendLabel: '',
+        trendDirection: '',
+        iconSvg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7.5C4 6.11929 5.11929 5 6.5 5H17.5C18.8807 5 20 6.11929 20 7.5V8.5C20 9.88071 18.8807 11 17.5 11H6.5C5.11929 11 4 9.88071 4 8.5V7.5Z" fill="currentColor" opacity="0.15"/><path d="M5 12.5C5 11.6716 5.67157 11 6.5 11H17.5C18.3284 11 19 11.6716 19 12.5V13.5C19 14.3284 18.3284 15 17.5 15H6.5C5.67157 15 5 14.3284 5 13.5V12.5Z" fill="currentColor" opacity="0.15"/><path d="M12 3V21M7 7H16C17.1046 7 18 7.89543 18 9C18 10.1046 17.1046 11 16 11H9C7.89543 11 7 11.8954 7 13C7 14.1046 7.89543 15 9 15H17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        variant: 'red'
+      },
+      {
+        title: 'Órdenes Hoy',
+        value: ordersCount,
+        subtitle: activeCount + ' activas',
+        iconSvg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="5" width="16" height="14" rx="2.5" ry="2.5" stroke="currentColor" stroke-width="2"/><path d="M7 9H17M7 13H13M17 13L15 11M17 13L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        trendLabel: '',
+        trendDirection: '',
+        variant: 'amber'
+      },
+      {
+        title: 'Ticket Promedio',
+        value: '$' + avgTicket.toFixed(2),
+        subtitle: '',
+        trendLabel: '',
+        trendDirection: '',
+        iconSvg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 10L12 14L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>`,
+        variant: 'blue'
+      },
+      {
+        title: 'En Cocina',
+        value: kitchenCount,
+        subtitle: 'órdenes activas',
+        iconSvg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4.5C6 3.67157 6.67157 3 7.5 3H16.5C17.3284 3 18 3.67157 18 4.5V7H6V4.5Z" fill="currentColor" opacity="0.15"/><rect x="5" y="7" width="14" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M9 11H15M9 14H12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        trendLabel: '',
+        trendDirection: '',
+        variant: 'blue'
+      },
+      {
+        title: 'Pagos procesados',
+        value: ordersCount,
+        subtitle: '',
+        iconSvg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10H21" stroke="currentColor" stroke-width="2"/></svg>`,
+        trendLabel: '',
+        trendDirection: '',
+        variant: 'default'
+      },
+      {
+        title: 'Entregas en curso',
+        value: deliveryCount,
+        subtitle: '',
+        iconSvg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 17C9 18.1046 8.10457 19 7 19C5.89543 19 5 18.1046 5 17C5 15.8954 5.89543 15 7 15C8.10457 15 9 15.8954 9 17Z" stroke="currentColor" stroke-width="2"/><path d="M19 17C19 18.1046 18.1046 19 17 19C15.8954 19 15 18.1046 15 17C15 15.8954 15.8954 15 17 15C18.1046 15 19 15.8954 19 17Z" stroke="currentColor" stroke-width="2"/><path d="M5 17H1V6C1 5.44772 1.44772 5 2 5H14V17M9 17H15M19 17H23V12.5L20 8H14V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        trendLabel: '',
+        trendDirection: '',
+        variant: 'default'
+      },
+      {
+        title: 'Total cobrado',
+        value: '$' + revenue.toFixed(2),
+        subtitle: '',
+        iconSvg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        trendLabel: '',
+        trendDirection: '',
+        variant: 'default'
+      }
+    ];
+
+    // Mock chart data
+    this.chartData = [
+      { day: 'Lun', value: 1000, label: 'Lunes' },
+      { day: 'Mar', value: 1500, label: 'Martes' },
+      { day: 'Mié', value: 5000, label: 'Miércoles' },
+      { day: 'Jue', value: 32000, label: 'Jueves' },
+      { day: 'Vie', value: 45000, label: 'Viernes' },
+      { day: 'Sáb', value: 50000, label: 'Sábado' },
+      { day: 'Dom', value: 35000, label: 'Domingo' }
+    ];
+    this.updateChartGeometry();
+  }
+
+  loadRecentOrders(orders: SupabaseOrder[]) {
+    const statusMap: { [key: string]: 'preparando' | 'pendiente' | 'listo' } = {
+      'pending': 'pendiente',
+      'preparing': 'preparando',
+      'ready': 'listo',
+      'completed': 'listo',
+      'cancelled': 'pendiente'
+    };
+
+    const statusLabelMap: { [key: string]: string } = {
+      'pending': 'Pendiente',
+      'preparing': 'Preparando',
+      'ready': 'Listo',
+      'completed': 'Completado',
+      'cancelled': 'Cancelado'
+    };
+
+    this.recentOrders = orders
+      .filter(o => o.status !== 'completed' && o.status !== 'cancelled')
+      .slice(0, 10)
+      .map(o => ({
+        id: o.id,
+        tableNumber: o.table_number || 0,
+        customerName: o.customer_name,
+        itemsCount: 0,
+        total: o.total_price,
+        status: statusMap[o.status] || 'pendiente',
+        statusLabel: statusLabelMap[o.status] || 'Pendiente'
+      }));
+  }
+
+  async loadTopProducts(orders: SupabaseOrder[]) {
+    // TODO: Implementar conteo real de productos desde order_items
+    this.topProducts = [
+      { id: '1', name: 'Dragon Roll', quantity: 34, rank: 1 },
+      { id: '2', name: 'Bento Box Deluxe', quantity: 28, rank: 2 },
+      { id: '3', name: 'Sake Frío Premium', quantity: 25, rank: 3 },
+      { id: '4', name: 'Sashimi Mixto', quantity: 22, rank: 4 },
+      { id: '5', name: 'Philadelphia Roll', quantity: 19, rank: 5 }
+    ];
+
+    this.topProductsData = this.topProducts.map(p => ({
+      id: p.id,
+      rank: p.rank,
+      name: p.name,
+      quantity: p.quantity
+    }));
+
+    // Actualizar status cards
+    this.statusCards = [
+      {
+        id: 'orders-today',
+        title: 'Órdenes Hoy',
+        value: this.recentOrders.length,
+        description: 'Órdenes activas',
+        icon: '📋',
+        color: 'blue',
+        badge: '+' + this.recentOrders.length
+      },
+      {
+        id: 'kitchen-active',
+        title: 'En Cocina',
+        value: this.recentOrders.filter(o => o.status === 'preparando').length,
+        description: 'Preparando',
+        icon: '🍳',
+        color: 'amber'
+      },
+      {
+        id: 'top-product',
+        title: 'Top Producto',
+        value: this.topProducts[0]?.name || 'N/A',
+        description: this.topProducts[0]?.quantity + ' unidades',
+        icon: '⭐',
+        color: 'green'
+      },
+      {
+        id: 'revenue-today',
+        title: 'Ingresos Hoy',
+        value: '$' + this.recentOrders.reduce((sum, o) => sum + o.total, 0).toLocaleString(),
+        description: this.recentOrders.length + ' transacciones',
+        icon: '💰',
+        color: 'red'
+      }
+    ];
   }
 
   private initializeTableColumns() {

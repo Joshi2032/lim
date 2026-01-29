@@ -71,6 +71,16 @@ export interface Category {
   updated_at: string;
 }
 
+export interface RestaurantTable {
+  id: string;
+  table_number: number;
+  capacity: number;
+  status: 'available' | 'occupied' | 'reserved' | 'cleaning';
+  current_order_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -297,6 +307,67 @@ export class SupabaseService {
       console.error('❌ Error in getCategories:', error);
       throw error;
     }
+  }
+
+  // ==================== RESTAURANT TABLES ====================
+
+  async getTables(): Promise<RestaurantTable[]> {
+    try {
+      console.log('📋 Fetching tables...');
+      const { data, error } = await supabase
+        .from('restaurant_tables')
+        .select('*')
+        .order('table_number', { ascending: true });
+
+      if (error) {
+        console.error('❌ Error fetching tables:', error);
+        throw error;
+      }
+
+      console.log('✅ Tables fetched:', data?.length || 0);
+      return (data as RestaurantTable[]) || [];
+    } catch (error) {
+      console.error('❌ Error in getTables:', error);
+      throw error;
+    }
+  }
+
+  async updateTableStatus(tableId: string, status: 'available' | 'occupied' | 'reserved' | 'cleaning'): Promise<void> {
+    try {
+      console.log('📝 Updating table status:', tableId, status);
+      const { error } = await supabase
+        .from('restaurant_tables')
+        .update({ status })
+        .eq('id', tableId);
+
+      if (error) {
+        console.error('❌ Error updating table status:', error);
+        throw error;
+      }
+
+      console.log('✅ Table status updated');
+    } catch (error) {
+      console.error('❌ Error in updateTableStatus:', error);
+      throw error;
+    }
+  }
+
+  subscribeToTables(callback: (tables: RestaurantTable[]) => void) {
+    console.log('🔔 Subscribing to table changes...');
+
+    const channel = supabase
+      .channel('restaurant_tables-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'restaurant_tables' },
+        () => {
+          console.log('🔄 Table change detected, fetching updated tables...');
+          this.getTables().then(callback);
+        }
+      )
+      .subscribe();
+
+    return channel;
   }
 
   // ==================== CUSTOMERS ====================

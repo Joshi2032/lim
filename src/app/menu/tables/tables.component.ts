@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { TableCardComponent, Table, TableStatus } from '../table-card/table-card.component';
@@ -6,6 +6,8 @@ import { MovementsService } from '../../shared/movements/movements.service';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stats-grid.component';
+import { SupabaseService, RestaurantTable as SupabaseTable } from '../../core/services/supabase.service';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface Filter {
 	id: string;
@@ -18,9 +20,11 @@ interface Filter {
   selector: 'app-tables',
   imports: [CommonModule, SidebarComponent, TableCardComponent, FilterChipsComponent, PageHeaderComponent, StatsGridComponent],
   templateUrl: './tables.component.html',
-  styleUrl: './tables.component.scss'
+  styleUrl: './tables.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TablesComponent {
+export class TablesComponent implements OnInit, OnDestroy {
+  private subscription: RealtimeChannel | null = null;
   selectedFilter: string = 'todas';
   filterOptions: FilterOption[] = [
     { id: 'todas', label: 'Todas' },
@@ -50,7 +54,11 @@ export class TablesComponent {
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
 
-  constructor(private movements: MovementsService) {}
+  constructor(
+    private movements: MovementsService,
+    private supabase: SupabaseService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   filters: Filter[] = [
     { id: 'todas', label: 'Todas', icon: '📍' },
@@ -60,12 +68,67 @@ export class TablesComponent {
     { id: 'limpieza', label: 'Limpieza', status: 'limpieza' }
   ];
 
-  tables: Table[] = Array.from({ length: 12 }, (_, i) => ({
-    id: `table-${i + 1}`,
-    name: `Mesa ${i + 1}`,
-    capacity: [2, 2, 4, 4, 6, 6, 8, 4, 2, 4, 6, 8][i],
-    status: ['disponible', 'disponible', 'disponible', 'disponible', 'disponible', 'disponible', 'disponible', 'disponible', 'disponible', 'disponible', 'disponible', 'disponible'][i] as TableStatus
-  }));
+  tables: Table[] = [];
+
+  ngOnInit() {
+    this.loadTables();
+    this.subscribeToTableChanges();
+  }
+
+  ngOnDestroy() {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+  }
+
+  async loadTables() {
+    try {
+      console.log('📋 Loading tables from Supabase...');
+      const supabaseTables = await this.supabase.getTables();
+      console.log('✅ Tables loaded:', supabaseTables);
+
+      this.tables = supabaseTables.map(t => this.mapSupabaseTableToLocal(t));
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('❌ Error loading tables:', error);
+      alert('Error al cargar mesas: ' + (error as any).message);
+    }
+  }
+
+  subscribeToTableChanges() {
+    this.subscription = this.supabase.subscribeToTables((tables) => {
+      console.log('🔄 Tables updated via subscription');
+      this.tables = tables.map(t => this.mapSupabaseTableToLocal(t));
+      this.cdr.markForCheck();
+    });
+  }
+
+  private mapSupabaseTableToLocal(supabaseTable: SupabaseTable): Table {
+    const statusMap: { [key: string]: TableStatus } = {
+      'available': 'disponible',
+      'occupied': 'ocupada',
+      'reserved': 'reservada',
+      'cleaning': 'limpieza'
+    };
+
+    return {
+      id: supabaseTable.id.toString(),
+      name: `Mesa ${supabaseTable.table_number}`,
+      capacity: supabaseTable.capacity,
+      status: statusMap[supabaseTable.status] || 'disponible'
+    };
+  }
+
+  private mapLocalStatusToSupabase(localStatus: TableStatus): 'available' | 'occupied' | 'reserved' | 'cleaning' {
+    const statusMap: { [key: string]: 'available' | 'occupied' | 'reserved' | 'cleaning' } = {
+      'disponible': 'available',
+      'ocupada': 'occupied',
+      'reservada': 'reserved',
+      'limpieza': 'cleaning'
+    };
+
+    return statusMap[localStatus] || 'available';
+  }
 
   get tableStats(): SimpleStatItem[] {
     return [
@@ -108,20 +171,27 @@ export class TablesComponent {
     console.log('Logout');
   }
 
-  onTableStatusChange(tableId: string, newStatus: TableStatus): void {
+  async onTableStatusChange(tableId: string, newStatus: TableStatus): Promise<void> {
     const table = this.tables.find(t => t.id === tableId);
     if (table) {
       const oldStatus = table.status;
-      table.status = newStatus;
 
-      this.movements.log({
-        title: `Mesa actualizada a ${newStatus}`,
-        description: `${table.name} · Cambió de ${oldStatus} a ${newStatus}`,
-        section: 'mesas',
-        status: 'info',
-        actor: this.currentUser.name,
-        role: this.currentUser.role
-      });
+      try {
+        const supabaseStatus = this.mapLocalStatusToSupabase(newStatus);
+        await this.supabase.updateTableStatus(tableId, supabaseStatus);
+
+        this.movements.log({
+          title: `Mesa actualizada a ${newStatus}`,
+          description: `${table.name} · Cambió de ${oldStatus} a ${newStatus}`,
+          section: 'mesas',
+          status: 'success',
+          actor: this.currentUser.name,
+          role: this.currentUser.role
+        });
+      } catch (error) {
+        console.error('❌ Error updating table status:', error);
+        alert('Error al actualizar estado de mesa: ' + (error as any).message);
+      }
     }
   }
 }

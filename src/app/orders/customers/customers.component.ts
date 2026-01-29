@@ -423,9 +423,18 @@ export class CustomersComponent implements OnInit, OnDestroy {
     this.isSubmitting = true;
 
     this.saveAddressToSupabase()
-      .then(() => {
+      .then(async () => {
         this.closeAddressModal();
-        this.loadCustomers();
+        // Recargar solo las direcciones del cliente seleccionado
+        if (this.selectedCustomer) {
+          try {
+            const addresses = await this.supabase.getCustomerAddresses(this.selectedCustomer.id);
+            this.selectedCustomer.addresses = addresses.map(a => this.mapSupabaseAddressToLocal(a));
+            this.selectedCustomer.addressCount = addresses.length;
+          } catch (error) {
+            console.error('Error loading addresses after save:', error);
+          }
+        }
       })
       .catch(error => {
         console.error('❌ Error saving address:', error);
@@ -488,8 +497,17 @@ export class CustomersComponent implements OnInit, OnDestroy {
     this.isSubmitting = true;
 
     this.deleteAddressFromSupabase(addressId)
-      .then(() => {
-        this.loadCustomers();
+      .then(async () => {
+        // Recargar solo las direcciones del cliente seleccionado
+        if (this.selectedCustomer) {
+          try {
+            const addresses = await this.supabase.getCustomerAddresses(this.selectedCustomer.id);
+            this.selectedCustomer.addresses = addresses.map(a => this.mapSupabaseAddressToLocal(a));
+            this.selectedCustomer.addressCount = addresses.length;
+          } catch (error) {
+            console.error('Error loading addresses after delete:', error);
+          }
+        }
       })
       .catch(error => {
         console.error('❌ Error deleting address:', error);
@@ -520,8 +538,17 @@ export class CustomersComponent implements OnInit, OnDestroy {
     this.isSubmitting = true;
 
     this.setDefaultAddressInSupabase(addressId)
-      .then(() => {
-        this.loadCustomers();
+      .then(async () => {
+        // Recargar solo las direcciones del cliente seleccionado
+        if (this.selectedCustomer) {
+          try {
+            const addresses = await this.supabase.getCustomerAddresses(this.selectedCustomer.id);
+            this.selectedCustomer.addresses = addresses.map(a => this.mapSupabaseAddressToLocal(a));
+            this.selectedCustomer.addressCount = addresses.length;
+          } catch (error) {
+            console.error('Error loading addresses after setting default:', error);
+          }
+        }
       })
       .catch(error => {
         console.error('❌ Error setting default address:', error);

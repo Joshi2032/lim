@@ -15,11 +15,11 @@ interface ProductForm {
   japaneseName: string;
   description: string;
   price: number;
-  category: number;
+  category: string;
 }
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
   icon?: string;
 }
@@ -60,7 +60,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
     japaneseName: '',
     description: '',
     price: 0,
-    category: 0
+    category: ''
   };
 
   private readonly DEFAULT_COMBO: ProductForm = {
@@ -68,7 +68,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
     japaneseName: '',
     description: '',
     price: 0,
-    category: 1
+    category: ''
   };
 
   private readonly ROMAJI_TO_KATAKANA: { [key: string]: string } = {
@@ -134,7 +134,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
       console.log('📋 Loading categories from Supabase...');
       const supabaseCategories = await this.supabase.getCategories();
       this.categories = supabaseCategories.map(cat => ({
-        id: Number(cat.id),
+        id: String(cat.id),
         name: cat.name,
         icon: this.getCategoryIcon(cat.name)
       }));
@@ -242,7 +242,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
       japaneseName: item.japaneseName || '',
       description: item.description,
       price: item.price,
-      category: typeof item.category === 'string' ? Number(item.category) : item.category
+      category: String(item.category)
     };
     this.itemImagePreview = item.image;
     this.showForm = true;
@@ -256,7 +256,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
       japaneseName: combo.japaneseName || '',
       description: combo.description || '',
       price: combo.price,
-      category: typeof combo.category === 'string' ? Number(combo.category) : combo.category || 1
+      category: String(combo.category || '')
     };
     this.comboImagePreview = combo.image;
     this.selectedComboItems = {};
@@ -289,7 +289,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.newItem.category || this.newItem.category === 0 || isNaN(this.newItem.category)) {
+    if (!this.newItem.category || this.newItem.category === '' || this.newItem.category === '0') {
       alert('Por favor selecciona una categoría válida');
       return;
     }
@@ -298,15 +298,14 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
     this.isSubmitting = true;
 
     try {
-      const categoryId = String(this.newItem.category);
-      console.log('🔍 Saving with category ID:', categoryId, 'Type:', typeof categoryId);
+      console.log('🔍 Saving with category ID:', this.newItem.category, 'Type:', typeof this.newItem.category);
 
       if (this.editingId) {
         await this.supabase.updateMenuItem(this.editingId, {
           name: this.newItem.name,
           description: this.newItem.description,
           price: this.newItem.price,
-          category_id: categoryId,
+          category_id: this.newItem.category,
           image_url: this.itemImagePreview || undefined
         });
         console.log('✅ Menu item updated');
@@ -315,12 +314,15 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
           name: this.newItem.name,
           description: this.newItem.description,
           price: this.newItem.price,
-          category_id: categoryId,
+          category_id: this.newItem.category,
           image_url: this.itemImagePreview || undefined,
           available: true
         });
         console.log('✅ Menu item created');
       }
+
+      // Reload menu items to show changes immediately
+      await this.loadMenuFromSupabase();
       this.closeForm();
     } catch (error) {
       console.error('❌ Error saving menu item:', error);
@@ -368,6 +370,9 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
         }, itemIds);
         console.log('✅ Combo created');
       }
+
+      // Reload combos to show changes immediately
+      await this.loadCombosFromSupabase();
       this.closeForm();
     } catch (error) {
       console.error('❌ Error saving combo:', error);
@@ -378,8 +383,9 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
   }
 
   private closeForm(): void {
-    this.resetForm();
     this.showForm = false;
+    this.resetForm();
+    this.cdr.markForCheck();
   }
 
   get isEditing(): boolean {
@@ -422,7 +428,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
 
   resetForm(): void {
     // Set first available category as default
-    const defaultCategoryId = this.categories.length > 0 ? this.categories[0].id : 0;
+    const defaultCategoryId = this.categories.length > 0 ? this.categories[0].id : '';
 
     this.newItem = {
       ...this.DEFAULT_ITEM,

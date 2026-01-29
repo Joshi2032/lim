@@ -113,10 +113,15 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.loadCategoriesFromSupabase();
-    this.loadMenuFromSupabase();
+    // Load all data in parallel for better performance
+    Promise.all([
+      this.loadCategoriesFromSupabase(),
+      this.loadMenuFromSupabase(),
+      this.loadCombosFromSupabase()
+    ]);
+
+    // Subscribe to real-time changes
     this.subscribeToMenuChanges();
-    this.loadCombosFromSupabase();
     this.subscribeToCombosChanges();
   }
 
@@ -321,7 +326,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
         console.log('✅ Menu item created');
       }
 
-      // Reload menu items to show changes immediately
+      // Reload to show changes immediately (subscription may have delay)
       await this.loadMenuFromSupabase();
       this.closeForm();
     } catch (error) {
@@ -371,7 +376,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
         console.log('✅ Combo created');
       }
 
-      // Reload combos to show changes immediately
+      // Reload to show changes immediately (subscription may have delay)
       await this.loadCombosFromSupabase();
       this.closeForm();
     } catch (error) {

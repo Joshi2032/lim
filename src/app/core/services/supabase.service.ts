@@ -71,6 +71,38 @@ export interface Category {
   updated_at: string;
 }
 
+export interface Combo {
+  id: string;
+  name: string;
+  japanese_name?: string;
+  description: string;
+  price: number;
+  image_url?: string;
+  available: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ComboItem {
+  id: string;
+  combo_id: string;
+  menu_item_id: string;
+  quantity: number;
+  created_at?: string;
+}
+
+export interface Employee {
+  id: string;
+  auth_user_id?: string;
+  email: string;
+  full_name: string;
+  role: 'admin' | 'chef' | 'waiter' | 'delivery' | 'cashier';
+  phone?: string;
+  active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface RestaurantTable {
   id: string;
   table_number: number;
@@ -288,13 +320,75 @@ export class SupabaseService {
     }
   }
 
+  async createMenuItem(itemData: Omit<MenuItem, 'id' | 'created_at' | 'updated_at'>): Promise<MenuItem> {
+    try {
+      console.log('📝 Creating menu item:', itemData);
+      const { data, error } = await supabase
+        .from('menu_items')
+        .insert([itemData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error creating menu item:', error);
+        throw error;
+      }
+
+      console.log('✅ Menu item created:', data);
+      return data as MenuItem;
+    } catch (error) {
+      console.error('❌ Error in createMenuItem:', error);
+      throw error;
+    }
+  }
+
+  async updateMenuItem(itemId: string, itemData: Partial<Omit<MenuItem, 'id' | 'created_at' | 'updated_at'>>): Promise<void> {
+    try {
+      console.log('📝 Updating menu item:', itemId, itemData);
+      const { error } = await supabase
+        .from('menu_items')
+        .update(itemData)
+        .eq('id', itemId);
+
+      if (error) {
+        console.error('❌ Error updating menu item:', error);
+        throw error;
+      }
+
+      console.log('✅ Menu item updated');
+    } catch (error) {
+      console.error('❌ Error in updateMenuItem:', error);
+      throw error;
+    }
+  }
+
+  async deleteMenuItem(itemId: string): Promise<void> {
+    try {
+      console.log('🗑️ Deleting menu item:', itemId);
+      const { error } = await supabase
+        .from('menu_items')
+        .update({ available: false })
+        .eq('id', itemId);
+
+      if (error) {
+        console.error('❌ Error deleting menu item:', error);
+        throw error;
+      }
+
+      console.log('✅ Menu item deleted (marked as unavailable)');
+    } catch (error) {
+      console.error('❌ Error in deleteMenuItem:', error);
+      throw error;
+    }
+  }
+
   async getCategories(): Promise<Category[]> {
     try {
       console.log('📋 Fetching categories...');
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .order('display_order', { ascending: true });
+        .order('name', { ascending: true });
 
       if (error) {
         console.error('❌ Error fetching categories:', error);
@@ -669,6 +763,292 @@ export class SupabaseService {
       console.log('✅ Address deleted successfully');
     } catch (error) {
       console.error('❌ Error in deleteCustomerAddress:', error);
+      throw error;
+    }
+  }
+
+  // ==================== COMBOS ====================
+
+  async getCombos(): Promise<Combo[]> {
+    try {
+      const { data, error } = await supabase
+        .from('combos')
+        .select('*')
+        .eq('available', true)
+        .order('name');
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching combos:', error);
+      return [];
+    }
+  }
+
+  async getComboWithItems(comboId: string): Promise<{ combo: Combo; items: MenuItem[] } | null> {
+    try {
+      const { data: combo, error: comboError } = await supabase
+        .from('combos')
+        .select('*')
+        .eq('id', comboId)
+        .single();
+
+      if (comboError) throw comboError;
+
+      const { data: comboItems, error: itemsError } = await supabase
+        .from('combo_items')
+        .select('menu_item_id, quantity')
+        .eq('combo_id', comboId);
+
+      if (itemsError) throw itemsError;
+
+      const menuItemIds = comboItems?.map(ci => ci.menu_item_id) || [];
+      const { data: menuItems, error: menuError } = await supabase
+        .from('menu_items')
+        .select('*')
+        .in('id', menuItemIds);
+
+      if (menuError) throw menuError;
+
+      return {
+        combo: combo as Combo,
+        items: menuItems || []
+      };
+    } catch (error) {
+      console.error('Error fetching combo with items:', error);
+      return null;
+    }
+  }
+
+  async createCombo(comboData: Omit<Combo, 'id' | 'created_at' | 'updated_at'>, itemIds: string[]): Promise<Combo> {
+    try {
+      console.log('📝 Creating combo:', comboData);
+
+      const { data: combo, error: comboError } = await supabase
+        .from('combos')
+        .insert([comboData])
+        .select()
+        .single();
+
+      if (comboError) {
+        console.error('❌ Error creating combo:', comboError);
+        throw comboError;
+      }
+
+      // Agregar items al combo
+      if (itemIds.length > 0) {
+        const comboItems = itemIds.map(itemId => ({
+          combo_id: combo.id,
+          menu_item_id: itemId,
+          quantity: 1
+        }));
+
+        const { error: itemsError } = await supabase
+          .from('combo_items')
+          .insert(comboItems);
+
+        if (itemsError) {
+          console.error('❌ Error adding items to combo:', itemsError);
+          throw itemsError;
+        }
+      }
+
+      console.log('✅ Combo created:', combo);
+      return combo as Combo;
+    } catch (error) {
+      console.error('❌ Error in createCombo:', error);
+      throw error;
+    }
+  }
+
+  async updateCombo(comboId: string, comboData: Partial<Omit<Combo, 'id' | 'created_at' | 'updated_at'>>, itemIds?: string[]): Promise<void> {
+    try {
+      console.log('📝 Updating combo:', comboId, comboData);
+
+      const { error: comboError } = await supabase
+        .from('combos')
+        .update(comboData)
+        .eq('id', comboId);
+
+      if (comboError) {
+        console.error('❌ Error updating combo:', comboError);
+        throw comboError;
+      }
+
+      // Si se proporcionan items, actualizar la relación
+      if (itemIds !== undefined) {
+        // Eliminar items actuales
+        await supabase
+          .from('combo_items')
+          .delete()
+          .eq('combo_id', comboId);
+
+        // Agregar nuevos items
+        if (itemIds.length > 0) {
+          const comboItems = itemIds.map(itemId => ({
+            combo_id: comboId,
+            menu_item_id: itemId,
+            quantity: 1
+          }));
+
+          const { error: itemsError } = await supabase
+            .from('combo_items')
+            .insert(comboItems);
+
+          if (itemsError) {
+            console.error('❌ Error updating combo items:', itemsError);
+            throw itemsError;
+          }
+        }
+      }
+
+      console.log('✅ Combo updated');
+    } catch (error) {
+      console.error('❌ Error in updateCombo:', error);
+      throw error;
+    }
+  }
+
+  async deleteCombo(comboId: string): Promise<void> {
+    try {
+      console.log('🗑️ Deleting combo:', comboId);
+      const { error } = await supabase
+        .from('combos')
+        .update({ available: false })
+        .eq('id', comboId);
+
+      if (error) {
+        console.error('❌ Error deleting combo:', error);
+        throw error;
+      }
+
+      console.log('✅ Combo deleted (marked as unavailable)');
+    } catch (error) {
+      console.error('❌ Error in deleteCombo:', error);
+      throw error;
+    }
+  }
+
+  subscribeToComboChanges(callback: (combos: Combo[]) => void) {
+    const channel = supabase
+      .channel('combos-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'combos' },
+        async () => {
+          const combos = await this.getCombos();
+          callback(combos);
+        }
+      )
+      .subscribe();
+
+    return channel;
+  }
+
+  // ==================== EMPLOYEES ====================
+
+  async getEmployees(): Promise<Employee[]> {
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .order('full_name');
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      return [];
+    }
+  }
+
+  async getEmployeeByEmail(email: string): Promise<Employee | null> {
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('email', email)
+        .eq('active', true)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') return null; // No rows returned
+        throw error;
+      }
+      return data as Employee;
+    } catch (error) {
+      console.error('Error fetching employee by email:', error);
+      return null;
+    }
+  }
+
+  async getEmployeeByAuthId(authUserId: string): Promise<Employee | null> {
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('auth_user_id', authUserId)
+        .eq('active', true)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw error;
+      }
+      return data as Employee;
+    } catch (error) {
+      console.error('Error fetching employee by auth ID:', error);
+      return null;
+    }
+  }
+
+  async createEmployee(employeeData: Omit<Employee, 'id' | 'created_at' | 'updated_at'>): Promise<Employee> {
+    try {
+      console.log('📝 Creating employee:', employeeData);
+      const { data, error } = await supabase
+        .from('employees')
+        .insert([employeeData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error creating employee:', error);
+        throw error;
+      }
+
+      console.log('✅ Employee created:', data);
+      return data as Employee;
+    } catch (error) {
+      console.error('❌ Error in createEmployee:', error);
+      throw error;
+    }
+  }
+
+  async updateEmployee(employeeId: string, employeeData: Partial<Omit<Employee, 'id' | 'created_at' | 'updated_at'>>): Promise<void> {
+    try {
+      console.log('📝 Updating employee:', employeeId, employeeData);
+      const { error } = await supabase
+        .from('employees')
+        .update(employeeData)
+        .eq('id', employeeId);
+
+      if (error) {
+        console.error('❌ Error updating employee:', error);
+        throw error;
+      }
+
+      console.log('✅ Employee updated');
+    } catch (error) {
+      console.error('❌ Error in updateEmployee:', error);
+      throw error;
+    }
+  }
+
+  async linkEmployeeToAuthUser(employeeId: string, authUserId: string): Promise<void> {
+    try {
+      await this.updateEmployee(employeeId, { auth_user_id: authUserId });
+    } catch (error) {
+      console.error('❌ Error linking employee to auth user:', error);
       throw error;
     }
   }

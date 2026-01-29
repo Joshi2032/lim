@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuService, MenuItem, Combo } from '../../shared/services/menu.service';
@@ -7,6 +7,8 @@ import { TabsContainerComponent, TabItem } from '../../shared/tabs-container/tab
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { ProductCardComponent, ProductCardData } from '../../shared/product-card/product-card.component';
 import { ModalComponent } from '../../shared/modal/modal.component';
+import { SupabaseService, MenuItem as SupabaseMenuItem, Combo as SupabaseCombo } from '../../core/services/supabase.service';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface ProductForm {
   name: string;
@@ -34,7 +36,10 @@ type ProductType = 'platos' | 'combos';
   styleUrls: ['./products-management.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProductsManagementComponent implements OnInit {
+export class ProductsManagementComponent implements OnInit, OnDestroy {
+  private menuSubscription: RealtimeChannel | null = null;
+  private comboSubscription: RealtimeChannel | null = null;
+  private isSubmitting = false;
   menuItems: MenuItem[] = [];
   combos: Combo[] = [];
   activeType: ProductType = 'platos';
@@ -94,18 +99,94 @@ export class ProductsManagementComponent implements OnInit {
     { id: 'combos', label: 'Combos', icon: '📦' }
   ];
 
-  constructor(private menuService: MenuService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private menuService: MenuService,
+    private supabase: SupabaseService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    this.menuService.getMenuItems().subscribe(items => {
-      this.menuItems = items;
-      this.cdr.markForCheck();
-    });
+    this.loadMenuFromSupabase();
+    this.subscribeToMenuChanges();
+    this.loadCombosFromSupabase();
+    this.subscribeToCombosChanges();
+  }
 
-    this.menuService.getCombos().subscribe(combos => {
-      this.combos = combos;
+  ngOnDestroy() {
+    if (this.menuSubscription) {
+      this.menuSubscription.unsubscribe();
+    }
+    if (this.comboSubscription) {
+      this.comboSubscription.unsubscribe();
+    }
+  }
+
+  async loadMenuFromSupabase() {
+    try {
+      console.log('📋 Loading menu items from Supabase...');
+      const supabaseItems = await this.supabase.getMenuItems();
+      console.log('✅ Menu items loaded:', supabaseItems);
+
+      this.menuItems = supabaseItems.map(item => this.mapSupabaseItemToLocal(item));
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('❌ Error loading menu items:', error);
+      alert('Error al cargar platillos: ' + (error as any).message);
+    }
+  }
+
+  subscribeToMenuChanges() {
+    this.menuSubscription = this.supabase.subscribeToMenuItems((items) => {
+      console.log('🔄 Menu items updated via subscription');
+      this.menuItems = items.map(item => this.mapSupabaseItemToLocal(item));
       this.cdr.markForCheck();
     });
+  }
+
+  async loadCombosFromSupabase() {
+    try {
+      console.log('📋 Loading combos from Supabase...');
+      const supabaseCombos = await this.supabase.getCombos();
+      console.log('✅ Combos loaded:', supabaseCombos);
+
+      this.combos = supabaseCombos.map(combo => this.mapSupabaseComboToLocal(combo));
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('❌ Error loading combos:', error);
+      alert('Error al cargar combos: ' + (error as any).message);
+    }
+  }
+
+  subscribeToCombosChanges() {
+    this.comboSubscription = this.supabase.subscribeToComboChanges((combos) => {
+      console.log('🔄 Combos updated via subscription');
+      this.combos = combos.map(combo => this.mapSupabaseComboToLocal(combo));
+      this.cdr.markForCheck();
+    });
+  }
+
+  private mapSupabaseComboToLocal(supabaseCombo: SupabaseCombo): Combo {
+    return {
+      id: supabaseCombo.id.toString(),
+      name: supabaseCombo.name,
+      japaneseName: supabaseCombo.japanese_name,
+      description: supabaseCombo.description,
+      price: supabaseCombo.price,
+      image: supabaseCombo.image_url || '/assets/placeholder.png',
+      category: 'combos',
+      items: []
+    };
+  }
+
+  private mapSupabaseItemToLocal(supabaseItem: SupabaseMenuItem): MenuItem {
+    return {
+      id: supabaseItem.id.toString(),
+      name: supabaseItem.name,
+      description: supabaseItem.description,
+      price: supabaseItem.price,
+      image: supabaseItem.image_url || '/assets/placeholder.png',
+      category: supabaseItem.category_id
+    };
   }
 
   toggleForm(): void {
@@ -164,32 +245,48 @@ export class ProductsManagementComponent implements OnInit {
     }
   }
 
-  private addPlato(): void {
+  private async addPlato(): Promise<void> {
     if (!this.newItem.name || !this.newItem.description || this.newItem.price <= 0) {
       alert('Por favor completa todos los campos');
       return;
     }
 
-    const item: MenuItem = {
-      id: this.editingId || Date.now().toString(),
-      ...this.newItem,
-      image: this.itemImagePreview || '/assets/placeholder.png'
-    };
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
 
-    if (this.editingId) {
-      this.menuService.updateMenuItem(this.editingId, {
-        ...this.newItem,
-        image: this.itemImagePreview || '/assets/placeholder.png'
-      });
-    } else {
-      this.menuService.addMenuItem(item);
+    try {
+      if (this.editingId) {
+        await this.supabase.updateMenuItem(this.editingId, {
+          name: this.newItem.name,
+          description: this.newItem.description,
+          price: this.newItem.price,
+          category_id: this.newItem.category,
+          image_url: this.itemImagePreview || undefined
+        });
+        console.log('✅ Menu item updated');
+      } else {
+        await this.supabase.createMenuItem({
+          name: this.newItem.name,
+          description: this.newItem.description,
+          price: this.newItem.price,
+          category_id: this.newItem.category,
+          image_url: this.itemImagePreview || undefined,
+          available: true
+        });
+        console.log('✅ Menu item created');
+      }
+      this.closeForm();
+    } catch (error) {
+      console.error('❌ Error saving menu item:', error);
+      alert('Error al guardar platillo: ' + (error as any).message);
+    } finally {
+      this.isSubmitting = false;
     }
-    this.closeForm();
   }
 
-  private addCombo(): void {
+  private async addCombo(): Promise<void> {
     if (!this.newCombo.name || this.newCombo.price <= 0) {
-      alert('Por favor completa el nombre y selecciona platillos para el combo');
+      alert('Por favor completa el nombre y precio del combo');
       return;
     }
 
@@ -199,23 +296,39 @@ export class ProductsManagementComponent implements OnInit {
       return;
     }
 
-    const combo: Combo = {
-      id: this.editingId || Date.now().toString(),
-      ...this.newCombo,
-      image: this.comboImagePreview || '/assets/placeholder.png',
-      items: selectedItems
-    };
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
 
-    if (this.editingId) {
-      this.menuService.updateCombo(this.editingId, {
-        ...this.newCombo,
-        image: this.comboImagePreview || '/assets/placeholder.png',
-        items: selectedItems
-      });
-    } else {
-      this.menuService.addCombo(combo);
+    try {
+      const itemIds = selectedItems.map(item => item.itemId);
+
+      if (this.editingId) {
+        await this.supabase.updateCombo(this.editingId, {
+          name: this.newCombo.name,
+          japanese_name: this.newCombo.japaneseName,
+          description: this.newCombo.description,
+          price: this.newCombo.price,
+          image_url: this.comboImagePreview || undefined
+        }, itemIds);
+        console.log('✅ Combo updated');
+      } else {
+        await this.supabase.createCombo({
+          name: this.newCombo.name,
+          japanese_name: this.newCombo.japaneseName,
+          description: this.newCombo.description,
+          price: this.newCombo.price,
+          image_url: this.comboImagePreview || undefined,
+          available: true
+        }, itemIds);
+        console.log('✅ Combo created');
+      }
+      this.closeForm();
+    } catch (error) {
+      console.error('❌ Error saving combo:', error);
+      alert('Error al guardar combo: ' + (error as any).message);
+    } finally {
+      this.isSubmitting = false;
     }
-    this.closeForm();
   }
 
   private closeForm(): void {
@@ -227,15 +340,37 @@ export class ProductsManagementComponent implements OnInit {
     return this.editingId !== null;
   }
 
-  deleteItem(id: string): void {
-    if (confirm('¿Eliminar este plato?')) {
-      this.menuService.deleteMenuItem(id);
+  async deleteItem(id: string): Promise<void> {
+    if (!confirm('¿Eliminar este plato?')) return;
+
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
+
+    try {
+      await this.supabase.deleteMenuItem(id);
+      console.log('✅ Menu item deleted');
+    } catch (error) {
+      console.error('❌ Error deleting menu item:', error);
+      alert('Error al eliminar platillo: ' + (error as any).message);
+    } finally {
+      this.isSubmitting = false;
     }
   }
 
-  deleteCombo(id: string): void {
-    if (confirm('¿Eliminar este combo?')) {
-      this.menuService.deleteCombo(id);
+  async deleteCombo(id: string): Promise<void> {
+    if (!confirm('¿Eliminar este combo?')) return;
+
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
+
+    try {
+      await this.supabase.deleteCombo(id);
+      console.log('✅ Combo deleted');
+    } catch (error) {
+      console.error('❌ Error deleting combo:', error);
+      alert('Error al eliminar combo: ' + (error as any).message);
+    } finally {
+      this.isSubmitting = false;
     }
   }
 

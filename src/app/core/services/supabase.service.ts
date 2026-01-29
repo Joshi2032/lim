@@ -303,6 +303,22 @@ export class SupabaseService {
     }
   }
 
+  async getMenuItemById(menuItemId: string): Promise<MenuItem | null> {
+    try {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('*')
+        .eq('id', menuItemId)
+        .single();
+
+      if (error) throw error;
+      return data as MenuItem;
+    } catch (error) {
+      console.error('Error fetching menu item by id:', error);
+      return null;
+    }
+  }
+
   async getMenuItemsByCategory(categoryId: string): Promise<MenuItem[]> {
     try {
       const { data, error } = await supabase

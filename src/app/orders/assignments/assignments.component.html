@@ -32,7 +32,7 @@
 <app-modal
 	[isOpen]="showAssignmentModal"
 	title="Nueva Asignación"
-	[showFooter]="true"
+	[showFooter]="false"
 	(close)="closeAssignmentModal()">
 	<div class="assignment-form">
 		<div class="form-group">
@@ -50,7 +50,7 @@
 			<select [(ngModel)]="assignmentForm.orderId" class="form-input">
 				<option value="">Selecciona un pedido</option>
 				@for (order of orders; track order.id) {
-					<option [value]="order.id">{{ order.number }} - ${{ order.total }} ({{ order.items }} ítems)</option>
+					<option [value]="order.id">{{ order.orderNumber }} - {{ order.customerName }} - ${{ order.totalPrice }} - {{ order.items }}</option>
 				}
 			</select>
 		</div>
@@ -60,7 +60,7 @@
 			<select [(ngModel)]="assignmentForm.deliveryPersonId" class="form-input">
 				<option value="">Selecciona un repartidor</option>
 				@for (person of deliveryPersons; track person.id) {
-					<option [value]="person.id">{{ person.name }} - {{ person.vehicle }}</option>
+					<option [value]="person.id">{{ person.name }} - {{ person.phone }}</option>
 				}
 			</select>
 		</div>

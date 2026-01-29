@@ -62,6 +62,15 @@ export interface CustomerAddress {
   updated_at: string;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  display_order?: number;
+  created_at: string;
+  updated_at: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -266,6 +275,27 @@ export class SupabaseService {
     } catch (error) {
       console.error('Error fetching menu items by category:', error);
       return [];
+    }
+  }
+
+  async getCategories(): Promise<Category[]> {
+    try {
+      console.log('📋 Fetching categories...');
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (error) {
+        console.error('❌ Error fetching categories:', error);
+        throw error;
+      }
+
+      console.log('✅ Categories fetched:', data?.length || 0);
+      return (data as Category[]) || [];
+    } catch (error) {
+      console.error('❌ Error in getCategories:', error);
+      throw error;
     }
   }
 

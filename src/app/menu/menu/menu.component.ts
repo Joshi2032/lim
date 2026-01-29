@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
@@ -12,6 +12,7 @@ import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/fi
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { SectionHeaderComponent } from '../../shared/section-header/section-header.component';
 import { SearchInputComponent } from '../../shared/search-input/search-input.component';
+import { SupabaseService, MenuItem as SupabaseMenuItem } from '../../core/services/supabase.service';
 
 interface Filter {
 	id: string;
@@ -40,7 +41,8 @@ interface Combo {
   selector: 'app-menu',
   imports: [CommonModule, SidebarComponent, MenuItemCardComponent, FormsModule, CartComponent, BadgeComponent, VariantSelectorComponent, FilterChipsComponent, PageHeaderComponent, SectionHeaderComponent, SearchInputComponent],
   templateUrl: './menu.component.html',
-  styleUrl: './menu.component.scss'
+  styleUrl: './menu.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MenuComponent implements OnInit {
   searchQuery: string = '';
@@ -58,14 +60,7 @@ export class MenuComponent implements OnInit {
   };
 
   filterOptions: FilterOption[] = [
-    { id: 'todos', label: 'Todos' },
-    { id: 'combos', label: 'Combos' },
-    { id: 'rolls', label: 'Rolls' },
-    { id: 'nigiri', label: 'Nigiri' },
-    { id: 'sashimi', label: 'Sashimi' },
-    { id: 'especiales', label: 'Especiales' },
-    { id: 'bebidas', label: 'Bebidas' },
-    { id: 'postres', label: 'Postres' }
+    { id: 'todos', label: 'Todos' }
   ];
 
   sidebarItems: SidebarMenuItem[] = [
@@ -81,20 +76,70 @@ export class MenuComponent implements OnInit {
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
 
-  constructor(private movements: MovementsService, private menuService: MenuService) {}
+  constructor(
+    private movements: MovementsService,
+    private menuService: MenuService,
+    private supabase: SupabaseService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    // Subscribe to menu items from service
-    this.menuService.getMenuItems().subscribe(items => {
-      this.menuItems = items;
-      this.filterItems();
-    });
+    this.loadMenuFromSupabase();
+  }
 
-    // Subscribe to combos from service
-    this.menuService.getCombos().subscribe(combos => {
-      this.combos = combos;
+  async loadMenuFromSupabase() {
+    try {
+      console.log('📋 Loading menu from Supabase...');
+
+      // Cargar items del menú
+      const supabaseItems = await this.supabase.getMenuItems();
+      console.log('✅ Menu items loaded:', supabaseItems);
+
+      // Mapear a formato local
+      this.menuItems = supabaseItems.map(item => this.mapSupabaseItemToLocal(item));
+
+      // Cargar categorías para filtros
+      await this.loadCategories();
+
+      // Filtrar items iniciales
       this.filterItems();
-    });
+
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('❌ Error loading menu:', error);
+      alert('Error al cargar menú: ' + (error as any).message);
+    }
+  }
+
+  async loadCategories() {
+    try {
+      const categories = await this.supabase.getCategories();
+      console.log('✅ Categories loaded:', categories);
+
+      // Crear filterOptions desde las categorías
+      this.filterOptions = [
+        { id: 'todos', label: 'Todos' },
+        ...categories.map(cat => ({
+          id: cat.id.toString(),
+          label: cat.name
+        }))
+      ];
+
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('❌ Error loading categories:', error);
+    }
+  }
+
+  private mapSupabaseItemToLocal(supabaseItem: SupabaseMenuItem): MenuItem {
+    return {
+      id: supabaseItem.id.toString(),
+      name: supabaseItem.name,
+      description: supabaseItem.description,
+      price: supabaseItem.price,
+      image: supabaseItem.image_url || '/assets/placeholder.png',
+      category: supabaseItem.category_id
+    };
   }
 
   filters: Filter[] = [
@@ -318,6 +363,7 @@ export class MenuComponent implements OnInit {
 
     this.filteredItems = items;
     this.filteredCombos = combos;
+    this.cdr.markForCheck();
   }
 
   handleAddToCart(itemId: string) {

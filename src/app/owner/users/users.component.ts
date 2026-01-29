@@ -140,6 +140,7 @@ export class UsersComponent implements OnInit {
   closeUserForm() {
     this.showUserFormModal = false;
     this.userBeingEdited = null;
+    this.cdr.markForCheck();
   }
 
   saveUser(formData: UserFormData) {
@@ -172,8 +173,8 @@ export class UsersComponent implements OnInit {
       const newEmployee = {
         full_name: formData.name,
         email: formData.email,
-        phone: formData.phone || null,
-        role: roleMap[formData.roleId as UserRole],
+        phone: formData.phone || undefined,
+        role: roleMap[formData.roleId as UserRole] as 'admin' | 'chef' | 'waiter' | 'delivery' | 'cashier',
         active: true
       };
 
@@ -191,6 +192,7 @@ export class UsersComponent implements OnInit {
 
       this.users.push(newUser);
       console.log('✅ Employee created:', newUser);
+      this.cdr.markForCheck();
 
       this.movements.log({
         title: 'Usuario creado',
@@ -229,8 +231,13 @@ export class UsersComponent implements OnInit {
       const updateData = {
         full_name: formData.name,
         email: formData.email,
-        phone: formData.phone || null,
-        role: roleMap[formData.roleId as UserRole]
+        phone: formData.phone || undefined,
+        role: roleMap[formData.roleId as UserRole] as 'admin' | 'chef' | 'waiter' | 'delivery' | 'cashier'
+      };
+
+      await this.supabase.updateEmployee(this.userBeingEdited.id, updateData);
+
+      const userIndex = this.users.findIndex(u => u.id === this.userBeingEdited!.id);
       if (userIndex !== -1) {
         this.users[userIndex] = {
           ...this.users[userIndex],
@@ -241,6 +248,7 @@ export class UsersComponent implements OnInit {
           initials: this.generateInitials(formData.name)
         };
       }
+      this.cdr.markForCheck();
 
       console.log('✅ Employee updated');
 

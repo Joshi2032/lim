@@ -8,6 +8,7 @@ export interface UserFormData {
   email: string;
   password: string;
   roleId: string;
+  phone?: string;
 }
 
 export interface UserBase {
@@ -15,6 +16,7 @@ export interface UserBase {
   name: string;
   email: string;
   roleId: string;
+  phone?: string;
 }
 
 export interface RoleOption {
@@ -72,7 +74,8 @@ export class UserFormComponent implements OnInit, OnChanges {
       name: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', this.isEditMode ? [] : [Validators.required, Validators.minLength(6)]],
-      roleId: ['', [Validators.required]]
+      roleId: ['', [Validators.required]],
+      phone: ['']
     });
   }
 

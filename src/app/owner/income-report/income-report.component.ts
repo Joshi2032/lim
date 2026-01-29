@@ -135,11 +135,8 @@ export class IncomeReportComponent implements OnInit {
   }
 
   generateMockData(): IncomeRecord[] {
-    const records: IncomeRecord[] = [];
-    const today = new Date();
-
-    // Generar datos de los últimos 60 días
-    for (let i = 0; i < 60; i++) {
+    // Mock data removed - data should come from Supabase
+    return [];
       const date = new Date(today);
       date.setDate(date.getDate() - i);
 

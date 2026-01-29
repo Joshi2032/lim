@@ -36,13 +36,9 @@ export class MovementsService {
   }
 
   seedDemoData() {
-    if (this.seeded) return;
-    this.seeded = true;
-
-    const demo: Array<Omit<ActivityLog, 'id'>> = [
-      {
-        title: 'Orden movida a Cocina',
-        description: 'Mesa 12 enviada a cocina con 2 items',
+    // Mock data removed - all data should come from real operations
+    // Keep this method for backwards compatibility but it does nothing
+    return;
         section: 'cocina',
         status: 'info',
         actor: 'Josue',

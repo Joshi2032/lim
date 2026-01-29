@@ -153,10 +153,8 @@ export class MenuComponent implements OnInit {
     { id: 'postres', label: 'Postres', labelJapanese: 'デザート' }
   ];
 
-  menuItems: MenuItem[] = [
-    {
-      id: '1',
-      name: 'Ramune',
+  menuItems: MenuItem[] = [];
+  combos: Combo[] = [];
       japaneseName: 'ラムネ',
       description: 'Refresco japonés tradicional',
       price: 55,

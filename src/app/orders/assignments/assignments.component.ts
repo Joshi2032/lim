@@ -97,48 +97,23 @@ export class AssignmentsComponent implements OnInit {
   }
 
   loadCustomers() {
-    // Mock data
-    this.customers = [
-      { id: '1', name: 'Juan Pérez', phone: '55 1234 5678' },
-      { id: '2', name: 'María García', phone: '55 2345 6789' },
-      { id: '3', name: 'Carlos López', phone: '55 3456 7890' }
-    ];
+    // Data should come from Supabase, not mock
+    this.customers = [];
   }
 
   loadOrders() {
-    // Mock data
-    this.orders = [
-      { id: 'ORD-001', number: '#1001', total: 450, items: 5 },
-      { id: 'ORD-002', number: '#1002', total: 650, items: 8 },
-      { id: 'ORD-003', number: '#1003', total: 320, items: 3 }
-    ];
+    // Data should come from Supabase, not mock
+    this.orders = [];
   }
 
   loadDeliveryPersons() {
-    // Mock data
-    this.deliveryPersons = [
-      { id: 'DEL-001', name: 'Luis Rodríguez', phone: '55 5555 5555', vehicle: 'Moto' },
-      { id: 'DEL-002', name: 'Ana Martínez', phone: '55 6666 6666', vehicle: 'Auto' },
-      { id: 'DEL-003', name: 'Roberto Gómez', phone: '55 7777 7777', vehicle: 'Bicicleta' }
-    ];
+    // Data should come from Supabase, not mock
+    this.deliveryPersons = [];
   }
 
   loadAssignments() {
-    this.assignments = [
-      {
-        id: '1',
-        customerId: '1',
-        customerName: 'Juan Pérez',
-        orderId: 'ORD-001',
-        orderNumber: '#1001',
-        deliveryPersonId: 'DEL-001',
-        deliveryPersonName: 'Luis Rodríguez',
-        status: 'en-ruta',
-        assignedAt: new Date(),
-        address: 'Calle Principal 123, Apto 4B',
-        notes: 'Timbrar 2 veces'
-      }
-    ];
+    // Data should come from Supabase, not mock
+    this.assignments = [];
   }
 
   openAssignmentModal() {

@@ -194,9 +194,10 @@ export class PickupRegistrationComponent implements OnInit {
       });
 
       this.router.navigate(['/recogida']);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error registering order:', error);
-      alert('Error al registrar el pedido. Intenta de nuevo.');
+      const errorMessage = error?.message || error?.toString() || 'Error desconocido';
+      alert(`Error al registrar el pedido:\n${errorMessage}`);
     }
   }
 

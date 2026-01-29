@@ -152,28 +152,28 @@ export class DeliveryComponent implements OnInit, OnDestroy {
 
   initializeTableColumns() {
     this.deliveryColumns = [
-      { key: 'orderNumber', label: 'Nº Pedido', sortable: true },
-      { key: 'customerName', label: 'Cliente', sortable: true },
-      { key: 'phone', label: 'Teléfono', sortable: false },
-      { key: 'address', label: 'Dirección', sortable: false },
-      { key: 'total', label: 'Total', sortable: true, type: 'currency' },
-      { key: 'status', label: 'Estado', sortable: true, type: 'badge' },
-      { key: 'actions', label: 'Acciones', sortable: false, type: 'actions' }
+      { key: 'orderNumber', header: 'Nº Pedido', width: '120px' },
+      { key: 'customerName', header: 'Cliente', width: '200px' },
+      { key: 'phone', header: 'Teléfono', width: '140px' },
+      { key: 'address', header: 'Dirección', width: '300px' },
+      { key: 'total', header: 'Total', width: '100px', align: 'right' },
+      { key: 'status', header: 'Estado', width: '120px' },
+      { key: 'actions', header: 'Acciones', width: '150px', align: 'center' }
     ];
   }
 
   initializeFilters() {
     this.filterFields = [
       {
-        key: 'status',
+        name: 'status',
         label: 'Estado',
         type: 'select',
         options: this.statusOptions
       },
       {
-        key: 'search',
+        name: 'search',
         label: 'Buscar',
-        type: 'text',
+        type: 'search',
         placeholder: 'Buscar por cliente o dirección...'
       }
     ];

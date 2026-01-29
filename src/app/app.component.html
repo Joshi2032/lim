@@ -1,3 +1,11 @@
+<div class="app-layout">
+	<app-sidebar
+		[menuItems]="sidebarItems"
+		[currentUser]="currentUser"
+		[cartCount]="cartCount">
+	</app-sidebar>
 
-
-<router-outlet />
+	<div class="app-content">
+		<router-outlet />
+	</div>
+</div>

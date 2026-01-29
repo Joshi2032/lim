@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
+import { MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { KitchenOrderComponent, Order, OrderStatus } from '../kitchen-order/kitchen-order.component';
 import { MovementsService } from '../../shared/movements/movements.service';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
@@ -12,7 +12,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 
 @Component({
   selector: 'app-pickup',
-  imports: [CommonModule, SidebarComponent, KitchenOrderComponent, FilterChipsComponent, PageHeaderComponent, StatsGridComponent],
+  imports: [CommonModule, KitchenOrderComponent, FilterChipsComponent, PageHeaderComponent, StatsGridComponent],
   templateUrl: './pickup.component.html',
   styleUrl: './pickup.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

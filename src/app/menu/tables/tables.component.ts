@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
+import { MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { TableCardComponent, Table, TableStatus } from '../table-card/table-card.component';
 import { MovementsService } from '../../shared/movements/movements.service';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
@@ -18,7 +18,7 @@ interface Filter {
 
 @Component({
   selector: 'app-tables',
-  imports: [CommonModule, SidebarComponent, TableCardComponent, FilterChipsComponent, PageHeaderComponent, StatsGridComponent],
+  imports: [CommonModule, TableCardComponent, FilterChipsComponent, PageHeaderComponent, StatsGridComponent],
   templateUrl: './tables.component.html',
   styleUrl: './tables.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -1,9 +1,9 @@
-﻿import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { PageHeaderComponent } from '../shared/page-header/page-header.component';
 import { ProductsManagementComponent } from './products-management/products-management.component';
-import { SidebarComponent, MenuItem } from '../shared/sidebar/sidebar.component';
+import { MenuItem } from '../shared/sidebar/sidebar.component';
 import { IncomeReportComponent } from './income-report/income-report.component';
 import { SupabaseService } from '../core/services/supabase.service';
 import { MovementsComponent } from './movements/movements.component';
@@ -36,7 +36,7 @@ export interface RecentOrder {
 @Component({
   selector: 'app-owner',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, DashboardComponent, ProductsManagementComponent, IncomeReportComponent, PageHeaderComponent, MovementsComponent, UsersComponent],
+  imports: [CommonModule, DashboardComponent, ProductsManagementComponent, IncomeReportComponent, PageHeaderComponent, MovementsComponent, UsersComponent],
   templateUrl: './owner.component.html',
   styleUrl: './owner.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

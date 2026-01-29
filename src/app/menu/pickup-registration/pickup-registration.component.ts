@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
+import { MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { MovementsService } from '../../shared/movements/movements.service';
 import { SupabaseService, MenuItem, Order, OrderItem } from '../../core/services/supabase.service';
@@ -21,7 +21,7 @@ interface PickupOrder {
 
 @Component({
   selector: 'app-pickup-registration',
-  imports: [CommonModule, FormsModule, SidebarComponent, PageHeaderComponent],
+  imports: [CommonModule, FormsModule, PageHeaderComponent],
   templateUrl: './pickup-registration.component.html',
   styleUrl: './pickup-registration.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

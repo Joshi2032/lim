@@ -114,12 +114,9 @@
             <div class="form-group">
               <label class="form-label">Categoría *</label>
               <select [(ngModel)]="newItem.category" class="form-input">
-                <option value="bebidas">🥤 Bebidas</option>
-                <option value="rolls">🍜 Rolls</option>
-                <option value="nigiri">🍣 Nigiri</option>
-                <option value="sashimi">🍱 Sashimi</option>
-                <option value="especiales">⭐ Especiales</option>
-                <option value="postres">🍰 Postres</option>
+                @for (cat of categories; track cat.id) {
+                  <option [value]="cat.id">{{ cat.icon }} {{ cat.name }}</option>
+                }
               </select>
             </div>
 

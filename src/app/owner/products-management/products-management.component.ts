@@ -15,7 +15,13 @@ interface ProductForm {
   japaneseName: string;
   description: string;
   price: number;
-  category: string;
+  category: number;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  icon?: string;
 }
 
 type ProductType = 'platos' | 'combos';
@@ -42,6 +48,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
   private isSubmitting = false;
   menuItems: MenuItem[] = [];
   combos: Combo[] = [];
+  categories: Category[] = [];
   activeType: ProductType = 'platos';
   showForm = false;
   editingId: string | null = null;
@@ -53,7 +60,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
     japaneseName: '',
     description: '',
     price: 0,
-    category: 'bebidas'
+    category: 1
   };
 
   private readonly DEFAULT_COMBO: ProductForm = {
@@ -61,7 +68,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
     japaneseName: '',
     description: '',
     price: 0,
-    category: 'combos'
+    category: 1
   };
 
   private readonly ROMAJI_TO_KATAKANA: { [key: string]: string } = {
@@ -106,6 +113,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.loadCategoriesFromSupabase();
     this.loadMenuFromSupabase();
     this.subscribeToMenuChanges();
     this.loadCombosFromSupabase();
@@ -119,6 +127,36 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
     if (this.comboSubscription) {
       this.comboSubscription.unsubscribe();
     }
+  }
+
+  async loadCategoriesFromSupabase() {
+    try {
+      console.log('📋 Loading categories from Supabase...');
+      const supabaseCategories = await this.supabase.getCategories();
+      this.categories = supabaseCategories.map(cat => ({
+        id: Number(cat.id),
+        name: cat.name,
+        icon: this.getCategoryIcon(cat.name)
+      }));
+      console.log('✅ Categories loaded:', this.categories);
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('❌ Error loading categories:', error);
+      alert('Error al cargar categorías: ' + (error as any).message);
+    }
+  }
+
+  private getCategoryIcon(categoryName: string): string {
+    const icons: Record<string, string> = {
+      'bebidas': '🥤',
+      'rolls': '🍜',
+      'nigiri': '🍣',
+      'sashimi': '🍱',
+      'especiales': '⭐',
+      'postres': '🍰',
+      'combos': '📦'
+    };
+    return icons[categoryName.toLowerCase()] || '🍽️';
   }
 
   async loadMenuFromSupabase() {
@@ -204,7 +242,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
       japaneseName: item.japaneseName || '',
       description: item.description,
       price: item.price,
-      category: item.category
+      category: typeof item.category === 'string' ? Number(item.category) : item.category
     };
     this.itemImagePreview = item.image;
     this.showForm = true;
@@ -218,7 +256,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
       japaneseName: combo.japaneseName || '',
       description: combo.description || '',
       price: combo.price,
-      category: combo.category || 'combos'
+      category: typeof combo.category === 'string' ? Number(combo.category) : combo.category || 1
     };
     this.comboImagePreview = combo.image;
     this.selectedComboItems = {};
@@ -260,7 +298,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
           name: this.newItem.name,
           description: this.newItem.description,
           price: this.newItem.price,
-          category_id: this.newItem.category,
+          category_id: String(this.newItem.category),
           image_url: this.itemImagePreview || undefined
         });
         console.log('✅ Menu item updated');
@@ -269,7 +307,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
           name: this.newItem.name,
           description: this.newItem.description,
           price: this.newItem.price,
-          category_id: this.newItem.category,
+          category_id: String(this.newItem.category),
           image_url: this.itemImagePreview || undefined,
           available: true
         });

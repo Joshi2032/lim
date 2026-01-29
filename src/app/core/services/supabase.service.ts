@@ -266,10 +266,14 @@ export class SupabaseService {
 
   subscribeToOrders(callback: (orders: Order[]) => void) {
     const subscription = supabase
-      .from('orders')
-      .on('*', (payload) => {
-        this.getOrders().then(callback);
-      })
+      .channel('public:orders')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders' },
+        () => {
+          this.getOrders().then(callback);
+        }
+      )
       .subscribe();
 
     return subscription;
@@ -277,10 +281,14 @@ export class SupabaseService {
 
   subscribeToPickupOrders(callback: (orders: Order[]) => void) {
     const subscription = supabase
-      .from('orders')
-      .on('*', (payload) => {
-        this.getOrdersByType('pickup').then(callback);
-      })
+      .channel('public:orders:pickup')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders' },
+        () => {
+          this.getOrdersByType('pickup').then(callback);
+        }
+      )
       .subscribe();
 
     return subscription;
@@ -288,10 +296,14 @@ export class SupabaseService {
 
   subscribeToMenuItems(callback: (items: MenuItem[]) => void) {
     const subscription = supabase
-      .from('menu_items')
-      .on('*', (payload) => {
-        this.getMenuItems().then(callback);
-      })
+      .channel('public:menu_items')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'menu_items' },
+        () => {
+          this.getMenuItems().then(callback);
+        }
+      )
       .subscribe();
 
     return subscription;

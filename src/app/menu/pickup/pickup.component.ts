@@ -38,11 +38,11 @@ export class PickupComponent implements OnInit, OnDestroy {
   get pickupStats(): SimpleStatItem[] {
     if (this._pickupStatsMemoized) return this._pickupStatsMemoized;
     this._pickupStatsMemoized = [
-      { value: this.getOrdersByStatus('pending').length, label: 'Pendientes', status: 'pending' },
-      { value: this.getOrdersByStatus('preparing').length, label: 'Preparando', status: 'preparing' },
-      { value: this.getOrdersByStatus('ready').length, label: 'Listos', status: 'ready' }
+      { value: this.getOrdersByStatus('pendiente').length, label: 'Pendientes', status: 'pendiente' },
+      { value: this.getOrdersByStatus('preparando').length, label: 'Preparando', status: 'preparando' },
+      { value: this.getOrdersByStatus('listo').length, label: 'Listos', status: 'listo' }
     ];
-    return this._pickupStatsMemoized;
+    return this._pickupStatsMemoized || [];
   }
 
   currentUser: User = {
@@ -115,13 +115,13 @@ export class PickupComponent implements OnInit, OnDestroy {
 
   private mapSupabaseStatus(status: SupabaseOrder['status']): OrderStatus {
     const statusMap: Record<string, OrderStatus> = {
-      'pending': 'pending',
-      'preparing': 'preparing',
-      'ready': 'ready',
-      'completed': 'ready',
-      'cancelled': 'cancelled'
+      'pending': 'pendiente',
+      'preparing': 'preparando',
+      'ready': 'listo',
+      'completed': 'listo',
+      'cancelled': 'pendiente'
     };
-    return statusMap[status] || 'pending';
+    return statusMap[status] || 'pendiente';
   }
 
   getFilteredOrders(): Order[] {
@@ -156,11 +156,10 @@ export class PickupComponent implements OnInit, OnDestroy {
 
   private mapOrderStatusToSupabase(orderStatus: OrderStatus): SupabaseOrder['status'] {
     const statusMap: Record<OrderStatus, SupabaseOrder['status']> = {
-      'pending': 'pending',
-      'preparing': 'preparing',
-      'ready': 'ready',
-      'completed': 'completed',
-      'cancelled': 'cancelled'
+      'pendiente': 'pending',
+      'preparando': 'preparing',
+      'listo': 'ready',
+      'servido': 'completed'
     };
     return statusMap[orderStatus] || 'pending';
   }

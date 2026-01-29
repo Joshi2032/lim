@@ -159,6 +159,7 @@ export class PickupRegistrationComponent implements OnInit {
     try {
       // Create order in Supabase
       const orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'> = {
+        order_number: `ORD-${Date.now()}`,
         customer_name: this.order.customerName,
         customer_phone: this.order.customerPhone,
         customer_email: '',

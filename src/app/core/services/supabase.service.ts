@@ -370,6 +370,90 @@ export class SupabaseService {
     return channel;
   }
 
+  // ==================== AUTHENTICATION ====================
+
+  async signIn(email: string, password: string) {
+    try {
+      console.log('🔑 Signing in user:', email);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        console.error('❌ Sign in error:', error);
+        throw error;
+      }
+
+      console.log('✅ User signed in:', data.user?.email);
+      return data;
+    } catch (error) {
+      console.error('❌ Error in signIn:', error);
+      throw error;
+    }
+  }
+
+  async signUp(email: string, password: string, metadata?: { name?: string }) {
+    try {
+      console.log('📝 Signing up user:', email);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: metadata
+        }
+      });
+
+      if (error) {
+        console.error('❌ Sign up error:', error);
+        throw error;
+      }
+
+      console.log('✅ User signed up:', data.user?.email);
+      return data;
+    } catch (error) {
+      console.error('❌ Error in signUp:', error);
+      throw error;
+    }
+  }
+
+  async signOut() {
+    try {
+      console.log('🚪 Signing out user...');
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.error('❌ Sign out error:', error);
+        throw error;
+      }
+
+      console.log('✅ User signed out');
+    } catch (error) {
+      console.error('❌ Error in signOut:', error);
+      throw error;
+    }
+  }
+
+  async getCurrentUser() {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+
+      if (error) {
+        console.error('❌ Error getting current user:', error);
+        throw error;
+      }
+
+      return user;
+    } catch (error) {
+      console.error('❌ Error in getCurrentUser:', error);
+      return null;
+    }
+  }
+
+  onAuthStateChange(callback: (event: string, session: any) => void) {
+    return supabase.auth.onAuthStateChange(callback);
+  }
+
   // ==================== CUSTOMERS ====================
 
   async createOrGetCustomer(phone: string, name?: string, email?: string): Promise<Customer> {

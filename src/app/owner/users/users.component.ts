@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { UserCardComponent } from '../../shared/user-card/user-card.component';
@@ -6,7 +6,12 @@ import { UserFormComponent, UserFormData, RoleOption } from '../../shared/user-f
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { MovementsService } from '../../shared/movements/movements.service';
-import { SupabaseService, Position } from '../../core/services/supabase.service';
+import { Employee } from '../../core/services/supabase.service';
+import { Position as StorePosition } from '../../store/employees/employees.reducer';
+import { Store } from '@ngrx/store';
+import { Observable, Subscription } from 'rxjs';
+import * as EmployeesActions from '../../store/employees/employees.actions';
+import { selectEmployees, selectEmployeesLoadingState, selectEmployeesPositions } from '../../store/employees/employees.selectors';
 
 export type UserRole = 'duena' | 'encargado' | 'chef' | 'mesero' | 'cajero' | 'repartidor';
 
@@ -34,11 +39,15 @@ export interface RoleStat extends RoleOption {
   styleUrl: './users.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class UsersComponent implements OnInit {
+export class UsersComponent implements OnInit, OnDestroy {
   private isSubmitting = false;
   @Input() embedded: boolean = false;
   users: UserEmployee[] = [];
-  positions: Position[] = [];
+  positions: StorePosition[] = [];
+  employees$: Observable<Employee[]>;
+  positions$: Observable<StorePosition[]>;
+  loading$: Observable<boolean>;
+  private subscriptions = new Subscription();
   cartCount: number = 0;
   showUserFormModal: boolean = false;
   userBeingEdited: UserEmployee | null = null;
@@ -67,9 +76,13 @@ export class UsersComponent implements OnInit {
 
   constructor(
     private movements: MovementsService,
-    private supabase: SupabaseService,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private cdr: ChangeDetectorRef,
+    private store: Store
+  ) {
+    this.employees$ = this.store.select(selectEmployees);
+    this.positions$ = this.store.select(selectEmployeesPositions);
+    this.loading$ = this.store.select(selectEmployeesLoadingState);
+  }
 
   roleStats: RoleStat[] = [
     { id: 'duena', label: 'Dueña', icon: '👑', count: 0 },
@@ -81,56 +94,55 @@ export class UsersComponent implements OnInit {
   ];
 
   ngOnInit() {
-    this.loadPositions();
-    this.loadUsersFromSupabase();
-    this.updateRoleStats();
+    this.store.dispatch(EmployeesActions.loadEmployees());
+    this.store.dispatch(EmployeesActions.loadPositions());
+
+    this.subscriptions.add(
+      this.positions$.subscribe(positions => {
+        this.positions = positions;
+        this.cdr.markForCheck();
+      })
+    );
+
+    this.subscriptions.add(
+      this.employees$.subscribe(employees => {
+        this.mapEmployeesToUsers(employees);
+        this.updateRoleStats();
+        this.cdr.markForCheck();
+      })
+    );
   }
 
-  async loadPositions() {
-    try {
-      this.positions = await this.supabase.getPositions();
-      console.log('✅ Positions loaded:', this.positions);
-    } catch (error) {
-      console.error('❌ Error loading positions:', error);
-    }
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 
-  async loadUsersFromSupabase() {
-    try {
-      console.log('📋 Loading employees from Supabase...');
-      const employees = await this.supabase.getEmployees();
-      this.users = employees.map(emp => {
-        // Map position name to UserRole
-        const positionToRoleMap: Record<string, UserRole> = {
-          'admin': 'duena',
-          'chef': 'chef',
-          'waiter': 'mesero',
-          'delivery': 'repartidor',
-          'cashier': 'cajero'
-        };
+  private mapEmployeesToUsers(employees: Employee[]) {
+    const positionToRoleMap: Record<string, UserRole> = {
+      'admin': 'duena',
+      'chef': 'chef',
+      'waiter': 'mesero',
+      'delivery': 'repartidor',
+      'cashier': 'cajero'
+    };
 
-        const positionName = emp.position?.name || '';
-        const roleId = positionToRoleMap[positionName] || 'mesero';
+    this.users = employees.map(emp => {
+      const fallbackPosition = this.positions.find(p => p.id === emp.position_id);
+      const positionName = emp.position?.name || fallbackPosition?.name || '';
+      const roleId = positionToRoleMap[positionName] || 'mesero';
 
-        return {
-          id: emp.id,
-          name: emp.full_name,
-          email: emp.email,
-          phone: emp.phone,
-          positionId: emp.position_id,
-          positionName: emp.position?.display_name,
-          roleId: roleId,
-          initials: this.generateInitials(emp.full_name),
-          status: emp.active ? 'activo' : 'inactivo'
-        };
-      });
-      console.log('✅ Employees loaded:', this.users);
-      this.updateRoleStats();
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('❌ Error loading employees:', error);
-      alert('Error al cargar empleados: ' + (error as any).message);
-    }
+      return {
+        id: String(emp.id),
+        name: emp.full_name,
+        email: emp.email,
+        phone: emp.phone,
+        positionId: emp.position_id,
+        positionName: emp.position?.display_name || emp.position?.name || fallbackPosition?.name,
+        roleId: roleId,
+        initials: this.generateInitials(emp.full_name),
+        status: emp.active ? 'activo' : 'inactivo'
+      };
+    });
   }
 
   updateRoleStats() {
@@ -168,143 +180,76 @@ export class UsersComponent implements OnInit {
 
     if (this.userBeingEdited) {
       // Modo edición
-      this.updateUserInSupabase(formData);
+      this.updateUserInStore(formData);
     } else {
       // Modo creación
-      this.createUserInSupabase(formData);
+      this.createUserInStore(formData);
     }
   }
 
-  private async createUserInSupabase(formData: UserFormData) {
-    try {
-      console.log('📝 Creating employee:', formData.name);
-
-      // Obtener la posición por el nombre del rol
-      const positionMap: Record<UserRole, string> = {
-        'duena': 'admin',
-        'chef': 'chef',
-        'mesero': 'waiter',
-        'repartidor': 'delivery',
-        'cajero': 'cashier',
-        'encargado': 'admin'
-      };
-
-      const positionName = positionMap[formData.roleId as UserRole];
-      const position = await this.supabase.getPositionByName(positionName);
-
-      if (!position) {
-        throw new Error(`Posición "${positionName}" no encontrada`);
-      }
-
-      const newEmployee = {
-        full_name: formData.name,
-        email: formData.email,
-        phone: formData.phone || undefined,
-        position_id: position.id,
-        active: true
-      };
-
-      const createdEmployee = await this.supabase.createEmployee(newEmployee);
-
-      const newUser: UserEmployee = {
-        id: createdEmployee.id,
-        name: createdEmployee.full_name,
-        email: createdEmployee.email,
-        phone: createdEmployee.phone,
-        positionId: createdEmployee.position_id,
-        positionName: createdEmployee.position?.display_name,
-        roleId: formData.roleId as UserRole,
-        initials: this.generateInitials(createdEmployee.full_name),
-        status: createdEmployee.active ? 'activo' : 'inactivo'
-      };
-
-      this.users.push(newUser);
-      console.log('✅ Employee created:', newUser);
-      this.cdr.markForCheck();
-
-      this.movements.log({
-        title: 'Usuario creado',
-        description: `${formData.name} (${formData.email}) como ${this.getRoleLabel(formData.roleId as UserRole)}`,
-        section: 'usuarios',
-        status: 'success',
-        actor: this.currentUser.name,
-        role: this.currentUser.role
-      });
-    } catch (error) {
-      console.error('❌ Error creating employee:', error);
-      alert('Error al crear usuario: ' + (error as any).message);
-    } finally {
+  private createUserInStore(formData: UserFormData) {
+    const position = this.getPositionByRole(formData.roleId as UserRole);
+    if (!position) {
+      alert('Posición no encontrada para el rol seleccionado');
       this.isSubmitting = false;
-      this.updateRoleStats();
-      this.closeUserForm();
+      return;
     }
+
+    const newEmployee = {
+      full_name: formData.name,
+      email: formData.email,
+      phone: formData.phone || undefined,
+      position_id: position.id,
+      active: true
+    };
+
+    this.store.dispatch(EmployeesActions.createEmployee({ employee: newEmployee }));
+
+    this.movements.log({
+      title: 'Usuario creado',
+      description: `${formData.name} (${formData.email}) como ${this.getRoleLabel(formData.roleId as UserRole)}`,
+      section: 'usuarios',
+      status: 'success',
+      actor: this.currentUser.name,
+      role: this.currentUser.role
+    });
+
+    this.isSubmitting = false;
+    this.closeUserForm();
   }
 
-  private async updateUserInSupabase(formData: UserFormData) {
+  private updateUserInStore(formData: UserFormData) {
     if (!this.userBeingEdited) return;
 
-    try {
-      console.log('✏️ Updating employee:', formData.name);
-
-      // Obtener la posición por el nombre del rol
-      const positionMap: Record<UserRole, string> = {
-        'duena': 'admin',
-        'chef': 'chef',
-        'mesero': 'waiter',
-        'repartidor': 'delivery',
-        'cajero': 'cashier',
-        'encargado': 'admin'
-      };
-
-      const positionName = positionMap[formData.roleId as UserRole];
-      const position = await this.supabase.getPositionByName(positionName);
-
-      if (!position) {
-        throw new Error(`Posición "${positionName}" no encontrada`);
-      }
-
-      const updateData = {
-        full_name: formData.name,
-        email: formData.email,
-        phone: formData.phone || undefined,
-        position_id: position.id
-      };
-
-      await this.supabase.updateEmployee(this.userBeingEdited.id, updateData);
-
-      const userIndex = this.users.findIndex(u => u.id === this.userBeingEdited!.id);
-      if (userIndex !== -1) {
-        this.users[userIndex] = {
-          ...this.users[userIndex],
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          positionId: position.id,
-          positionName: position.display_name,
-          roleId: formData.roleId as UserRole,
-          initials: this.generateInitials(formData.name)
-        };
-      }
-      this.cdr.markForCheck();
-
-      console.log('✅ Employee updated');
-
-      this.movements.log({
-        title: 'Usuario actualizado',
-        description: `${formData.name} ahora es ${this.getRoleLabel(formData.roleId as UserRole)}`,
-        section: 'usuarios',
-        status: 'success',
-        actor: this.currentUser.name,
-        role: this.currentUser.role
-      });
-    } catch (error) {
-      console.error('❌ Error updating employee:', error);
-      alert('Error al actualizar usuario: ' + (error as any).message);
-    } finally {
+    const position = this.getPositionByRole(formData.roleId as UserRole);
+    if (!position) {
+      alert('Posición no encontrada para el rol seleccionado');
       this.isSubmitting = false;
-      this.updateRoleStats();
-      this.closeUserForm();
+      return;
     }
+
+    const updateData = {
+      full_name: formData.name,
+      email: formData.email,
+      phone: formData.phone || undefined,
+      position_id: position.id
+    };
+
+    this.store.dispatch(
+      EmployeesActions.updateEmployee({ employeeId: this.userBeingEdited.id, employee: updateData })
+    );
+
+    this.movements.log({
+      title: 'Usuario actualizado',
+      description: `${formData.name} ahora es ${this.getRoleLabel(formData.roleId as UserRole)}`,
+      section: 'usuarios',
+      status: 'success',
+      actor: this.currentUser.name,
+      role: this.currentUser.role
+    });
+
+    this.isSubmitting = false;
+    this.closeUserForm();
   }
 
   private generateInitials(name: string): string {
@@ -316,33 +261,37 @@ export class UsersComponent implements OnInit {
       .slice(0, 2);
   }
 
-  async deleteUser(userId: string) {
+  deleteUser(userId: string) {
     if (!confirm('¿Está seguro de que desea eliminar este usuario?')) return;
 
     if (this.isSubmitting) return;
     this.isSubmitting = true;
 
-    try {
-      console.log('🗑️ Deleting employee:', userId);
-      await this.supabase.deleteEmployee(userId);
+    this.store.dispatch(EmployeesActions.deleteEmployee({ employeeId: userId }));
 
-      this.users = this.users.filter(u => u.id !== userId);
-      console.log('✅ Employee deleted');
+    this.movements.log({
+      title: 'Usuario eliminado',
+      description: `Usuario con id ${userId} removido`,
+      section: 'usuarios',
+      status: 'warning',
+      actor: this.currentUser.name,
+      role: this.currentUser.role
+    });
 
-      this.movements.log({
-        title: 'Usuario eliminado',
-        description: `Usuario con id ${userId} removido`,
-        section: 'usuarios',
-        status: 'warning',
-        actor: this.currentUser.name,
-        role: this.currentUser.role
-      });
-    } catch (error) {
-      console.error('❌ Error deleting employee:', error);
-      alert('Error al eliminar usuario: ' + (error as any).message);
-    } finally {
-      this.isSubmitting = false;
-      this.updateRoleStats();
-    }
+    this.isSubmitting = false;
+  }
+
+  private getPositionByRole(roleId: UserRole): StorePosition | undefined {
+    const positionMap: Record<UserRole, string> = {
+      'duena': 'admin',
+      'chef': 'chef',
+      'mesero': 'waiter',
+      'repartidor': 'delivery',
+      'cajero': 'cashier',
+      'encargado': 'admin'
+    };
+
+    const positionName = positionMap[roleId];
+    return this.positions.find(p => p.name === positionName);
   }
 }

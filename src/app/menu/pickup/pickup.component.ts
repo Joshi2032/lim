@@ -8,7 +8,10 @@ import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/fi
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stats-grid.component';
 import { SupabaseService, Order as SupabaseOrder } from '../../core/services/supabase.service';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { Store } from '@ngrx/store';
+import { Observable, Subscription } from 'rxjs';
+import * as OrdersActions from '../../store/orders/orders.actions';
+import { selectOrdersByType, selectOrdersLoading$ } from '../../store/orders/orders.selectors';
 
 @Component({
   selector: 'app-pickup',
@@ -28,7 +31,9 @@ export class PickupComponent implements OnInit, OnDestroy {
   orders: Order[] = [];
   cartCount: number = 0;
   private _pickupStatsMemoized: SimpleStatItem[] | null = null;
-  private pickupOrdersSubscription: RealtimeChannel | null = null;
+  orders$: Observable<SupabaseOrder[]>;
+  loading$: Observable<boolean>;
+  private subscriptions = new Subscription();
 
   headerAction: PageAction = {
     label: 'Nuevo Pedido',
@@ -68,38 +73,36 @@ export class PickupComponent implements OnInit, OnDestroy {
     private movements: MovementsService,
     private router: Router,
     private supabase: SupabaseService,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private cdr: ChangeDetectorRef,
+    private store: Store
+  ) {
+    this.orders$ = this.store.select(selectOrdersByType('pickup'));
+    this.loading$ = this.store.select(selectOrdersLoading$);
+  }
 
   ngOnInit() {
-    this.loadPickupOrders();
-    this.subscribeToPickupOrdersChanges();
+    // Load all orders (filtered by type 'pickup' in selector)
+    this.store.dispatch(OrdersActions.loadOrders());
+
+    // Subscribe to pickup orders
+    this.subscriptions.add(
+      this.orders$.subscribe(supabaseOrders => {
+        this.orders = this.mapSupabaseOrdersToOrders(supabaseOrders);
+        this._pickupStatsMemoized = null;
+        this.cdr.markForCheck();
+      })
+    );
+
+    // Subscribe to real-time changes
+    this.store.dispatch(OrdersActions.subscribeToOrders());
   }
 
   ngOnDestroy() {
-    if (this.pickupOrdersSubscription) {
-      this.pickupOrdersSubscription.unsubscribe();
-    }
+    this.subscriptions.unsubscribe();
   }
 
-  async loadPickupOrders() {
-    try {
-      const supabaseOrders = await this.supabase.getOrdersByType('pickup');
-      this.orders = this.mapSupabaseOrdersToOrders(supabaseOrders);
-      this._pickupStatsMemoized = null; // Invalidar caché
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('Error loading pickup orders:', error);
-    }
-  }
 
-  private subscribeToPickupOrdersChanges() {
-    this.pickupOrdersSubscription = this.supabase.subscribeToPickupOrders((orders) => {
-      this.orders = this.mapSupabaseOrdersToOrders(orders);
-      this._pickupStatsMemoized = null; // Invalidar caché
-      this.cdr.markForCheck();
-    });
-  }
+  // Data loading and real-time subscription handled by NgRx store
 
   private mapSupabaseOrdersToOrders(supabaseOrders: SupabaseOrder[]): Order[] {
     return supabaseOrders.map(so => ({

@@ -1,5 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Store } from '@ngrx/store';
+import { Observable, Subscription } from 'rxjs';
 import { MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { KitchenOrderComponent, Order, OrderStatus } from '../kitchen-order/kitchen-order.component';
 import { MovementsService } from '../../shared/movements/movements.service';
@@ -7,7 +9,8 @@ import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/fi
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stats-grid.component';
 import { SupabaseService, Order as SupabaseOrder } from '../../core/services/supabase.service';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import * as OrdersActions from '../../store/orders/orders.actions';
+import { selectOrders } from '../../store/orders/orders.selectors';
 
 @Component({
   selector: 'app-kitchen',
@@ -27,7 +30,10 @@ export class KitchenComponent implements OnInit, OnDestroy {
   orders: Order[] = [];
   cartCount: number = 0;
   private _kitchenStatsMemoized: SimpleStatItem[] | null = null;
-  private kitchenOrdersSubscription: RealtimeChannel | null = null;
+  private subscriptions = new Subscription();
+
+  // Observable del store
+  orders$: Observable<SupabaseOrder[]>;
 
   headerAction: PageAction = {
     label: 'Nuevo Pedido',
@@ -66,39 +72,36 @@ export class KitchenComponent implements OnInit, OnDestroy {
   constructor(
     private movements: MovementsService,
     private supabase: SupabaseService,
+    private store: Store,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    // Inicializar observable del store
+    this.orders$ = this.store.select(selectOrders);
+  }
 
   ngOnInit() {
-    this.loadKitchenOrders();
-    this.subscribeToKitchenOrdersChanges();
+    // Dispatch para cargar órdenes desde el store
+    this.store.dispatch(OrdersActions.loadOrders());
+
+    // Suscribirse a cambios en órdenes
+    this.subscriptions.add(
+      this.orders$.subscribe(supabaseOrders => {
+        this.orders = this.mapSupabaseOrdersToOrders(supabaseOrders);
+        this._kitchenStatsMemoized = null;
+        this.cdr.markForCheck();
+      })
+    );
+
+    // Suscribirse a cambios en tiempo real
+    this.store.dispatch(OrdersActions.subscribeToOrders());
   }
 
   ngOnDestroy() {
-    if (this.kitchenOrdersSubscription) {
-      this.kitchenOrdersSubscription.unsubscribe();
-    }
+    this.subscriptions.unsubscribe();
   }
 
-  async loadKitchenOrders() {
-    try {
-      // Kitchen ve TODAS las órdenes (pickup, delivery, dine-in)
-      const supabaseOrders = await this.supabase.getOrders();
-      this.orders = this.mapSupabaseOrdersToOrders(supabaseOrders);
-      this._kitchenStatsMemoized = null;
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('Error loading kitchen orders:', error);
-    }
-  }
-
-  private subscribeToKitchenOrdersChanges() {
-    this.kitchenOrdersSubscription = this.supabase.subscribeToOrders((orders) => {
-      this.orders = this.mapSupabaseOrdersToOrders(orders);
-      this._kitchenStatsMemoized = null;
-      this.cdr.markForCheck();
-    });
-  }
+  // Métodos de carga ahora se manejan desde NgRx store
+  // loadKitchenOrders() y subscribeToKitchenOrdersChanges() ya no son necesarios
 
   private mapSupabaseOrdersToOrders(supabaseOrders: SupabaseOrder[]): Order[] {
     return supabaseOrders.map(so => ({

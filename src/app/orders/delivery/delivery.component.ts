@@ -7,7 +7,10 @@ import { DataTableComponent, DataTableColumn } from '../../shared/data-table/dat
 import { FilterBarComponent, FilterField, FilterOption } from '../../shared/filter-bar/filter-bar.component';
 import { MovementsService } from '../../shared/movements/movements.service';
 import { SupabaseService, Order as SupabaseOrder } from '../../core/services/supabase.service';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { Store } from '@ngrx/store';
+import { Observable, Subscription } from 'rxjs';
+import * as OrdersActions from '../../store/orders/orders.actions';
+import { selectOrdersByType, selectOrdersLoading$ } from '../../store/orders/orders.selectors';
 
 export type DeliveryStatus = 'pendiente' | 'enCurso' | 'entregada';
 
@@ -35,7 +38,9 @@ export class DeliveryComponent implements OnInit, OnDestroy {
   deliveries: Delivery[] = [];
   cartCount: number = 0;
   private _deliveryStatsMemoized: SimpleStatItem[] | null = null;
-  private deliveryOrdersSubscription: RealtimeChannel | null = null;
+  orders$: Observable<SupabaseOrder[]>;
+  loading$: Observable<boolean>;
+  private subscriptions = new Subscription();
 
   deliveryColumns: DataTableColumn[] = [];
   deliveryTableData: any[] = [];
@@ -79,43 +84,40 @@ export class DeliveryComponent implements OnInit, OnDestroy {
   constructor(
     private movements: MovementsService,
     private supabase: SupabaseService,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private cdr: ChangeDetectorRef,
+    private store: Store
+  ) {
+    this.orders$ = this.store.select(selectOrdersByType('delivery'));
+    this.loading$ = this.store.select(selectOrdersLoading$);
+  }
 
   ngOnInit() {
     this.initializeTableColumns();
     this.initializeFilters();
-    this.loadDeliveries();
-    this.subscribeToDeliveryChanges();
+
+    // Load all orders (filtered by type 'delivery' in selector)
+    this.store.dispatch(OrdersActions.loadOrders());
+
+    // Subscribe to delivery orders
+    this.subscriptions.add(
+      this.orders$.subscribe(supabaseOrders => {
+        this.deliveries = this.mapSupabaseOrdersToDeliveries(supabaseOrders);
+        this.updateTableData();
+        this._deliveryStatsMemoized = null;
+        this.cdr.markForCheck();
+      })
+    );
+
+    // Subscribe to real-time changes
+    this.store.dispatch(OrdersActions.subscribeToOrders());
   }
 
   ngOnDestroy() {
-    if (this.deliveryOrdersSubscription) {
-      this.deliveryOrdersSubscription.unsubscribe();
-    }
+    this.subscriptions.unsubscribe();
   }
 
-  async loadDeliveries() {
-    try {
-      const supabaseOrders = await this.supabase.getOrdersByType('delivery');
-      this.deliveries = this.mapSupabaseOrdersToDeliveries(supabaseOrders);
-      this.updateTableData();
-      this._deliveryStatsMemoized = null;
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('Error loading delivery orders:', error);
-    }
-  }
 
-  private subscribeToDeliveryChanges() {
-    this.deliveryOrdersSubscription = this.supabase.subscribeToOrders((orders) => {
-      const deliveryOrders = orders.filter(o => o.order_type === 'delivery');
-      this.deliveries = this.mapSupabaseOrdersToDeliveries(deliveryOrders);
-      this.updateTableData();
-      this._deliveryStatsMemoized = null;
-      this.cdr.markForCheck();
-    });
-  }
+  // Data loading and real-time subscription handled by NgRx store
 
   private mapSupabaseOrdersToDeliveries(supabaseOrders: SupabaseOrder[]): Delivery[] {
     return supabaseOrders.map(so => ({

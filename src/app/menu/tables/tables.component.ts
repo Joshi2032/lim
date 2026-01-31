@@ -159,7 +159,6 @@ export class TablesComponent implements OnInit, OnDestroy {
   }
 
   handleLogout() {
-    console.log('Logout');
   }
 
   async onTableStatusChange(tableId: string, newStatus: TableStatus): Promise<void> {

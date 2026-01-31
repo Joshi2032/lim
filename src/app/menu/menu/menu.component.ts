@@ -221,7 +221,6 @@ export class MenuComponent implements OnInit, OnDestroy {
         this.addComboToCartDirect(combo);
       }
     }
-    console.log('Attempting to add combo to cart:', comboId);
   }
 
   onVariantConfirm(event: { item: MenuItem; variant: any; quantity: number }) {
@@ -290,7 +289,6 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   handleLogout() {
-    console.log('Logout clicked');
     // Logout logic would go here
   }
 

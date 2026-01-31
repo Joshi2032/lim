@@ -295,8 +295,6 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
     if (this.isSubmitting) return;
     this.isSubmitting = true;
 
-    console.log('🔍 Saving with category ID:', this.newItem.category, 'Type:', typeof this.newItem.category);
-
     const menuItemPayload = {
       name: this.newItem.name,
       description: this.newItem.description,

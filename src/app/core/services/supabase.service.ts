@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, isDevMode } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { supabase } from '../config/supabase.config';
 
@@ -127,16 +127,23 @@ export interface RestaurantTable {
   providedIn: 'root'
 })
 export class SupabaseService {
+  private readonly debug = isDevMode();
   private ordersSubject = new BehaviorSubject<Order[]>([]);
   private menuItemsSubject = new BehaviorSubject<MenuItem[]>([]);
 
   constructor() {}
 
+  private log(...args: unknown[]) {
+    if (this.debug) {
+      console.log(...args);
+    }
+  }
+
   // ==================== ORDERS ====================
 
   async createOrder(orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'>) {
     try {
-      console.log('Creating order:', orderData);
+      this.log('Creating order:', orderData);
       const { data, error } = await supabase
         .from('orders')
         .insert([
@@ -161,7 +168,7 @@ export class SupabaseService {
         console.error('Supabase error creating order:', error);
         throw error;
       }
-      console.log('Order created:', data);
+      this.log('Order created:', data);
       return data as Order;
     } catch (error) {
       console.error('Error creating order:', error);
@@ -180,7 +187,7 @@ export class SupabaseService {
         console.error('Supabase error fetching orders:', error);
         throw error;
       }
-      console.log('Orders loaded:', (data || []).length, data);
+      this.log('Orders loaded:', (data || []).length, data);
       return (data || []) as Order[];
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -216,7 +223,7 @@ export class SupabaseService {
         console.error(`Supabase error fetching orders with type ${orderType}:`, error);
         throw error;
       }
-      console.log(`Orders of type ${orderType} loaded:`, (data || []).length, data);
+      this.log(`Orders of type ${orderType} loaded:`, (data || []).length, data);
       return (data || []) as Order[];
     } catch (error) {
       console.error(`Error fetching orders with type ${orderType}:`, error);
@@ -226,7 +233,7 @@ export class SupabaseService {
 
   async updateOrderStatus(orderId: string, status: Order['status'], userId?: string) {
     try {
-      console.log('📝 Updating order status:', orderId, 'to', status);
+      this.log('📝 Updating order status:', orderId, 'to', status);
 
       const { error } = await supabase
         .from('orders')
@@ -249,7 +256,7 @@ export class SupabaseService {
         console.warn('⚠️ Error recording status history:', historyError);
         // No fallar si no se puede registrar el historial
       } else {
-        console.log('✅ Status history recorded');
+        this.log('✅ Status history recorded');
       }
 
       return true;
@@ -275,7 +282,7 @@ export class SupabaseService {
 
   async addOrderItems(items: Array<Omit<OrderItem, 'id'>>) {
     try {
-      console.log('Adding order items:', items);
+      this.log('Adding order items:', items);
       const { data, error } = await supabase
         .from('order_items')
         .insert(items)
@@ -285,7 +292,7 @@ export class SupabaseService {
         console.error('Supabase error adding order items:', error);
         throw error;
       }
-      console.log('Order items added:', data);
+      this.log('Order items added:', data);
       return data;
     } catch (error) {
       console.error('Error adding order items:', error);
@@ -324,7 +331,7 @@ export class SupabaseService {
       }
 
       const items = (data || []) as MenuItem[];
-      console.log('Menu items loaded:', items.length, items);
+      this.log('Menu items loaded:', items.length, items);
       this.menuItemsSubject.next(items);
       return items;
     } catch (error) {
@@ -368,7 +375,7 @@ export class SupabaseService {
 
   async createMenuItem(itemData: Omit<MenuItem, 'id' | 'created_at' | 'updated_at'>): Promise<MenuItem> {
     try {
-      console.log('📝 Creating menu item:', itemData);
+      this.log('📝 Creating menu item:', itemData);
       const { data, error } = await supabase
         .from('menu_items')
         .insert([itemData])
@@ -380,7 +387,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Menu item created:', data);
+      this.log('✅ Menu item created:', data);
       return data as MenuItem;
     } catch (error) {
       console.error('❌ Error in createMenuItem:', error);
@@ -390,7 +397,7 @@ export class SupabaseService {
 
   async updateMenuItem(itemId: string, itemData: Partial<Omit<MenuItem, 'id' | 'created_at' | 'updated_at'>>): Promise<void> {
     try {
-      console.log('📝 Updating menu item:', itemId, itemData);
+      this.log('📝 Updating menu item:', itemId, itemData);
       const { error } = await supabase
         .from('menu_items')
         .update(itemData)
@@ -401,7 +408,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Menu item updated');
+      this.log('✅ Menu item updated');
     } catch (error) {
       console.error('❌ Error in updateMenuItem:', error);
       throw error;
@@ -410,7 +417,7 @@ export class SupabaseService {
 
   async deleteMenuItem(itemId: string): Promise<void> {
     try {
-      console.log('🗑️ Deleting menu item:', itemId);
+      this.log('🗑️ Deleting menu item:', itemId);
       const { error } = await supabase
         .from('menu_items')
         .update({ available: false })
@@ -421,7 +428,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Menu item deleted (marked as unavailable)');
+      this.log('✅ Menu item deleted (marked as unavailable)');
     } catch (error) {
       console.error('❌ Error in deleteMenuItem:', error);
       throw error;
@@ -430,7 +437,7 @@ export class SupabaseService {
 
   async getCategories(): Promise<Category[]> {
     try {
-      console.log('📋 Fetching categories...');
+      this.log('📋 Fetching categories...');
       const { data, error } = await supabase
         .from('categories')
         .select('*')
@@ -441,7 +448,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Categories fetched:', data?.length || 0);
+      this.log('✅ Categories fetched:', data?.length || 0);
       return (data as Category[]) || [];
     } catch (error) {
       console.error('❌ Error in getCategories:', error);
@@ -453,7 +460,7 @@ export class SupabaseService {
 
   async getTables(): Promise<RestaurantTable[]> {
     try {
-      console.log('📋 Fetching tables...');
+      this.log('📋 Fetching tables...');
       const { data, error } = await supabase
         .from('restaurant_tables')
         .select('*')
@@ -464,7 +471,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Tables fetched:', data?.length || 0);
+      this.log('✅ Tables fetched:', data?.length || 0);
       return (data as RestaurantTable[]) || [];
     } catch (error) {
       console.error('❌ Error in getTables:', error);
@@ -474,7 +481,7 @@ export class SupabaseService {
 
   async updateTableStatus(tableId: string, status: 'available' | 'occupied' | 'reserved' | 'cleaning'): Promise<void> {
     try {
-      console.log('📝 Updating table status:', tableId, status);
+      this.log('📝 Updating table status:', tableId, status);
       const { error } = await supabase
         .from('restaurant_tables')
         .update({ status })
@@ -485,7 +492,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Table status updated');
+      this.log('✅ Table status updated');
     } catch (error) {
       console.error('❌ Error in updateTableStatus:', error);
       throw error;
@@ -493,7 +500,7 @@ export class SupabaseService {
   }
 
   subscribeToTables(callback: (tables: RestaurantTable[]) => void) {
-    console.log('🔔 Subscribing to table changes...');
+    this.log('🔔 Subscribing to table changes...');
 
     const channel = supabase
       .channel('restaurant_tables-changes')
@@ -501,7 +508,7 @@ export class SupabaseService {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'restaurant_tables' },
         () => {
-          console.log('🔄 Table change detected, fetching updated tables...');
+          this.log('🔄 Table change detected, fetching updated tables...');
           this.getTables().then(callback);
         }
       )
@@ -514,7 +521,7 @@ export class SupabaseService {
 
   async signIn(email: string, password: string) {
     try {
-      console.log('🔑 Signing in user:', email);
+      this.log('🔑 Signing in user:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -525,7 +532,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ User signed in:', data.user?.email);
+      this.log('✅ User signed in:', data.user?.email);
       return data;
     } catch (error) {
       console.error('❌ Error in signIn:', error);
@@ -535,7 +542,7 @@ export class SupabaseService {
 
   async signUp(email: string, password: string, metadata?: { name?: string }) {
     try {
-      console.log('📝 Signing up user:', email);
+      this.log('📝 Signing up user:', email);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -549,7 +556,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ User signed up:', data.user?.email);
+      this.log('✅ User signed up:', data.user?.email);
       return data;
     } catch (error) {
       console.error('❌ Error in signUp:', error);
@@ -559,7 +566,7 @@ export class SupabaseService {
 
   async signOut() {
     try {
-      console.log('🚪 Signing out user...');
+      this.log('🚪 Signing out user...');
       const { error } = await supabase.auth.signOut();
 
       if (error) {
@@ -567,7 +574,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ User signed out');
+      this.log('✅ User signed out');
     } catch (error) {
       console.error('❌ Error in signOut:', error);
       throw error;
@@ -598,7 +605,7 @@ export class SupabaseService {
 
   async createOrGetCustomer(phone: string, name?: string, email?: string): Promise<Customer> {
     try {
-      console.log('🔍 Checking for existing customer with phone:', phone);
+      this.log('🔍 Checking for existing customer with phone:', phone);
 
       // Try to find existing customer by phone
       const { data: existing } = await supabase
@@ -608,12 +615,12 @@ export class SupabaseService {
         .single();
 
       if (existing) {
-        console.log('✅ Found existing customer:', existing);
+        this.log('✅ Found existing customer:', existing);
         return existing as Customer;
       }
 
       // Create new customer
-      console.log('📝 Creating new customer...');
+      this.log('📝 Creating new customer...');
       const customerData = {
         phone,
         name: name || 'Cliente',
@@ -631,7 +638,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Customer created:', data);
+      this.log('✅ Customer created:', data);
       return data as Customer;
     } catch (error) {
       console.error('❌ Error in createOrGetCustomer:', error);
@@ -641,7 +648,7 @@ export class SupabaseService {
 
   async getCustomers(): Promise<Customer[]> {
     try {
-      console.log('📋 Fetching all customers...');
+      this.log('📋 Fetching all customers...');
       const { data, error } = await supabase
         .from('customers')
         .select('*')
@@ -652,7 +659,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Customers fetched:', data?.length || 0);
+      this.log('✅ Customers fetched:', data?.length || 0);
       return (data as Customer[]) || [];
     } catch (error) {
       console.error('❌ Error in getCustomers:', error);
@@ -662,7 +669,7 @@ export class SupabaseService {
 
   async updateCustomer(customerId: number, customerData: Partial<Omit<Customer, 'id' | 'created_at' | 'updated_at'>>): Promise<void> {
     try {
-      console.log('📝 Updating customer:', customerId, customerData);
+      this.log('📝 Updating customer:', customerId, customerData);
       const { error } = await supabase
         .from('customers')
         .update(customerData)
@@ -673,7 +680,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Customer updated successfully');
+      this.log('✅ Customer updated successfully');
     } catch (error) {
       console.error('❌ Error in updateCustomer:', error);
       throw error;
@@ -682,7 +689,7 @@ export class SupabaseService {
 
   async deleteCustomer(customerId: number): Promise<void> {
     try {
-      console.log('🗑️ Deleting customer:', customerId);
+      this.log('🗑️ Deleting customer:', customerId);
       const { error } = await supabase
         .from('customers')
         .delete()
@@ -693,7 +700,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Customer deleted successfully');
+      this.log('✅ Customer deleted successfully');
     } catch (error) {
       console.error('❌ Error in deleteCustomer:', error);
       throw error;
@@ -704,7 +711,7 @@ export class SupabaseService {
 
   async getCustomerAddresses(customerId: string): Promise<CustomerAddress[]> {
     try {
-      console.log('📋 Fetching addresses for customer:', customerId);
+      this.log('📋 Fetching addresses for customer:', customerId);
       const { data, error } = await supabase
         .from('customer_addresses')
         .select('*')
@@ -716,7 +723,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Addresses fetched:', data?.length || 0);
+      this.log('✅ Addresses fetched:', data?.length || 0);
       return (data as CustomerAddress[]) || [];
     } catch (error) {
       console.error('❌ Error in getCustomerAddresses:', error);
@@ -726,7 +733,7 @@ export class SupabaseService {
 
   async createCustomerAddress(addressData: Omit<CustomerAddress, 'id' | 'created_at' | 'updated_at'>): Promise<CustomerAddress> {
     try {
-      console.log('📝 Creating customer address:', addressData);
+      this.log('📝 Creating customer address:', addressData);
 
       // Si es la dirección por defecto, quitar el default de las demás
       if (addressData.is_default) {
@@ -747,7 +754,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Address created:', data);
+      this.log('✅ Address created:', data);
       return data as CustomerAddress;
     } catch (error) {
       console.error('❌ Error in createCustomerAddress:', error);
@@ -757,7 +764,7 @@ export class SupabaseService {
 
   async updateCustomerAddress(addressId: string, addressData: Partial<Omit<CustomerAddress, 'id' | 'customer_id' | 'created_at' | 'updated_at'>>): Promise<void> {
     try {
-      console.log('📝 Updating address:', addressId, addressData);
+      this.log('📝 Updating address:', addressId, addressData);
 
       // Si se está marcando como default, quitar el default de las demás
       if (addressData.is_default) {
@@ -786,7 +793,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Address updated successfully');
+      this.log('✅ Address updated successfully');
     } catch (error) {
       console.error('❌ Error in updateCustomerAddress:', error);
       throw error;
@@ -795,7 +802,7 @@ export class SupabaseService {
 
   async deleteCustomerAddress(addressId: string): Promise<void> {
     try {
-      console.log('🗑️ Deleting address:', addressId);
+      this.log('🗑️ Deleting address:', addressId);
       const { error } = await supabase
         .from('customer_addresses')
         .delete()
@@ -806,7 +813,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Address deleted successfully');
+      this.log('✅ Address deleted successfully');
     } catch (error) {
       console.error('❌ Error in deleteCustomerAddress:', error);
       throw error;
@@ -884,7 +891,7 @@ export class SupabaseService {
 
   async createCombo(comboData: Omit<Combo, 'id' | 'created_at' | 'updated_at'>, itemIds: string[]): Promise<Combo> {
     try {
-      console.log('📝 Creating combo:', comboData);
+      this.log('📝 Creating combo:', comboData);
 
       const { data: combo, error: comboError } = await supabase
         .from('combos')
@@ -915,7 +922,7 @@ export class SupabaseService {
         }
       }
 
-      console.log('✅ Combo created:', combo);
+      this.log('✅ Combo created:', combo);
       return combo as Combo;
     } catch (error) {
       console.error('❌ Error in createCombo:', error);
@@ -925,7 +932,7 @@ export class SupabaseService {
 
   async updateCombo(comboId: string, comboData: Partial<Omit<Combo, 'id' | 'created_at' | 'updated_at'>>, itemIds?: string[]): Promise<void> {
     try {
-      console.log('📝 Updating combo:', comboId, comboData);
+      this.log('📝 Updating combo:', comboId, comboData);
 
       const { error: comboError } = await supabase
         .from('combos')
@@ -964,7 +971,7 @@ export class SupabaseService {
         }
       }
 
-      console.log('✅ Combo updated');
+      this.log('✅ Combo updated');
     } catch (error) {
       console.error('❌ Error in updateCombo:', error);
       throw error;
@@ -973,7 +980,7 @@ export class SupabaseService {
 
   async deleteCombo(comboId: string): Promise<void> {
     try {
-      console.log('🗑️ Deleting combo:', comboId);
+      this.log('🗑️ Deleting combo:', comboId);
       const { error } = await supabase
         .from('combos')
         .update({ available: false })
@@ -984,7 +991,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Combo deleted (marked as unavailable)');
+      this.log('✅ Combo deleted (marked as unavailable)');
     } catch (error) {
       console.error('❌ Error in deleteCombo:', error);
       throw error;
@@ -1018,7 +1025,7 @@ export class SupabaseService {
     notes?: string;
   }): Promise<any> {
     try {
-      console.log('📝 Creating assignment:', assignmentData);
+      this.log('📝 Creating assignment:', assignmentData);
 
       const { data, error } = await supabase
         .from('assignments')
@@ -1028,7 +1035,7 @@ export class SupabaseService {
 
       if (error) throw error;
 
-      console.log('✅ Assignment created:', data);
+      this.log('✅ Assignment created:', data);
       return data;
     } catch (error) {
       console.error('❌ Error creating assignment:', error);
@@ -1074,7 +1081,7 @@ export class SupabaseService {
     completed_at: string;
   }>): Promise<void> {
     try {
-      console.log('📝 Updating assignment:', assignmentId, assignmentData);
+      this.log('📝 Updating assignment:', assignmentId, assignmentData);
 
       const { error } = await supabase
         .from('assignments')
@@ -1083,7 +1090,7 @@ export class SupabaseService {
 
       if (error) throw error;
 
-      console.log('✅ Assignment updated');
+      this.log('✅ Assignment updated');
     } catch (error) {
       console.error('❌ Error updating assignment:', error);
       throw error;
@@ -1092,7 +1099,7 @@ export class SupabaseService {
 
   async deleteAssignment(assignmentId: string): Promise<void> {
     try {
-      console.log('🗑️ Deleting assignment:', assignmentId);
+      this.log('🗑️ Deleting assignment:', assignmentId);
 
       const { error } = await supabase
         .from('assignments')
@@ -1101,7 +1108,7 @@ export class SupabaseService {
 
       if (error) throw error;
 
-      console.log('✅ Assignment deleted');
+      this.log('✅ Assignment deleted');
     } catch (error) {
       console.error('❌ Error deleting assignment:', error);
       throw error;
@@ -1128,14 +1135,14 @@ export class SupabaseService {
 
   async getPositions(): Promise<Position[]> {
     try {
-      console.log('📋 Fetching positions...');
+      this.log('📋 Fetching positions...');
       const { data, error } = await supabase
         .from('positions')
         .select('*')
         .order('name', { ascending: true });
 
       if (error) throw error;
-      console.log('✅ Positions fetched:', data?.length || 0);
+      this.log('✅ Positions fetched:', data?.length || 0);
       return (data as Position[]) || [];
     } catch (error) {
       console.error('❌ Error in getPositions:', error);
@@ -1163,7 +1170,7 @@ export class SupabaseService {
 
   async getEmployees(): Promise<Employee[]> {
     try {
-      console.log('📋 Fetching employees...');
+      this.log('📋 Fetching employees...');
       const { data, error } = await supabase
         .from('employees')
         .select(`
@@ -1180,7 +1187,7 @@ export class SupabaseService {
         .order('full_name', { ascending: true });
 
       if (error) throw error;
-      console.log('✅ Employees fetched:', data?.length || 0, data);
+      this.log('✅ Employees fetched:', data?.length || 0, data);
       return (data as Employee[]) || [];
     } catch (error) {
       console.error('❌ Error in getEmployees:', error);
@@ -1250,7 +1257,7 @@ export class SupabaseService {
 
   async createEmployee(employeeData: Omit<Employee, 'id' | 'created_at' | 'updated_at' | 'position'>): Promise<Employee> {
     try {
-      console.log('📝 Creating employee:', employeeData);
+      this.log('📝 Creating employee:', employeeData);
       const { data, error } = await supabase
         .from('employees')
         .insert([employeeData])
@@ -1272,7 +1279,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Employee created:', data);
+      this.log('✅ Employee created:', data);
       return data as Employee;
     } catch (error) {
       console.error('❌ Error in createEmployee:', error);
@@ -1282,7 +1289,7 @@ export class SupabaseService {
 
   async updateEmployee(employeeId: string, employeeData: Partial<Omit<Employee, 'id' | 'created_at' | 'updated_at' | 'position'>>): Promise<void> {
     try {
-      console.log('📝 Updating employee:', employeeId, employeeData);
+      this.log('📝 Updating employee:', employeeId, employeeData);
       const { error } = await supabase
         .from('employees')
         .update(employeeData)
@@ -1293,7 +1300,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Employee updated');
+      this.log('✅ Employee updated');
     } catch (error) {
       console.error('❌ Error in updateEmployee:', error);
       throw error;
@@ -1311,7 +1318,7 @@ export class SupabaseService {
 
   async deleteEmployee(employeeId: string): Promise<void> {
     try {
-      console.log('🗑️ Deleting employee:', employeeId);
+      this.log('🗑️ Deleting employee:', employeeId);
       const { error } = await supabase
         .from('employees')
         .delete()
@@ -1322,7 +1329,7 @@ export class SupabaseService {
         throw error;
       }
 
-      console.log('✅ Employee deleted');
+      this.log('✅ Employee deleted');
     } catch (error) {
       console.error('❌ Error in deleteEmployee:', error);
       throw error;

@@ -219,7 +219,6 @@ export class DeliveryComponent implements OnInit, OnDestroy {
   }
 
   onFilterChange(filters: any) {
-    console.log('Filters changed:', filters);
     // Implementar lógica de filtrado si es necesario
   }
 
@@ -241,7 +240,6 @@ export class DeliveryComponent implements OnInit, OnDestroy {
   }
 
   assignDelivery(delivery: Delivery) {
-    console.log('Assign delivery:', delivery);
     // Implementar asignación de repartidor
   }
 

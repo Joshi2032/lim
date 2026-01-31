@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
@@ -7,12 +7,19 @@ import { CartComponent, CartItem } from '../../shared/cart/cart.component';
 import { BadgeComponent } from '../../shared/badge/badge.component';
 import { VariantSelectorComponent } from '../variant-selector/variant-selector.component';
 import { MovementsService } from '../../shared/movements/movements.service';
-import { MenuService } from '../../shared/services/menu.service';
+import { Store } from '@ngrx/store';
+import { Observable, Subscription } from 'rxjs';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { SectionHeaderComponent } from '../../shared/section-header/section-header.component';
 import { SearchInputComponent } from '../../shared/search-input/search-input.component';
-import { SupabaseService, MenuItem as SupabaseMenuItem } from '../../core/services/supabase.service';
+import { MenuItem as SupabaseMenuItem, Category as SupabaseCategory, Combo as SupabaseCombo } from '../../core/services/supabase.service';
+import * as MenuItemsActions from '../../store/menu-items/menu-items.actions';
+import { selectAvailableMenuItems } from '../../store/menu-items/menu-items.selectors';
+import * as CategoriesActions from '../../store/categories/categories.actions';
+import { selectCategories } from '../../store/categories/categories.selectors';
+import * as CombosActions from '../../store/combos/combos.actions';
+import { selectCombos } from '../../store/combos/combos.selectors';
 
 interface Filter {
 	id: string;
@@ -44,7 +51,7 @@ interface Combo {
   styleUrl: './menu.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MenuComponent implements OnInit {
+export class MenuComponent implements OnInit, OnDestroy {
   searchQuery: string = '';
   selectedFilter: string = 'todos';
   cartCount: number = 0;
@@ -76,64 +83,69 @@ export class MenuComponent implements OnInit {
     { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
 
+  menuItems$: Observable<SupabaseMenuItem[]>;
+  categories$: Observable<SupabaseCategory[]>;
+  combos$: Observable<SupabaseCombo[]>;
+  private subscriptions = new Subscription();
+
   constructor(
     private movements: MovementsService,
-    private menuService: MenuService,
-    private supabase: SupabaseService,
+    private store: Store,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    this.menuItems$ = this.store.select(selectAvailableMenuItems);
+    this.categories$ = this.store.select(selectCategories);
+    this.combos$ = this.store.select(selectCombos);
+  }
 
   ngOnInit(): void {
-    this.loadMenuFromSupabase();
+    this.store.dispatch(MenuItemsActions.loadMenuItems());
+    this.store.dispatch(MenuItemsActions.subscribeToMenuItems());
+    this.store.dispatch(CategoriesActions.loadCategories());
+    this.store.dispatch(CombosActions.loadCombos());
+    this.store.dispatch(CombosActions.subscribeToCombos());
+
+    this.subscriptions.add(
+      this.menuItems$.subscribe(items => {
+        this.menuItems = items.map(item => this.mapSupabaseItemToLocal(item));
+        this.filterItems();
+        this.cdr.markForCheck();
+      })
+    );
+
+    this.subscriptions.add(
+      this.categories$.subscribe(categories => {
+        this.filterOptions = [
+          { id: 'todos', label: 'Todos' },
+          ...categories.map(cat => ({
+            id: cat.id.toString(),
+            label: cat.name
+          }))
+        ];
+        this.cdr.markForCheck();
+      })
+    );
+
+    this.subscriptions.add(
+      this.combos$.subscribe(combos => {
+        this.combos = combos.map(combo => ({
+          id: combo.id.toString(),
+          name: combo.name,
+          japaneseName: combo.japanese_name || '',
+          description: combo.description || '',
+          price: combo.price,
+          image: combo.image_url || '/assets/placeholder.png',
+          items: [],
+          category: 'combos'
+        }));
+        this.filterItems();
+        this.cdr.markForCheck();
+      })
+    );
   }
 
-  async loadMenuFromSupabase() {
-    try {
-      console.log('📋 Loading menu from Supabase...');
-
-      // Cargar items del menú
-      const supabaseItems = await this.supabase.getMenuItems();
-      console.log('✅ Menu items loaded:', supabaseItems);
-
-      // Mapear a formato local
-      this.menuItems = supabaseItems.map(item => this.mapSupabaseItemToLocal(item));
-
-      // Cargar categorías para filtros
-      await this.loadCategories();
-
-      // Cargar combos
-      await this.loadCombosFromSupabase();
-
-      // Filtrar items iniciales
-      this.filterItems();
-
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('❌ Error loading menu:', error);
-      alert('Error al cargar menú: ' + (error as any).message);
-    }
-  }
-
-  async loadCombosFromSupabase() {
-    try {
-      const supabaseCombos = await this.supabase.getCombos();
-      console.log('✅ Combos loaded:', supabaseCombos);
-
-      this.combos = supabaseCombos.map(combo => ({
-        id: combo.id.toString(),
-        name: combo.name,
-        japaneseName: combo.japanese_name || '',
-        description: combo.description || '',
-        price: combo.price,
-        image: combo.image_url || '/assets/placeholder.png',
-        items: [], // Will be populated by combo items
-        category: 'combos'
-      }));
-
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('❌ Error loading combos:', error);
-    }
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 
   filterItems() {
@@ -169,25 +181,6 @@ export class MenuComponent implements OnInit {
     this.filterItems();
   }
 
-  async loadCategories() {
-    try {
-      const categories = await this.supabase.getCategories();
-      console.log('✅ Categories loaded:', categories);
-
-      // Crear filterOptions desde las categorías
-      this.filterOptions = [
-        { id: 'todos', label: 'Todos' },
-        ...categories.map(cat => ({
-          id: cat.id.toString(),
-          label: cat.name
-        }))
-      ];
-
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('❌ Error loading categories:', error);
-    }
-  }
 
   private mapSupabaseItemToLocal(supabaseItem: SupabaseMenuItem): MenuItem {
     return {

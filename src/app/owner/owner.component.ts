@@ -5,7 +5,6 @@ import { PageHeaderComponent } from '../shared/page-header/page-header.component
 import { ProductsManagementComponent } from './products-management/products-management.component';
 import { MenuItem } from '../shared/sidebar/sidebar.component';
 import { IncomeReportComponent } from './income-report/income-report.component';
-import { SupabaseService } from '../core/services/supabase.service';
 import { MovementsComponent } from './movements/movements.component';
 import { UsersComponent } from './users/users.component';
 
@@ -81,7 +80,6 @@ export class OwnerComponent implements OnInit {
   ];
 
   constructor(
-    private supabase: SupabaseService,
     private cdr: ChangeDetectorRef
   ) {}
 

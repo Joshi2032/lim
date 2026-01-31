@@ -8,7 +8,7 @@ import { SectionHeaderComponent } from '../../shared/section-header/section-head
 import { DataTableComponent, DataTableColumn } from '../../shared/data-table/data-table.component';
 import { InfoCardsComponent, InfoCard } from '../../shared/info-cards/info-cards.component';
 import { TopProductsChartComponent, TopProduct } from '../../shared/top-products-chart/top-products-chart.component';
-import { SupabaseService, Order as SupabaseOrder } from '../../core/services/supabase.service';
+import { Order as SupabaseOrder } from '../../core/services/supabase.service';
 import * as OrdersActions from '../../store/orders/orders.actions';
 import { selectTodayOrders, selectOrdersStats, selectOrdersByStatus, selectOrdersByType } from '../../store/orders/orders.selectors';
 
@@ -127,7 +127,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private store: Store,
-    private supabase: SupabaseService,
     private cdr: ChangeDetectorRef
   ) {
     // Inicializar observables del store

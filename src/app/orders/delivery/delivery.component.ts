@@ -6,7 +6,7 @@ import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stat
 import { DataTableComponent, DataTableColumn } from '../../shared/data-table/data-table.component';
 import { FilterBarComponent, FilterField, FilterOption } from '../../shared/filter-bar/filter-bar.component';
 import { MovementsService } from '../../shared/movements/movements.service';
-import { SupabaseService, Order as SupabaseOrder } from '../../core/services/supabase.service';
+import { Order as SupabaseOrder } from '../../core/services/supabase.service';
 import { Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
 import * as OrdersActions from '../../store/orders/orders.actions';
@@ -83,7 +83,6 @@ export class DeliveryComponent implements OnInit, OnDestroy {
 
   constructor(
     private movements: MovementsService,
-    private supabase: SupabaseService,
     private cdr: ChangeDetectorRef,
     private store: Store
   ) {
@@ -248,7 +247,7 @@ export class DeliveryComponent implements OnInit, OnDestroy {
 
   async startDelivery(delivery: Delivery) {
     try {
-      await this.supabase.updateOrderStatus(delivery.id, 'ready');
+      this.store.dispatch(OrdersActions.updateOrderStatus({ orderId: delivery.id, status: 'ready' }));
       this.movements.log({
         title: 'Entrega iniciada',
         description: `Pedido ${delivery.orderNumber} en camino`,
@@ -264,7 +263,7 @@ export class DeliveryComponent implements OnInit, OnDestroy {
 
   async completeDelivery(delivery: Delivery) {
     try {
-      await this.supabase.updateOrderStatus(delivery.id, 'completed');
+      this.store.dispatch(OrdersActions.updateOrderStatus({ orderId: delivery.id, status: 'completed' }));
       this.movements.log({
         title: 'Entrega completada',
         description: `Pedido ${delivery.orderNumber} entregado a ${delivery.customerName}`,

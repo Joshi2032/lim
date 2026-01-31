@@ -1,13 +1,16 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { TableCardComponent, Table, TableStatus } from '../table-card/table-card.component';
 import { MovementsService } from '../../shared/movements/movements.service';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stats-grid.component';
-import { SupabaseService, RestaurantTable as SupabaseTable } from '../../core/services/supabase.service';
+import { Store } from '@ngrx/store';
+import { RestaurantTable as SupabaseTable } from '../../core/services/supabase.service';
+import * as TablesActions from '../../store/tables/tables.actions';
+import { selectTables } from '../../store/tables/tables.selectors';
 
 interface Filter {
 	id: string;
@@ -25,6 +28,7 @@ interface Filter {
 })
 export class TablesComponent implements OnInit, OnDestroy {
   private subscriptions = new Subscription();
+  tables$: Observable<SupabaseTable[]>;
   selectedFilter: string = 'todas';
   filterOptions: FilterOption[] = [
     { id: 'todas', label: 'Todas' },
@@ -56,9 +60,11 @@ export class TablesComponent implements OnInit, OnDestroy {
 
   constructor(
     private movements: MovementsService,
-    private supabase: SupabaseService,
+    private store: Store,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    this.tables$ = this.store.select(selectTables);
+  }
 
   filters: Filter[] = [
     { id: 'todas', label: 'Todas', icon: '📍' },
@@ -71,37 +77,22 @@ export class TablesComponent implements OnInit, OnDestroy {
   tables: Table[] = [];
 
   ngOnInit() {
-    this.loadTables();
-    this.subscribeToTableChanges();
+    this.store.dispatch(TablesActions.loadTables());
+    this.store.dispatch(TablesActions.subscribeToTables());
+
+    this.subscriptions.add(
+      this.tables$.subscribe(tables => {
+        this.tables = tables.map(t => this.mapSupabaseTableToLocal(t));
+        this.cdr.markForCheck();
+      })
+    );
   }
 
   ngOnDestroy() {
     this.subscriptions.unsubscribe();
   }
 
-  async loadTables() {
-    try {
-      console.log('📋 Loading tables from Supabase...');
-      const supabaseTables = await this.supabase.getTables();
-      console.log('✅ Tables loaded:', supabaseTables);
-
-      this.tables = supabaseTables.map(t => this.mapSupabaseTableToLocal(t));
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('❌ Error loading tables:', error);
-      alert('Error al cargar mesas: ' + (error as any).message);
-    }
-  }
-
-  subscribeToTableChanges() {
-    const subscription = this.supabase.subscribeToTables((tables) => {
-      console.log('🔄 Tables updated via subscription');
-      this.tables = tables.map(t => this.mapSupabaseTableToLocal(t));
-      this.cdr.markForCheck();
-    });
-
-    this.subscriptions.add(subscription);
-  }
+  // Data loading handled by NgRx store
 
   private mapSupabaseTableToLocal(supabaseTable: SupabaseTable): Table {
     const statusMap: { [key: string]: TableStatus } = {
@@ -178,7 +169,7 @@ export class TablesComponent implements OnInit, OnDestroy {
 
       try {
         const supabaseStatus = this.mapLocalStatusToSupabase(newStatus);
-        await this.supabase.updateTableStatus(tableId, supabaseStatus);
+        this.store.dispatch(TablesActions.updateTableStatus({ tableId, status: supabaseStatus }));
 
         this.movements.log({
           title: `Mesa actualizada a ${newStatus}`,

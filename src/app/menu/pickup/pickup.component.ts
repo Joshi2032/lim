@@ -7,7 +7,7 @@ import { MovementsService } from '../../shared/movements/movements.service';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stats-grid.component';
-import { SupabaseService, Order as SupabaseOrder } from '../../core/services/supabase.service';
+import { Order as SupabaseOrder } from '../../core/services/supabase.service';
 import { Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
 import * as OrdersActions from '../../store/orders/orders.actions';
@@ -72,7 +72,6 @@ export class PickupComponent implements OnInit, OnDestroy {
   constructor(
     private movements: MovementsService,
     private router: Router,
-    private supabase: SupabaseService,
     private cdr: ChangeDetectorRef,
     private store: Store
   ) {
@@ -149,11 +148,9 @@ export class PickupComponent implements OnInit, OnDestroy {
       order.status = newStatus;
       this._pickupStatsMemoized = null; // Invalidar caché
 
-      // Update in Supabase
+      // Update in store
       const supabaseStatus = this.mapOrderStatusToSupabase(newStatus);
-      this.supabase.updateOrderStatus(orderId, supabaseStatus).catch(error => {
-        console.error('Error updating order status:', error);
-      });
+      this.store.dispatch(OrdersActions.updateOrderStatus({ orderId, status: supabaseStatus }));
     }
   }
 

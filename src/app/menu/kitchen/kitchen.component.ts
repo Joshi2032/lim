@@ -8,7 +8,7 @@ import { MovementsService } from '../../shared/movements/movements.service';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stats-grid.component';
-import { SupabaseService, Order as SupabaseOrder } from '../../core/services/supabase.service';
+import { Order as SupabaseOrder } from '../../core/services/supabase.service';
 import * as OrdersActions from '../../store/orders/orders.actions';
 import { selectOrders } from '../../store/orders/orders.selectors';
 
@@ -71,7 +71,6 @@ export class KitchenComponent implements OnInit, OnDestroy {
 
   constructor(
     private movements: MovementsService,
-    private supabase: SupabaseService,
     private store: Store,
     private cdr: ChangeDetectorRef
   ) {
@@ -171,11 +170,9 @@ export class KitchenComponent implements OnInit, OnDestroy {
       order.status = newStatus;
       this._kitchenStatsMemoized = null; // Invalidar caché
 
-      // Actualizar en Supabase
+      // Actualizar en store
       const supabaseStatus = this.mapOrderStatusToSupabase(newStatus);
-      this.supabase.updateOrderStatus(orderId, supabaseStatus).catch(error => {
-        console.error('Error updating order status:', error);
-      });
+      this.store.dispatch(OrdersActions.updateOrderStatus({ orderId, status: supabaseStatus }));
 
       this.movements.log({
         title: `Orden ${newStatus === 'listo' ? 'lista' : 'actualizada'}`,

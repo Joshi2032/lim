@@ -15,6 +15,7 @@ import { categoriesReducer } from './store/categories/categories.reducer';
 import { combosReducer } from './store/combos/combos.reducer';
 import { tablesReducer } from './store/tables/tables.reducer';
 import { addressesReducer } from './store/addresses/addresses.reducer';
+import { authReducer } from './store/auth/auth.reducer';
 import { OrdersEffects } from './store/orders/orders.effects';
 import { CustomersEffects } from './store/customers/customers.effects';
 import { EmployeesEffects } from './store/employees/employees.effects';
@@ -24,6 +25,7 @@ import { CategoriesEffects } from './store/categories/categories.effects';
 import { CombosEffects } from './store/combos/combos.effects';
 import { TablesEffects } from './store/tables/tables.effects';
 import { AddressesEffects } from './store/addresses/addresses.effects';
+import { AuthEffects } from './store/auth/auth.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -38,7 +40,8 @@ export const appConfig: ApplicationConfig = {
       categories: categoriesReducer,
       combos: combosReducer,
       tables: tablesReducer,
-      addresses: addressesReducer
+      addresses: addressesReducer,
+      auth: authReducer
     }),
     provideEffects([
       OrdersEffects,
@@ -49,7 +52,8 @@ export const appConfig: ApplicationConfig = {
       CategoriesEffects,
       CombosEffects,
       TablesEffects,
-      AddressesEffects
+      AddressesEffects,
+      AuthEffects
     ]),
     provideStoreDevtools({ maxAge: 25, logOnly: !isDevMode() })
   ]

@@ -10,7 +10,7 @@ import { SearchInputComponent } from '../../shared/search-input/search-input.com
 import { IconButtonComponent } from '../../shared/icon-button/icon-button.component';
 import { CustomerItemComponent, CustomerItemData } from '../../shared/customer-item/customer-item.component';
 import { AddressCardComponent, AddressData } from '../../shared/address-card/address-card.component';
-import { SupabaseService, Customer as SupabaseCustomer, CustomerAddress as SupabaseAddress } from '../../core/services/supabase.service';
+import { Customer as SupabaseCustomer } from '../../core/services/supabase.service';
 import { Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
 import * as CustomersActions from '../../store/customers/customers.actions';
@@ -189,19 +189,6 @@ export class CustomersComponent implements OnInit, OnDestroy {
       initials,
       addresses: [],
       addressCount: 0
-    };
-  }
-
-  private mapSupabaseAddressToLocal(supabaseAddress: SupabaseAddress): Address {
-    return {
-      id: supabaseAddress.id.toString(),
-      label: supabaseAddress.label,
-      street: supabaseAddress.street,
-      city: supabaseAddress.city,
-      state: supabaseAddress.state,
-      zipCode: supabaseAddress.zip_code,
-      reference: supabaseAddress.reference,
-      isDefault: supabaseAddress.is_default
     };
   }
 

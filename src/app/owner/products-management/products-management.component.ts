@@ -1,7 +1,8 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { Observable, Subscription } from 'rxjs';
 import { MenuService, MenuItem, Combo } from '../../shared/services/menu.service';
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { TabsContainerComponent, TabItem } from '../../shared/tabs-container/tabs-container.component';
@@ -9,6 +10,8 @@ import { EmptyStateComponent } from '../../shared/empty-state/empty-state.compon
 import { ProductCardComponent, ProductCardData } from '../../shared/product-card/product-card.component';
 import { ModalComponent } from '../../shared/modal/modal.component';
 import { SupabaseService, MenuItem as SupabaseMenuItem, Combo as SupabaseCombo } from '../../core/services/supabase.service';
+import * as MenuItemsActions from '../../store/menu-items/menu-items.actions';
+import { selectMenuItems, selectAvailableMenuItems, selectMenuItemsLoadingState } from '../../store/menu-items/menu-items.selectors';
 
 interface ProductForm {
   name: string;
@@ -45,6 +48,11 @@ type ProductType = 'platos' | 'combos';
 export class ProductsManagementComponent implements OnInit, OnDestroy {
   private subscriptions = new Subscription();
   private isSubmitting = false;
+
+  // Observables del store
+  menuItems$: Observable<SupabaseMenuItem[]>;
+  menuItemsLoading$: Observable<boolean>;
+
   menuItems: MenuItem[] = [];
   combos: Combo[] = [];
   categories: Category[] = [];
@@ -108,19 +116,34 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
   constructor(
     private menuService: MenuService,
     private supabase: SupabaseService,
+    private store: Store,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    // Inicializar observables del store
+    this.menuItems$ = this.store.select(selectMenuItems);
+    this.menuItemsLoading$ = this.store.select(selectMenuItemsLoadingState);
+  }
 
   ngOnInit(): void {
-    // Load all data in parallel for better performance
-    Promise.all([
-      this.loadCategoriesFromSupabase(),
-      this.loadMenuFromSupabase(),
-      this.loadCombosFromSupabase()
-    ]);
+    // Cargar categorías
+    this.loadCategoriesFromSupabase();
 
-    // Subscribe to real-time changes
-    this.subscribeToMenuChanges();
+    // Dispatch para cargar items del menú desde el store
+    this.store.dispatch(MenuItemsActions.loadMenuItems());
+
+    // Cargar combos (aún desde Supabase directo, pendiente migrar)
+    this.loadCombosFromSupabase();
+
+    // Suscribirse a cambios en menu items desde el store
+    this.subscriptions.add(
+      this.menuItems$.subscribe(items => {
+        this.menuItems = items.map(item => this.mapSupabaseItemToLocal(item));
+        this.cdr.markForCheck();
+      })
+    );
+
+    // Suscribirse a cambios en tiempo real
+    this.store.dispatch(MenuItemsActions.subscribeToMenuItems());
     this.subscribeToCombosChanges();
   }
 
@@ -158,28 +181,8 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
     return icons[categoryName.toLowerCase()] || '🍽️';
   }
 
-  async loadMenuFromSupabase() {
-    try {
-      console.log('📋 Loading menu items from Supabase...');
-      const supabaseItems = await this.supabase.getMenuItems();
-      console.log('✅ Menu items loaded:', supabaseItems);
-
-      this.menuItems = supabaseItems.map(item => this.mapSupabaseItemToLocal(item));
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('❌ Error loading menu items:', error);
-      alert('Error al cargar platillos: ' + (error as any).message);
-    }
-  }
-
-  subscribeToMenuChanges() {
-    const subscription = this.supabase.subscribeToMenuItems((items) => {
-      console.log('🔄 Menu items updated via subscription');
-      this.menuItems = items.map(item => this.mapSupabaseItemToLocal(item));
-      this.cdr.markForCheck();
-    });
-    this.subscriptions.add(subscription);
-  }
+  // Métodos eliminados - ahora se usan desde NgRx store
+  // loadMenuFromSupabase() y subscribeToMenuChanges() ya no son necesarios
 
   async loadCombosFromSupabase() {
     try {
@@ -322,8 +325,8 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
         console.log('✅ Menu item created');
       }
 
-      // Reload to show changes immediately (subscription may have delay)
-      await this.loadMenuFromSupabase();
+      // Reload to show changes immediately - now via NgRx subscription
+      this.store.dispatch(MenuItemsActions.loadMenuItems());
       this.closeForm();
     } catch (error) {
       console.error('❌ Error saving menu item:', error);

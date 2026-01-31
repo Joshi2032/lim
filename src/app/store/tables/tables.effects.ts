@@ -7,47 +7,51 @@ import * as TablesActions from './tables.actions';
 
 @Injectable()
 export class TablesEffects {
-  loadTables$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(TablesActions.loadTables),
-      switchMap(() =>
-        this.supabase.getTables().then(
-          tables => TablesActions.loadTablesSuccess({ tables }),
-          (error: any) => TablesActions.loadTablesFailure({ error: error.message })
-        )
-      )
-    )
-  );
-
-  updateTableStatus$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(TablesActions.updateTableStatus),
-      switchMap(({ tableId, status }) =>
-        this.supabase.updateTableStatus(tableId, status).then(
-          () => TablesActions.updateTableStatusSuccess({ tableId, status }),
-          (error: any) => TablesActions.updateTableStatusFailure({ error: error.message })
-        )
-      )
-    )
-  );
-
-  subscribeToTables$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(TablesActions.subscribeToTables),
-      switchMap(() => {
-        return new Promise<never>((_, reject) => {
-          this.supabase.subscribeToTables((tables) => {
-            this.store.dispatch(TablesActions.tablesUpdated({ tables }));
-          });
-        });
-      })
-    ),
-    { dispatch: false }
-  );
+  loadTables$;
+  updateTableStatus$;
+  subscribeToTables$;
 
   constructor(
     private actions$: Actions,
     private supabase: SupabaseService,
     private store: Store
-  ) {}
+  ) {
+    this.loadTables$ = createEffect(() =>
+      this.actions$.pipe(
+        ofType(TablesActions.loadTables),
+        switchMap(() =>
+          this.supabase.getTables().then(
+            tables => TablesActions.loadTablesSuccess({ tables }),
+            (error: any) => TablesActions.loadTablesFailure({ error: error.message })
+          )
+        )
+      )
+    );
+
+    this.updateTableStatus$ = createEffect(() =>
+      this.actions$.pipe(
+        ofType(TablesActions.updateTableStatus),
+        switchMap(({ tableId, status }) =>
+          this.supabase.updateTableStatus(tableId, status).then(
+            () => TablesActions.updateTableStatusSuccess({ tableId, status }),
+            (error: any) => TablesActions.updateTableStatusFailure({ error: error.message })
+          )
+        )
+      )
+    );
+
+    this.subscribeToTables$ = createEffect(() =>
+      this.actions$.pipe(
+        ofType(TablesActions.subscribeToTables),
+        switchMap(() => {
+          return new Promise<never>((_, reject) => {
+            this.supabase.subscribeToTables((tables) => {
+              this.store.dispatch(TablesActions.tablesUpdated({ tables }));
+            });
+          });
+        })
+      ),
+      { dispatch: false }
+    );
+  }
 }

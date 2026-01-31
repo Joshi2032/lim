@@ -6,20 +6,22 @@ import * as CategoriesActions from './categories.actions';
 
 @Injectable()
 export class CategoriesEffects {
-  loadCategories$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(CategoriesActions.loadCategories),
-      switchMap(() =>
-        this.supabase.getCategories().then(
-          categories => CategoriesActions.loadCategoriesSuccess({ categories }),
-          (error: any) => CategoriesActions.loadCategoriesFailure({ error: error.message })
-        )
-      )
-    )
-  );
+  loadCategories$;
 
   constructor(
     private actions$: Actions,
     private supabase: SupabaseService
-  ) {}
+  ) {
+    this.loadCategories$ = createEffect(() =>
+      this.actions$.pipe(
+        ofType(CategoriesActions.loadCategories),
+        switchMap(() =>
+          this.supabase.getCategories().then(
+            categories => CategoriesActions.loadCategoriesSuccess({ categories }),
+            (error: any) => CategoriesActions.loadCategoriesFailure({ error: error.message })
+          )
+        )
+      )
+    );
+  }
 }

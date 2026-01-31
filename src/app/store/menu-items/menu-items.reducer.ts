@@ -1,6 +1,6 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
-import { MenuItem } from '../../core/services/supabase.service';
+import { MenuItem } from '../menu/menu.models';
 import * as MenuItemsActions from './menu-items.actions';
 
 export interface MenuItemsState extends EntityState<MenuItem> {

@@ -1,6 +1,6 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
-import { Combo } from '../../core/services/supabase.service';
+import { Combo } from './combos.models';
 import * as CombosActions from './combos.actions';
 
 export interface CombosState extends EntityState<Combo> {

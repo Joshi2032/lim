@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { Employee } from '../../core/services/supabase.service';
+import { Employee } from '../employees/employees.models';
 
 export const login = createAction(
   '[Auth Page] Login',

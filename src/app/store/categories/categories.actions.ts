@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { Category } from '../../core/services/supabase.service';
+import { Category } from './categories.models';
 
 // Load Categories
 export const loadCategories = createAction('[Categories Page] Load Categories');

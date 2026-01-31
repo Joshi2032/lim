@@ -214,14 +214,34 @@ export class SupabaseService {
     }
   }
 
-  async updateOrderStatus(orderId: string, status: Order['status']) {
+  async updateOrderStatus(orderId: string, status: Order['status'], userId?: string) {
     try {
+      console.log('📝 Updating order status:', orderId, 'to', status);
+
       const { error } = await supabase
         .from('orders')
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', orderId);
 
       if (error) throw error;
+
+      // Registrar en historial de cambios de estado
+      const { error: historyError } = await supabase
+        .from('order_status_history')
+        .insert([{
+          order_id: orderId,
+          status: status,
+          changed_by: userId || 'system',
+          changed_at: new Date().toISOString()
+        }]);
+
+      if (historyError) {
+        console.warn('⚠️ Error recording status history:', historyError);
+        // No fallar si no se puede registrar el historial
+      } else {
+        console.log('✅ Status history recorded');
+      }
+
       return true;
     } catch (error) {
       console.error('Error updating order status:', error);
@@ -970,6 +990,123 @@ export class SupabaseService {
         async () => {
           const combos = await this.getCombos();
           callback(combos);
+        }
+      )
+      .subscribe();
+
+    return channel;
+  }
+
+  // ==================== ASSIGNMENTS ====================
+
+  async createAssignment(assignmentData: {
+    order_id: string;
+    customer_id: string;
+    delivery_person_id: string;
+    status: 'pendiente' | 'en-ruta' | 'entregado' | 'cancelado';
+    address?: string;
+    notes?: string;
+  }): Promise<any> {
+    try {
+      console.log('📝 Creating assignment:', assignmentData);
+
+      const { data, error } = await supabase
+        .from('assignments')
+        .insert([assignmentData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Assignment created:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Error creating assignment:', error);
+      throw error;
+    }
+  }
+
+  async getAssignments(): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('assignments')
+        .select('*')
+        .order('assigned_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('❌ Error fetching assignments:', error);
+      return [];
+    }
+  }
+
+  async getAssignmentsByDeliveryPerson(deliveryPersonId: string): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('assignments')
+        .select('*')
+        .eq('delivery_person_id', deliveryPersonId)
+        .order('assigned_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('❌ Error fetching assignments for delivery person:', error);
+      return [];
+    }
+  }
+
+  async updateAssignment(assignmentId: string, assignmentData: Partial<{
+    status: string;
+    address: string;
+    notes: string;
+    completed_at: string;
+  }>): Promise<void> {
+    try {
+      console.log('📝 Updating assignment:', assignmentId, assignmentData);
+
+      const { error } = await supabase
+        .from('assignments')
+        .update({ ...assignmentData, updated_at: new Date().toISOString() })
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+
+      console.log('✅ Assignment updated');
+    } catch (error) {
+      console.error('❌ Error updating assignment:', error);
+      throw error;
+    }
+  }
+
+  async deleteAssignment(assignmentId: string): Promise<void> {
+    try {
+      console.log('🗑️ Deleting assignment:', assignmentId);
+
+      const { error } = await supabase
+        .from('assignments')
+        .delete()
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+
+      console.log('✅ Assignment deleted');
+    } catch (error) {
+      console.error('❌ Error deleting assignment:', error);
+      throw error;
+    }
+  }
+
+  subscribeToAssignments(callback: (assignments: any[]) => void) {
+    const channel = supabase
+      .channel('assignments-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'assignments' },
+        async () => {
+          const assignments = await this.getAssignments();
+          callback(assignments);
         }
       )
       .subscribe();

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators';
 import { SupabaseService } from '../../core/services/supabase.service';
 import * as CombosActions from './combos.actions';
 
@@ -69,11 +69,9 @@ export class CombosEffects {
     this.subscribeToCombos$ = createEffect(() =>
       this.actions$.pipe(
         ofType(CombosActions.subscribeToCombos),
-        switchMap(() => {
-          return new Promise<never>((_, reject) => {
-            this.supabase.subscribeToComboChanges((combos) => {
-              this.store.dispatch(CombosActions.combosUpdated({ combos }));
-            });
+        tap(() => {
+          this.supabase.subscribeToComboChanges((combos) => {
+            this.store.dispatch(CombosActions.combosUpdated({ combos }));
           });
         })
       ),

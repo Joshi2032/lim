@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators';
 import { SupabaseService } from '../../core/services/supabase.service';
 import * as MenuItemsActions from './menu-items.actions';
 
@@ -82,12 +82,9 @@ export class MenuItemsEffects {
     this.subscribeToMenuItems$ = createEffect(() =>
       this.actions$.pipe(
         ofType(MenuItemsActions.subscribeToMenuItems),
-        switchMap(() => {
-          return new Promise<never>((_, reject) => {
-            this.supabase.subscribeToMenuItems((menuItems) => {
-              // Dispatch update action when items change
-              this.store.dispatch(MenuItemsActions.menuItemsUpdated({ menuItems }));
-            });
+        tap(() => {
+          this.supabase.subscribeToMenuItems((menuItems) => {
+            this.store.dispatch(MenuItemsActions.menuItemsUpdated({ menuItems }));
           });
         })
       ),

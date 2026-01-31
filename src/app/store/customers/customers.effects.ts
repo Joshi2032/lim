@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { of } from 'rxjs';
-import { map, switchMap, catchError } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators';
 import { SupabaseService } from '../../core/services/supabase.service';
 import * as CustomersActions from './customers.actions';
 

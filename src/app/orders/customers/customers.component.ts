@@ -62,6 +62,7 @@ export interface Customer {
 export class CustomersComponent implements OnInit, OnDestroy {
   private isSubmitting = false;
   private subscriptions = new Subscription();
+  private addressSubscription: Subscription | null = null;
   private pendingSelectPhone: string | null = null;
 
   constructor(
@@ -144,6 +145,9 @@ export class CustomersComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subscriptions.unsubscribe();
+    if (this.addressSubscription) {
+      this.addressSubscription.unsubscribe();
+    }
   }
 
   private mapAndUpdateCustomers(supabaseCustomers: SupabaseCustomer[]) {
@@ -227,15 +231,16 @@ export class CustomersComponent implements OnInit, OnDestroy {
     this.store.dispatch(AddressesActions.subscribeToCustomerAddresses({ customerId: customer.id }));
 
     // Subscribe to address updates from store
-    this.subscriptions.add(
-      this.addresses$.subscribe(addresses => {
-        if (this.selectedCustomer && this.selectedCustomer.id === customer.id) {
-          this.selectedCustomer.addresses = addresses.map(addr => this.mapStoreAddressToLocal(addr));
-          this.selectedCustomer.addressCount = addresses.length;
-          this.cdr.markForCheck();
-        }
-      })
-    );
+    if (this.addressSubscription) {
+      this.addressSubscription.unsubscribe();
+    }
+    this.addressSubscription = this.addresses$.subscribe(addresses => {
+      if (this.selectedCustomer && this.selectedCustomer.id === customer.id) {
+        this.selectedCustomer.addresses = addresses.map(addr => this.mapStoreAddressToLocal(addr));
+        this.selectedCustomer.addressCount = addresses.length;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   openNewCustomerModal() {

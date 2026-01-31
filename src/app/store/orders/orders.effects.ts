@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { of } from 'rxjs';
-import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { Store } from '@ngrx/store';
+import { switchMap, tap } from 'rxjs/operators';
 import { SupabaseService } from '../../core/services/supabase.service';
 import * as OrdersActions from './orders.actions';
 
@@ -18,7 +18,8 @@ export class OrdersEffects {
 
   constructor(
     private actions$: Actions,
-    private supabase: SupabaseService
+    private supabase: SupabaseService,
+    private store: Store
   ) {
     this.loadOrders$ = createEffect(() =>
       this.actions$.pipe(
@@ -116,9 +117,7 @@ export class OrdersEffects {
         ofType(OrdersActions.subscribeToOrders),
         tap(() => {
           this.supabase.subscribeToOrders((orders) => {
-            this.actions$.pipe(
-              ofType(OrdersActions.ordersUpdated)
-            );
+            this.store.dispatch(OrdersActions.ordersUpdated({ orders }));
           });
         })
       ),

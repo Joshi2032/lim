@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { of } from 'rxjs';
-import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { Store } from '@ngrx/store';
+import { switchMap, tap } from 'rxjs/operators';
 import { SupabaseService } from '../../core/services/supabase.service';
 import * as AddressesActions from './addresses.actions';
 
@@ -15,7 +15,8 @@ export class AddressesEffects {
 
   constructor(
     private actions$: Actions,
-    private supabase: SupabaseService
+    private supabase: SupabaseService,
+    private store: Store
   ) {
     this.loadCustomerAddresses$ = createEffect(() =>
       this.actions$.pipe(
@@ -85,13 +86,9 @@ export class AddressesEffects {
           this.supabase.subscribeToCustomerAddresses(
             String(customerId),
             (addresses) => {
-              // Dispatch action to update store with new addresses
-              const updateAction = AddressesActions.customerAddressesUpdated({
-                customerId,
-                addresses
-              });
-              // We need to manually dispatch this since we're in a tap
-              // This will be handled by the reducer
+              this.store.dispatch(
+                AddressesActions.customerAddressesUpdated({ customerId, addresses })
+              );
             }
           );
         })

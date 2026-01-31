@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators';
 import { SupabaseService } from '../../core/services/supabase.service';
 import * as TablesActions from './tables.actions';
 
@@ -43,11 +43,9 @@ export class TablesEffects {
     this.subscribeToTables$ = createEffect(() =>
       this.actions$.pipe(
         ofType(TablesActions.subscribeToTables),
-        switchMap(() => {
-          return new Promise<never>((_, reject) => {
-            this.supabase.subscribeToTables((tables) => {
-              this.store.dispatch(TablesActions.tablesUpdated({ tables }));
-            });
+        tap(() => {
+          this.supabase.subscribeToTables((tables) => {
+            this.store.dispatch(TablesActions.tablesUpdated({ tables }));
           });
         })
       ),

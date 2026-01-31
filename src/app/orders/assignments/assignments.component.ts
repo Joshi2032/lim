@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { ModalComponent } from '../../shared/modal/modal.component';
@@ -44,6 +45,8 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   customers: any[] = [];
   orders: any[] = [];
   deliveryPersons: any[] = [];
+
+  private subscriptions = new Subscription();
 
   showAssignmentModal: boolean = false;
   headerAction: PageAction = { label: 'Nueva Asignación', icon: '+' };
@@ -95,7 +98,7 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // Cleanup subscriptions if needed
+    this.subscriptions.unsubscribe();
   }  loadData() {
     this.loadCustomers();
     this.loadOrders();
@@ -201,7 +204,7 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   }
 
   private subscribeToAssignments() {
-    this.supabase.subscribeToAssignments((assignments) => {
+    const subscription = this.supabase.subscribeToAssignments((assignments) => {
       this.assignments = assignments.map(a => ({
         id: a.id,
         customerId: a.customer_id,
@@ -219,6 +222,8 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
       this.cdr.markForCheck();
       console.log('🔄 Asignaciones actualizadas en tiempo real');
     });
+
+    this.subscriptions.add(subscription);
   }
 
   openAssignmentModal() {

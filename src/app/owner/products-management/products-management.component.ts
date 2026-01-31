@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { MenuService, MenuItem, Combo } from '../../shared/services/menu.service';
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { TabsContainerComponent, TabItem } from '../../shared/tabs-container/tabs-container.component';
@@ -8,7 +9,6 @@ import { EmptyStateComponent } from '../../shared/empty-state/empty-state.compon
 import { ProductCardComponent, ProductCardData } from '../../shared/product-card/product-card.component';
 import { ModalComponent } from '../../shared/modal/modal.component';
 import { SupabaseService, MenuItem as SupabaseMenuItem, Combo as SupabaseCombo } from '../../core/services/supabase.service';
-import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface ProductForm {
   name: string;
@@ -43,8 +43,7 @@ type ProductType = 'platos' | 'combos';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProductsManagementComponent implements OnInit, OnDestroy {
-  private menuSubscription: RealtimeChannel | null = null;
-  private comboSubscription: RealtimeChannel | null = null;
+  private subscriptions = new Subscription();
   private isSubmitting = false;
   menuItems: MenuItem[] = [];
   combos: Combo[] = [];
@@ -126,12 +125,7 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.menuSubscription) {
-      this.menuSubscription.unsubscribe();
-    }
-    if (this.comboSubscription) {
-      this.comboSubscription.unsubscribe();
-    }
+    this.subscriptions.unsubscribe();
   }
 
   async loadCategoriesFromSupabase() {
@@ -179,11 +173,12 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
   }
 
   subscribeToMenuChanges() {
-    this.menuSubscription = this.supabase.subscribeToMenuItems((items) => {
+    const subscription = this.supabase.subscribeToMenuItems((items) => {
       console.log('🔄 Menu items updated via subscription');
       this.menuItems = items.map(item => this.mapSupabaseItemToLocal(item));
       this.cdr.markForCheck();
     });
+    this.subscriptions.add(subscription);
   }
 
   async loadCombosFromSupabase() {
@@ -201,11 +196,12 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
   }
 
   subscribeToCombosChanges() {
-    this.comboSubscription = this.supabase.subscribeToComboChanges((combos) => {
+    const subscription = this.supabase.subscribeToComboChanges((combos) => {
       console.log('🔄 Combos updated via subscription');
       this.combos = combos.map(combo => this.mapSupabaseComboToLocal(combo));
       this.cdr.markForCheck();
     });
+    this.subscriptions.add(subscription);
   }
 
   private mapSupabaseComboToLocal(supabaseCombo: SupabaseCombo): Combo {

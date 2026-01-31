@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { TableCardComponent, Table, TableStatus } from '../table-card/table-card.component';
 import { MovementsService } from '../../shared/movements/movements.service';
@@ -7,7 +8,6 @@ import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/fi
 import { PageHeaderComponent } from '../../shared/page-header/page-header.component';
 import { StatsGridComponent, SimpleStatItem } from '../../shared/stats-grid/stats-grid.component';
 import { SupabaseService, RestaurantTable as SupabaseTable } from '../../core/services/supabase.service';
-import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface Filter {
 	id: string;
@@ -24,7 +24,7 @@ interface Filter {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TablesComponent implements OnInit, OnDestroy {
-  private subscription: RealtimeChannel | null = null;
+  private subscriptions = new Subscription();
   selectedFilter: string = 'todas';
   filterOptions: FilterOption[] = [
     { id: 'todas', label: 'Todas' },
@@ -76,9 +76,7 @@ export class TablesComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
+    this.subscriptions.unsubscribe();
   }
 
   async loadTables() {
@@ -96,11 +94,13 @@ export class TablesComponent implements OnInit, OnDestroy {
   }
 
   subscribeToTableChanges() {
-    this.subscription = this.supabase.subscribeToTables((tables) => {
+    const subscription = this.supabase.subscribeToTables((tables) => {
       console.log('🔄 Tables updated via subscription');
       this.tables = tables.map(t => this.mapSupabaseTableToLocal(t));
       this.cdr.markForCheck();
     });
+
+    this.subscriptions.add(subscription);
   }
 
   private mapSupabaseTableToLocal(supabaseTable: SupabaseTable): Table {

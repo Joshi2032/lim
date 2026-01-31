@@ -1,6 +1,6 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
-import { Employee } from '../../core/services/supabase.service';
+import { Employee } from './employees.models';
 import * as EmployeesActions from './employees.actions';
 
 export interface Position {

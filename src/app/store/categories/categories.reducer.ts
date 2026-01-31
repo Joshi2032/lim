@@ -1,6 +1,6 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
-import { Category } from '../../core/services/supabase.service';
+import { Category } from './categories.models';
 import * as CategoriesActions from './categories.actions';
 
 export interface CategoriesState extends EntityState<Category> {

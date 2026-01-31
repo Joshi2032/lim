@@ -1,6 +1,6 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
-import { Order } from '../../core/services/supabase.service';
+import { Order } from './orders.models';
 import * as OrdersActions from './orders.actions';
 
 // State interface

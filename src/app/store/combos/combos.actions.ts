@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { Combo } from '../../core/services/supabase.service';
+import { Combo } from './combos.models';
 
 export type ComboCreate = Omit<Combo, 'id' | 'created_at' | 'updated_at'>;
 export type ComboUpdate = Partial<Omit<Combo, 'id' | 'created_at' | 'updated_at'>>;

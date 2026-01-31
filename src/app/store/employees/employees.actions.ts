@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { Employee } from '../../core/services/supabase.service';
+import { Employee } from './employees.models';
 
 // Load Employees
 export const loadEmployees = createAction('[Employees Page] Load Employees');

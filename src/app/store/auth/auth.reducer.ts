@@ -1,5 +1,5 @@
 import { createReducer, on } from '@ngrx/store';
-import { Employee } from '../../core/services/supabase.service';
+import { Employee } from '../employees/employees.models';
 import * as AuthActions from './auth.actions';
 
 export interface AuthState {

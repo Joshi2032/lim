@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { switchMap } from 'rxjs/operators';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { Customer } from './customers.models';
 import * as CustomersActions from './customers.actions';
 
 @Injectable()

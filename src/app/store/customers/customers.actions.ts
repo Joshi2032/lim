@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { Customer } from '../../core/services/supabase.service';
+import { Customer } from './customers.models';
 
 export const loadCustomers = createAction('[Customers Page] Load Customers');
 

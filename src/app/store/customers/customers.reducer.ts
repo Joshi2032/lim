@@ -1,6 +1,6 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
-import { Customer } from '../../core/services/supabase.service';
+import { Customer } from './customers.models';
 import * as CustomersActions from './customers.actions';
 
 export interface CustomersState extends EntityState<Customer> {

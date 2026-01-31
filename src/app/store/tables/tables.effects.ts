@@ -3,6 +3,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { switchMap, tap } from 'rxjs/operators';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { RestaurantTable } from './tables.models';
 import * as TablesActions from './tables.actions';
 
 @Injectable()

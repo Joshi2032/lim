@@ -1,6 +1,6 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
-import { RestaurantTable } from '../../core/services/supabase.service';
+import { RestaurantTable } from './tables.models';
 import * as TablesActions from './tables.actions';
 
 export interface TablesState extends EntityState<RestaurantTable> {

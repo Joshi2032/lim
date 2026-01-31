@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { Order, OrderItem } from '../../core/services/supabase.service';
+import { Order, OrderItem } from './orders.models';
 
 // Load Actions
 export const loadOrders = createAction('[Orders Page] Load Orders');

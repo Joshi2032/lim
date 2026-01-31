@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { RestaurantTable } from '../../core/services/supabase.service';
+import { RestaurantTable } from './tables.models';
 
 // Load Tables
 export const loadTables = createAction('[Tables Page] Load Tables');

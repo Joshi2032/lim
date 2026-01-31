@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { MenuItem } from '../../core/services/supabase.service';
+import { MenuItem } from '../menu/menu.models';
 
 // Load Menu Items
 export const loadMenuItems = createAction('[Menu Page] Load Menu Items');

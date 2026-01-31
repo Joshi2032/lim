@@ -14,6 +14,7 @@ import { assignmentsReducer } from './store/assignments/assignments.reducer';
 import { categoriesReducer } from './store/categories/categories.reducer';
 import { combosReducer } from './store/combos/combos.reducer';
 import { tablesReducer } from './store/tables/tables.reducer';
+import { addressesReducer } from './store/addresses/addresses.reducer';
 import { OrdersEffects } from './store/orders/orders.effects';
 import { CustomersEffects } from './store/customers/customers.effects';
 import { EmployeesEffects } from './store/employees/employees.effects';
@@ -22,6 +23,7 @@ import { AssignmentsEffects } from './store/assignments/assignments.effects';
 import { CategoriesEffects } from './store/categories/categories.effects';
 import { CombosEffects } from './store/combos/combos.effects';
 import { TablesEffects } from './store/tables/tables.effects';
+import { AddressesEffects } from './store/addresses/addresses.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -35,7 +37,8 @@ export const appConfig: ApplicationConfig = {
       assignments: assignmentsReducer,
       categories: categoriesReducer,
       combos: combosReducer,
-      tables: tablesReducer
+      tables: tablesReducer,
+      addresses: addressesReducer
     }),
     provideEffects([
       OrdersEffects,
@@ -45,7 +48,8 @@ export const appConfig: ApplicationConfig = {
       AssignmentsEffects,
       CategoriesEffects,
       CombosEffects,
-      TablesEffects
+      TablesEffects,
+      AddressesEffects
     ]),
     provideStoreDevtools({ maxAge: 25, logOnly: !isDevMode() })
   ]

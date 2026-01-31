@@ -163,9 +163,9 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   async loadDeliveryPersons() {
     try {
       const employees = await this.supabase.getEmployees();
-      // Filtrar solo empleados con rol 'delivery'
+      // Filtrar solo empleados con posición 'delivery'
       this.deliveryPersons = employees
-        .filter(e => e.role === 'delivery' && e.active)
+        .filter(e => e.position?.name === 'delivery' && e.active)
         .map(e => ({
           id: e.id,
           name: e.full_name,

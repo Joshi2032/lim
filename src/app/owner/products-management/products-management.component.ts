@@ -9,9 +9,13 @@ import { TabsContainerComponent, TabItem } from '../../shared/tabs-container/tab
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { ProductCardComponent, ProductCardData } from '../../shared/product-card/product-card.component';
 import { ModalComponent } from '../../shared/modal/modal.component';
-import { SupabaseService, MenuItem as SupabaseMenuItem, Combo as SupabaseCombo } from '../../core/services/supabase.service';
+import { MenuItem as SupabaseMenuItem, Combo as SupabaseCombo, Category as SupabaseCategory } from '../../core/services/supabase.service';
 import * as MenuItemsActions from '../../store/menu-items/menu-items.actions';
 import { selectMenuItems, selectAvailableMenuItems, selectMenuItemsLoadingState } from '../../store/menu-items/menu-items.selectors';
+import * as CategoriesActions from '../../store/categories/categories.actions';
+import { selectCategories } from '../../store/categories/categories.selectors';
+import * as CombosActions from '../../store/combos/combos.actions';
+import { selectCombos } from '../../store/combos/combos.selectors';
 
 interface ProductForm {
   name: string;
@@ -52,6 +56,8 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
   // Observables del store
   menuItems$: Observable<SupabaseMenuItem[]>;
   menuItemsLoading$: Observable<boolean>;
+  categories$: Observable<SupabaseCategory[]>;
+  combos$: Observable<SupabaseCombo[]>;
 
   menuItems: MenuItem[] = [];
   combos: Combo[] = [];
@@ -115,24 +121,23 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
 
   constructor(
     private menuService: MenuService,
-    private supabase: SupabaseService,
     private store: Store,
     private cdr: ChangeDetectorRef
   ) {
     // Inicializar observables del store
     this.menuItems$ = this.store.select(selectMenuItems);
     this.menuItemsLoading$ = this.store.select(selectMenuItemsLoadingState);
+    this.categories$ = this.store.select(selectCategories);
+    this.combos$ = this.store.select(selectCombos);
   }
 
   ngOnInit(): void {
-    // Cargar categorías
-    this.loadCategoriesFromSupabase();
+    // Cargar categorías y combos
+    this.store.dispatch(CategoriesActions.loadCategories());
+    this.store.dispatch(CombosActions.loadCombos());
 
     // Dispatch para cargar items del menú desde el store
     this.store.dispatch(MenuItemsActions.loadMenuItems());
-
-    // Cargar combos (aún desde Supabase directo, pendiente migrar)
-    this.loadCombosFromSupabase();
 
     // Suscribirse a cambios en menu items desde el store
     this.subscriptions.add(
@@ -142,30 +147,32 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
       })
     );
 
+    this.subscriptions.add(
+      this.categories$.subscribe(categories => {
+        this.categories = categories.map(cat => ({
+          id: String(cat.id),
+          name: cat.name,
+          icon: this.getCategoryIcon(cat.name)
+        }));
+        this.ensureDefaultCategory();
+        this.cdr.markForCheck();
+      })
+    );
+
+    this.subscriptions.add(
+      this.combos$.subscribe(combos => {
+        this.combos = combos.map(combo => this.mapSupabaseComboToLocal(combo));
+        this.cdr.markForCheck();
+      })
+    );
+
     // Suscribirse a cambios en tiempo real
     this.store.dispatch(MenuItemsActions.subscribeToMenuItems());
-    this.subscribeToCombosChanges();
+    this.store.dispatch(CombosActions.subscribeToCombos());
   }
 
   ngOnDestroy() {
     this.subscriptions.unsubscribe();
-  }
-
-  async loadCategoriesFromSupabase() {
-    try {
-      console.log('📋 Loading categories from Supabase...');
-      const supabaseCategories = await this.supabase.getCategories();
-      this.categories = supabaseCategories.map(cat => ({
-        id: String(cat.id),
-        name: cat.name,
-        icon: this.getCategoryIcon(cat.name)
-      }));
-      console.log('✅ Categories loaded:', this.categories);
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('❌ Error loading categories:', error);
-      alert('Error al cargar categorías: ' + (error as any).message);
-    }
   }
 
   private getCategoryIcon(categoryName: string): string {
@@ -184,27 +191,14 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
   // Métodos eliminados - ahora se usan desde NgRx store
   // loadMenuFromSupabase() y subscribeToMenuChanges() ya no son necesarios
 
-  async loadCombosFromSupabase() {
-    try {
-      console.log('📋 Loading combos from Supabase...');
-      const supabaseCombos = await this.supabase.getCombos();
-      console.log('✅ Combos loaded:', supabaseCombos);
-
-      this.combos = supabaseCombos.map(combo => this.mapSupabaseComboToLocal(combo));
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('❌ Error loading combos:', error);
-      alert('Error al cargar combos: ' + (error as any).message);
+  private ensureDefaultCategory() {
+    const defaultCategoryId = this.categories.length > 0 ? this.categories[0].id : '';
+    if (!this.newItem.category) {
+      this.newItem = { ...this.newItem, category: defaultCategoryId };
     }
-  }
-
-  subscribeToCombosChanges() {
-    const subscription = this.supabase.subscribeToComboChanges((combos) => {
-      console.log('🔄 Combos updated via subscription');
-      this.combos = combos.map(combo => this.mapSupabaseComboToLocal(combo));
-      this.cdr.markForCheck();
-    });
-    this.subscriptions.add(subscription);
+    if (!this.newCombo.category) {
+      this.newCombo = { ...this.newCombo, category: defaultCategoryId };
+    }
   }
 
   private mapSupabaseComboToLocal(supabaseCombo: SupabaseCombo): Combo {
@@ -301,39 +295,36 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
     if (this.isSubmitting) return;
     this.isSubmitting = true;
 
-    try {
-      console.log('🔍 Saving with category ID:', this.newItem.category, 'Type:', typeof this.newItem.category);
+    console.log('🔍 Saving with category ID:', this.newItem.category, 'Type:', typeof this.newItem.category);
 
-      if (this.editingId) {
-        await this.supabase.updateMenuItem(this.editingId, {
-          name: this.newItem.name,
-          description: this.newItem.description,
-          price: this.newItem.price,
-          category_id: this.newItem.category,
-          image_url: this.itemImagePreview || undefined
-        });
-        console.log('✅ Menu item updated');
-      } else {
-        await this.supabase.createMenuItem({
-          name: this.newItem.name,
-          description: this.newItem.description,
-          price: this.newItem.price,
-          category_id: this.newItem.category,
-          image_url: this.itemImagePreview || undefined,
-          available: true
-        });
-        console.log('✅ Menu item created');
-      }
+    const menuItemPayload = {
+      name: this.newItem.name,
+      description: this.newItem.description,
+      price: this.newItem.price,
+      category_id: this.newItem.category,
+      image_url: this.itemImagePreview || undefined
+    };
 
-      // Reload to show changes immediately - now via NgRx subscription
-      this.store.dispatch(MenuItemsActions.loadMenuItems());
-      this.closeForm();
-    } catch (error) {
-      console.error('❌ Error saving menu item:', error);
-      alert('Error al guardar platillo: ' + (error as any).message);
-    } finally {
-      this.isSubmitting = false;
+    if (this.editingId) {
+      this.store.dispatch(
+        MenuItemsActions.updateMenuItem({
+          menuItemId: this.editingId,
+          menuItem: menuItemPayload
+        })
+      );
+    } else {
+      this.store.dispatch(
+        MenuItemsActions.createMenuItem({
+          menuItem: {
+            ...menuItemPayload,
+            available: true
+          }
+        })
+      );
     }
+
+    this.closeForm();
+    this.isSubmitting = false;
   }
 
   private async addCombo(): Promise<void> {
@@ -351,39 +342,37 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
     if (this.isSubmitting) return;
     this.isSubmitting = true;
 
-    try {
-      const itemIds = selectedItems.map(item => item.itemId);
+    const itemIds = selectedItems.map(item => item.itemId);
+    const comboPayloadUpdate = {
+      name: this.newCombo.name,
+      japanese_name: this.newCombo.japaneseName,
+      description: this.newCombo.description,
+      price: this.newCombo.price,
+      image_url: this.comboImagePreview || undefined
+    };
 
-      if (this.editingId) {
-        await this.supabase.updateCombo(this.editingId, {
-          name: this.newCombo.name,
-          japanese_name: this.newCombo.japaneseName,
-          description: this.newCombo.description,
-          price: this.newCombo.price,
-          image_url: this.comboImagePreview || undefined
-        }, itemIds);
-        console.log('✅ Combo updated');
-      } else {
-        await this.supabase.createCombo({
-          name: this.newCombo.name,
-          japanese_name: this.newCombo.japaneseName,
-          description: this.newCombo.description,
-          price: this.newCombo.price,
-          image_url: this.comboImagePreview || undefined,
-          available: true
-        }, itemIds);
-        console.log('✅ Combo created');
-      }
-
-      // Reload to show changes immediately (subscription may have delay)
-      await this.loadCombosFromSupabase();
-      this.closeForm();
-    } catch (error) {
-      console.error('❌ Error saving combo:', error);
-      alert('Error al guardar combo: ' + (error as any).message);
-    } finally {
-      this.isSubmitting = false;
+    if (this.editingId) {
+      this.store.dispatch(
+        CombosActions.updateCombo({
+          comboId: this.editingId,
+          combo: comboPayloadUpdate,
+          itemIds
+        })
+      );
+    } else {
+      this.store.dispatch(
+        CombosActions.createCombo({
+          combo: {
+            ...comboPayloadUpdate,
+            available: true
+          },
+          itemIds
+        })
+      );
     }
+
+    this.closeForm();
+    this.isSubmitting = false;
   }
 
   private closeForm(): void {
@@ -402,15 +391,8 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
     if (this.isSubmitting) return;
     this.isSubmitting = true;
 
-    try {
-      await this.supabase.deleteMenuItem(id);
-      console.log('✅ Menu item deleted');
-    } catch (error) {
-      console.error('❌ Error deleting menu item:', error);
-      alert('Error al eliminar platillo: ' + (error as any).message);
-    } finally {
-      this.isSubmitting = false;
-    }
+    this.store.dispatch(MenuItemsActions.deleteMenuItem({ menuItemId: id }));
+    this.isSubmitting = false;
   }
 
   async deleteCombo(id: string): Promise<void> {
@@ -419,15 +401,8 @@ export class ProductsManagementComponent implements OnInit, OnDestroy {
     if (this.isSubmitting) return;
     this.isSubmitting = true;
 
-    try {
-      await this.supabase.deleteCombo(id);
-      console.log('✅ Combo deleted');
-    } catch (error) {
-      console.error('❌ Error deleting combo:', error);
-      alert('Error al eliminar combo: ' + (error as any).message);
-    } finally {
-      this.isSubmitting = false;
-    }
+    this.store.dispatch(CombosActions.deleteCombo({ comboId: id }));
+    this.isSubmitting = false;
   }
 
   resetForm(): void {

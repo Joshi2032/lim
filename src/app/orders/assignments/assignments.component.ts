@@ -7,7 +7,9 @@ import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../share
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { ModalComponent } from '../../shared/modal/modal.component';
 import { DataTableComponent, DataTableColumn } from '../../shared/data-table/data-table.component';
-import { SupabaseService } from '../../core/services/supabase.service';
+import * as AssignmentsActions from '../../store/assignments/assignments.actions';
+import { selectAssignments } from '../../store/assignments/assignments.selectors';
+import { Assignment } from '../../store/assignments/assignments.models';
 import * as OrdersActions from '../../store/orders/orders.actions';
 import * as CustomersActions from '../../store/customers/customers.actions';
 import * as EmployeesActions from '../../store/employees/employees.actions';
@@ -49,11 +51,13 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   @Input() embedded: boolean = false;
 
   assignments: OrderAssignment[] = [];
+  assignmentsRaw: Assignment[] = [];
 
   // Observables del store
   customers$: Observable<any[]>;
   orders$: Observable<any[]>;
   deliveryPersons$: Observable<any[]>;
+  assignments$: Observable<Assignment[]>;
 
   // Arrays locales para búsquedas
   customers: any[] = [];
@@ -103,13 +107,13 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
 
   constructor(
     private cdr: ChangeDetectorRef,
-    private supabase: SupabaseService,
     private store: Store
   ) {
     // Inicializar observables del store
     this.customers$ = this.store.select(selectCustomers);
     this.orders$ = this.store.select(selectOrders);
     this.deliveryPersons$ = this.store.select(selectDeliveryPersons);
+    this.assignments$ = this.store.select(selectAssignments);
   }
 
   ngOnInit() {
@@ -118,6 +122,8 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
     this.store.dispatch(OrdersActions.loadOrders());
     this.store.dispatch(EmployeesActions.loadEmployees());
     this.store.dispatch(EmployeesActions.loadPositions());
+    this.store.dispatch(AssignmentsActions.loadAssignments());
+    this.store.dispatch(AssignmentsActions.subscribeToAssignments());
 
     // Suscribirse a cambios en los datos
     this.subscriptions.add(
@@ -161,9 +167,13 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Cargar asignaciones
-    this.loadAssignments();
-    this.subscribeToAssignments();
+    this.subscriptions.add(
+      this.assignments$.subscribe(assignments => {
+        this.assignmentsRaw = assignments;
+        this.updateAssignmentsDisplay();
+        this.cdr.markForCheck();
+      })
+    );
   }
 
   ngOnDestroy() {
@@ -171,57 +181,20 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   }
 
   updateAssignmentsDisplay() {
-    // Recargar asignaciones si ya se han cargado para actualizar nombres
-    if (this.assignments.length > 0) {
-      this.loadAssignments();
-    }
-  }
-  loadAssignments() {
-    this.supabase.getAssignments()
-      .then(assignments => {
-        this.assignments = assignments.map(a => ({
-          id: a.id,
-          customerId: a.customer_id,
-          customerName: this.customers.find(c => c.id === a.customer_id)?.name || 'N/A',
-          orderId: a.order_id,
-          orderNumber: this.orders.find(o => o.id === a.order_id)?.orderNumber || 'N/A',
-          deliveryPersonId: a.delivery_person_id,
-          deliveryPersonName: this.deliveryPersons.find(d => d.id === a.delivery_person_id)?.name || 'N/A',
-          status: a.status as any,
-          assignedAt: new Date(a.assigned_at),
-          completedAt: a.completed_at ? new Date(a.completed_at) : undefined,
-          address: a.address,
-          notes: a.notes
-        }));
-        this.cdr.markForCheck();
-        console.log('✅ Asignaciones cargadas:', this.assignments);
-      })
-      .catch(error => {
-        console.error('❌ Error loading assignments:', error);
-      });
-  }
-
-  private subscribeToAssignments() {
-    const subscription = this.supabase.subscribeToAssignments((assignments) => {
-      this.assignments = assignments.map(a => ({
-        id: a.id,
-        customerId: a.customer_id,
-        customerName: this.customers.find(c => c.id === a.customer_id)?.name || 'N/A',
-        orderId: a.order_id,
-        orderNumber: this.orders.find(o => o.id === a.order_id)?.orderNumber || 'N/A',
-        deliveryPersonId: a.delivery_person_id,
-        deliveryPersonName: this.deliveryPersons.find(d => d.id === a.delivery_person_id)?.name || 'N/A',
-        status: a.status as any,
-        assignedAt: new Date(a.assigned_at),
-        completedAt: a.completed_at ? new Date(a.completed_at) : undefined,
-        address: a.address,
-        notes: a.notes
-      }));
-      this.cdr.markForCheck();
-      console.log('🔄 Asignaciones actualizadas en tiempo real');
-    });
-
-    this.subscriptions.add(subscription);
+    this.assignments = this.assignmentsRaw.map(a => ({
+      id: a.id,
+      customerId: a.customer_id,
+      customerName: this.customers.find(c => c.id === a.customer_id)?.name || 'N/A',
+      orderId: a.order_id,
+      orderNumber: this.orders.find(o => o.id === a.order_id)?.orderNumber || 'N/A',
+      deliveryPersonId: a.delivery_person_id,
+      deliveryPersonName: this.deliveryPersons.find(d => d.id === a.delivery_person_id)?.name || 'N/A',
+      status: a.status as any,
+      assignedAt: new Date(a.assigned_at),
+      completedAt: a.completed_at ? new Date(a.completed_at) : undefined,
+      address: a.address,
+      notes: a.notes
+    }));
   }
 
   openAssignmentModal() {
@@ -253,46 +226,18 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.saveAssignmentToSupabase(customer, order, deliveryPerson);
-  }
+    const assignmentData = {
+      order_id: order.id,
+      customer_id: this.assignmentForm.customerId,
+      delivery_person_id: this.assignmentForm.deliveryPersonId,
+      status: 'pendiente' as const,
+      address: (order as any).deliveryAddress || 'Sin dirección',
+      notes: this.assignmentForm.notes
+    };
 
-  private async saveAssignmentToSupabase(customer: any, order: any, deliveryPerson: any) {
-    try {
-      const assignmentData = {
-        order_id: order.id,
-        customer_id: this.assignmentForm.customerId,
-        delivery_person_id: this.assignmentForm.deliveryPersonId,
-        status: 'pendiente' as const,
-        address: (order as any).deliveryAddress || 'Sin dirección',
-        notes: this.assignmentForm.notes
-      };
-
-      const savedAssignment = await this.supabase.createAssignment(assignmentData);
-
-      // Agregar a la lista local
-      const newAssignment: OrderAssignment = {
-        id: savedAssignment.id,
-        customerId: this.assignmentForm.customerId,
-        customerName: customer.name,
-        orderId: this.assignmentForm.orderId,
-        orderNumber: order.orderNumber,
-        deliveryPersonId: this.assignmentForm.deliveryPersonId,
-        deliveryPersonName: deliveryPerson.name,
-        status: 'pendiente',
-        assignedAt: new Date(savedAssignment.assigned_at),
-        address: assignmentData.address,
-        notes: this.assignmentForm.notes
-      };
-
-      this.assignments = [...this.assignments, newAssignment];
-      this.cdr.markForCheck();
-      this.closeAssignmentModal();
-
-      console.log('✅ Asignación guardada en BD:', savedAssignment);
-    } catch (error) {
-      console.error('❌ Error saving assignment:', error);
-      alert('Error al guardar la asignación: ' + (error as any).message);
-    }
+    this.store.dispatch(AssignmentsActions.createAssignment({ assignment: assignmentData }));
+    this.closeAssignmentModal();
+    this.cdr.markForCheck();
   }
 
   updateStatus(assignmentId: string, newStatus: string) {
@@ -300,38 +245,22 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
     if (assignment) {
       const completedAt = newStatus === 'entregado' ? new Date().toISOString() : null;
 
-      this.supabase.updateAssignment(assignmentId, {
-        status: newStatus,
-        completed_at: completedAt || undefined
-      })
-        .then(() => {
-          assignment.status = newStatus as any;
-          if (newStatus === 'entregado') {
-            assignment.completedAt = new Date();
+      this.store.dispatch(
+        AssignmentsActions.updateAssignment({
+          assignmentId,
+          assignment: {
+            status: newStatus as any,
+            completed_at: completedAt || undefined
           }
-          this.cdr.markForCheck();
-          console.log('✅ Estado de asignación actualizado:', newStatus);
         })
-        .catch(error => {
-          console.error('❌ Error updating assignment status:', error);
-          alert('Error al actualizar estado: ' + (error as any).message);
-        });
+      );
     }
   }
 
   deleteAssignment(assignmentId: string) {
     const confirmed = confirm('¿Eliminar esta asignación?');
     if (confirmed) {
-      this.supabase.deleteAssignment(assignmentId)
-        .then(() => {
-          this.assignments = this.assignments.filter(a => a.id !== assignmentId);
-          this.cdr.markForCheck();
-          console.log('✅ Asignación eliminada');
-        })
-        .catch(error => {
-          console.error('❌ Error deleting assignment:', error);
-          alert('Error al eliminar: ' + (error as any).message);
-        });
+      this.store.dispatch(AssignmentsActions.deleteAssignment({ assignmentId }));
     }
   }
 }

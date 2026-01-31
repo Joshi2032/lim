@@ -125,21 +125,7 @@ export class UsersComponent implements OnInit {
         };
       });
       console.log('✅ Employees loaded:', this.users);
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('❌ Error loading employees:', error);
-      alert('Error al cargar empleados: ' + (error as any).message);
-    }
-  }
-          name: emp.full_name,
-          email: emp.email,
-          phone: emp.phone,
-          roleId: roleMap[emp.role] || 'mesero',
-          initials: this.generateInitials(emp.full_name),
-          status: emp.active ? 'activo' : 'inactivo'
-        };
-      });
-      console.log('✅ Employees loaded:', this.users);
+      this.updateRoleStats();
       this.cdr.markForCheck();
     } catch (error) {
       console.error('❌ Error loading employees:', error);

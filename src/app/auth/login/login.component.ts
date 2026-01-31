@@ -86,11 +86,11 @@ export class LoginComponent {
         console.log('✅ Step 3 OK: Employee ya vinculado');
       }
 
-      console.log('✅ Employee validated:', employee.full_name, '(' + employee.role + ')');
+      console.log('✅ Employee validated:', employee.full_name, '(' + employee.position?.name + ')');
       console.log('🔐 Step 4: Redirigiendo según rol...');
 
       // 4. Redirigir según el rol
-      this.redirectByRole(employee.role);
+      this.redirectByRole(employee.position?.name || 'waiter');
 
       // Reset loading después de un delay para asegurar la navegación
       setTimeout(() => {

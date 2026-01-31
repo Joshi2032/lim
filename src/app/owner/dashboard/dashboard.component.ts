@@ -1,5 +1,7 @@
 import { Component, OnInit, Input, TemplateRef, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Store } from '@ngrx/store';
+import { Observable, Subscription } from 'rxjs';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { StatCardComponent, StatVariant } from '../../shared/stat-card/stat-card.component';
 import { SectionHeaderComponent } from '../../shared/section-header/section-header.component';
@@ -7,7 +9,8 @@ import { DataTableComponent, DataTableColumn } from '../../shared/data-table/dat
 import { InfoCardsComponent, InfoCard } from '../../shared/info-cards/info-cards.component';
 import { TopProductsChartComponent, TopProduct } from '../../shared/top-products-chart/top-products-chart.component';
 import { SupabaseService, Order as SupabaseOrder } from '../../core/services/supabase.service';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import * as OrdersActions from '../../store/orders/orders.actions';
+import { selectTodayOrders, selectOrdersStats, selectOrdersByStatus, selectOrdersByType } from '../../store/orders/orders.selectors';
 
 export interface Product {
   id: string;
@@ -51,10 +54,17 @@ interface StatCardData {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  private subscription: RealtimeChannel | null = null;
+  private subscriptions = new Subscription();
   @Input() embedded: boolean = false;
   cartCount: number = 0;
   statCards: StatCardData[] = [];
+
+  // Observables del store
+  todayOrders$: Observable<SupabaseOrder[]>;
+  ordersStats$: Observable<any>;
+  activeOrders$: Observable<SupabaseOrder[]>;
+  kitchenOrders$: Observable<SupabaseOrder[]>;
+  deliveryOrders$: Observable<SupabaseOrder[]>;
   // Derived groups for layout rows
   get primaryStats(): StatCardData[] { return this.statCards.slice(0, 4); }
   get secondaryStats(): StatCardData[] { return this.statCards.slice(4); }
@@ -116,64 +126,62 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ];
 
   constructor(
+    private store: Store,
     private supabase: SupabaseService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    // Inicializar observables del store
+    this.todayOrders$ = this.store.select(selectTodayOrders);
+    this.ordersStats$ = this.store.select(selectOrdersStats);
+    this.activeOrders$ = this.store.select(selectOrdersByStatus('pending'));
+    this.kitchenOrders$ = this.store.select(selectOrdersByStatus('preparing'));
+    this.deliveryOrders$ = this.store.select(selectOrdersByType('delivery'));
+  }
 
   ngOnInit() {
     this.initializeTableColumns();
-    this.loadDataFromSupabase();
-    this.subscribeToOrderChanges();
+
+    // Dispatch para cargar órdenes
+    this.store.dispatch(OrdersActions.loadOrders());
+
+    // Suscribirse a estadísticas para actualizar UI
+    this.subscriptions.add(
+      this.ordersStats$.subscribe(stats => {
+        if (stats) {
+          this.updateStatCardsFromStats(stats);
+          this.cdr.markForCheck();
+        }
+      })
+    );
+
+    // Suscribirse a órdenes de hoy para la tabla
+    this.subscriptions.add(
+      this.todayOrders$.subscribe(orders => {
+        this.loadRecentOrders(orders);
+        this.loadTopProducts(orders);
+        this.cdr.markForCheck();
+      })
+    );
+
+    // Suscribirse a cambios en tiempo real
+    this.store.dispatch(OrdersActions.subscribeToOrders());
   }
 
   ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
+    this.subscriptions.unsubscribe();
   }
 
-  subscribeToOrderChanges() {
-    this.subscription = this.supabase.subscribeToOrders((orders) => {
-      console.log('🔄 Orders updated via subscription, refreshing dashboard...');
-      this.loadDataFromSupabase();
-    });
-  }
+  updateStatCardsFromStats(stats: any) {
+    const { total, pending, preparing, ready, completed, cancelled, revenue, avgTicket } = stats;
 
-  async loadDataFromSupabase() {
-    try {
-      console.log('📋 Loading dashboard data from Supabase...');
+    // Contar órdenes activas (no completadas ni canceladas)
+    const activeCount = pending + preparing + ready;
 
-      const orders = await this.supabase.getOrders();
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+    // Obtener conteo de entregas (se actualiza desde el observable)
+    let deliveryCount = 0;
+    this.deliveryOrders$.subscribe(orders => deliveryCount = orders.length).unsubscribe();
 
-      // Filtrar órdenes de hoy
-      const todayOrders = orders.filter(o => {
-        const orderDate = new Date(o.created_at);
-        orderDate.setHours(0, 0, 0, 0);
-        return orderDate.getTime() === today.getTime();
-      });
-
-      // Calcular estadísticas
-      const totalRevenue = todayOrders.reduce((sum, o) => sum + o.total_price, 0);
-      const activeOrders = todayOrders.filter(o => o.status !== 'completed' && o.status !== 'cancelled');
-      const kitchenOrders = todayOrders.filter(o => o.status === 'preparing');
-      const deliveryOrders = orders.filter(o => o.order_type === 'delivery' && o.status !== 'completed');
-      const avgTicket = todayOrders.length > 0 ? totalRevenue / todayOrders.length : 0;
-
-      // Actualizar stats
-      this.updateStatCards(totalRevenue, todayOrders.length, avgTicket, kitchenOrders.length, activeOrders.length, deliveryOrders.length);
-
-      // Cargar órdenes recientes
-      this.loadRecentOrders(orders);
-
-      // Cargar productos más vendidos
-      await this.loadTopProducts(orders);
-
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('❌ Error loading dashboard data:', error);
-    }
+    this.updateStatCards(revenue, total, avgTicket, preparing, activeCount, deliveryCount);
   }
 
   updateStatCards(revenue: number, ordersCount: number, avgTicket: number, kitchenCount: number, activeCount: number, deliveryCount: number) {

@@ -1,12 +1,19 @@
 import { Component, OnInit, OnDestroy, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { Observable, Subscription, combineLatest } from 'rxjs';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { ModalComponent } from '../../shared/modal/modal.component';
 import { DataTableComponent, DataTableColumn } from '../../shared/data-table/data-table.component';
 import { SupabaseService } from '../../core/services/supabase.service';
+import * as OrdersActions from '../../store/orders/orders.actions';
+import * as CustomersActions from '../../store/customers/customers.actions';
+import * as EmployeesActions from '../../store/employees/employees.actions';
+import { selectOrders } from '../../store/orders/orders.selectors';
+import { selectCustomers } from '../../store/customers/customers.selectors';
+import { selectDeliveryPersons } from '../../store/employees/employees.selectors';
 
 export interface OrderAssignment {
   id: string;
@@ -42,6 +49,13 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   @Input() embedded: boolean = false;
 
   assignments: OrderAssignment[] = [];
+
+  // Observables del store
+  customers$: Observable<any[]>;
+  orders$: Observable<any[]>;
+  deliveryPersons$: Observable<any[]>;
+
+  // Arrays locales para búsquedas
   customers: any[] = [];
   orders: any[] = [];
   deliveryPersons: any[] = [];
@@ -89,95 +103,79 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
 
   constructor(
     private cdr: ChangeDetectorRef,
-    private supabase: SupabaseService
-  ) {}
+    private supabase: SupabaseService,
+    private store: Store
+  ) {
+    // Inicializar observables del store
+    this.customers$ = this.store.select(selectCustomers);
+    this.orders$ = this.store.select(selectOrders);
+    this.deliveryPersons$ = this.store.select(selectDeliveryPersons);
+  }
 
   ngOnInit() {
-    this.loadData();
-    this.subscribeToAssignments();
-  }
+    // Dispatch para cargar datos desde el store
+    this.store.dispatch(CustomersActions.loadCustomers());
+    this.store.dispatch(OrdersActions.loadOrders());
+    this.store.dispatch(EmployeesActions.loadEmployees());
+    this.store.dispatch(EmployeesActions.loadPositions());
 
-  ngOnDestroy() {
-    this.subscriptions.unsubscribe();
-  }  loadData() {
-    this.loadCustomers();
-    this.loadOrders();
-    this.loadDeliveryPersons();
-    this.loadAssignments();
-  }
+    // Suscribirse a cambios en los datos
+    this.subscriptions.add(
+      this.customers$.subscribe(customers => {
+        this.customers = customers.map(c => ({
+          id: c.id.toString(),
+          name: c.name,
+          phone: c.phone || '',
+          email: c.email || ''
+        }));
+        this.updateAssignmentsDisplay();
+        this.cdr.markForCheck();
+      })
+    );
 
-  async loadCustomers() {
-    try {
-      const supabaseCustomers = await this.supabase.getCustomers();
-      this.customers = supabaseCustomers.map(c => ({
-        id: c.id.toString(),
-        name: c.name,
-        phone: c.phone || '',
-        email: c.email || ''
-      }));
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('❌ Error loading customers:', error);
-    }
-  }
+    this.subscriptions.add(
+      this.orders$.subscribe(orders => {
+        this.orders = orders.map(o => ({
+          id: o.id.toString(),
+          orderNumber: `#${o.order_number}`,
+          customerName: o.customer_name,
+          status: o.status,
+          orderType: o.order_type,
+          totalPrice: o.total_price
+        }));
+        this.updateAssignmentsDisplay();
+        this.cdr.markForCheck();
+      })
+    );
 
-  async loadOrders() {
-    try {
-      const supabaseOrders = await this.supabase.getOrders();
-
-      // Cargar items para cada pedido
-      this.orders = await Promise.all(
-        supabaseOrders.map(async (o) => {
-          const items = await this.supabase.getOrderItems(o.id);
-
-          // Obtener nombres de los items del menú
-          const itemNames = await Promise.all(
-            items.map(async (item) => {
-              try {
-                const menuItem = await this.supabase.getMenuItemById(item.menu_item_id);
-                return menuItem ? `${menuItem.name} (x${item.quantity})` : `Item ${item.menu_item_id}`;
-              } catch {
-                return `Item ${item.menu_item_id}`;
-              }
-            })
-          );
-
-          return {
-            id: o.id.toString(),
-            orderNumber: `#${o.order_number}`,
-            customerName: o.customer_name,
-            status: o.status,
-            orderType: o.order_type,
-            items: itemNames.join(', ') || 'Sin items',
-            totalPrice: o.total_price
-          };
-        })
-      );
-
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('❌ Error loading orders:', error);
-    }
-  }
-
-  async loadDeliveryPersons() {
-    try {
-      const employees = await this.supabase.getEmployees();
-      // Filtrar solo empleados con posición 'delivery'
-      this.deliveryPersons = employees
-        .filter(e => e.position?.name === 'delivery' && e.active)
-        .map(e => ({
+    this.subscriptions.add(
+      this.deliveryPersons$.subscribe(persons => {
+        this.deliveryPersons = persons.map(e => ({
           id: e.id,
           name: e.full_name,
           email: e.email,
           phone: e.phone
         }));
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('❌ Error loading delivery persons:', error);
-    }
+        this.updateAssignmentsDisplay();
+        this.cdr.markForCheck();
+      })
+    );
+
+    // Cargar asignaciones
+    this.loadAssignments();
+    this.subscribeToAssignments();
   }
 
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
+  }
+
+  updateAssignmentsDisplay() {
+    // Recargar asignaciones si ya se han cargado para actualizar nombres
+    if (this.assignments.length > 0) {
+      this.loadAssignments();
+    }
+  }
   loadAssignments() {
     this.supabase.getAssignments()
       .then(assignments => {

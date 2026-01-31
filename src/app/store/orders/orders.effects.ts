@@ -55,6 +55,25 @@ export class OrdersEffects {
     )
   );
 
+  createOrderWithItems$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(OrdersActions.createOrderWithItems),
+      switchMap(({ order, items }) =>
+        this.supabase.createOrder(order).then(
+          async (result) => {
+            const orderItems = items.map(item => ({
+              ...item,
+              order_id: result.id
+            }));
+            await this.supabase.addOrderItems(orderItems);
+            return OrdersActions.createOrderSuccess({ order: result });
+          },
+          (error: any) => OrdersActions.createOrderFailure({ error: error.message })
+        )
+      )
+    )
+  );
+
   updateOrderStatus$ = createEffect(() =>
     this.actions$.pipe(
       ofType(OrdersActions.updateOrderStatus),

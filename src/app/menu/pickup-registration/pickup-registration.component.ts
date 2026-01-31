@@ -1,11 +1,16 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { MovementsService } from '../../shared/movements/movements.service';
-import { SupabaseService, MenuItem, Order, OrderItem } from '../../core/services/supabase.service';
+import { Store } from '@ngrx/store';
+import { Observable, Subscription } from 'rxjs';
+import { MenuItem, Order, OrderItem } from '../../core/services/supabase.service';
+import * as MenuItemsActions from '../../store/menu-items/menu-items.actions';
+import { selectAvailableMenuItems } from '../../store/menu-items/menu-items.selectors';
+import * as OrdersActions from '../../store/orders/orders.actions';
 
 interface LocalMenuItem extends MenuItem {
   quantity: number;
@@ -26,7 +31,7 @@ interface PickupOrder {
   styleUrl: './pickup-registration.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PickupRegistrationComponent implements OnInit {
+export class PickupRegistrationComponent implements OnInit, OnDestroy {
   order: PickupOrder = {
     customerName: '',
     customerPhone: '',
@@ -36,6 +41,8 @@ export class PickupRegistrationComponent implements OnInit {
   };
 
   availableItems: MenuItem[] = [];
+  menuItems$: Observable<MenuItem[]>;
+  private subscriptions = new Subscription();
   selectedItem: string = '';
   private _totalMemoized: number | null = null;
   selectedQuantity: number = 1;
@@ -68,24 +75,27 @@ export class PickupRegistrationComponent implements OnInit {
   constructor(
     private router: Router,
     private movements: MovementsService,
-    private supabase: SupabaseService,
+    private store: Store,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    this.menuItems$ = this.store.select(selectAvailableMenuItems);
+  }
 
   ngOnInit() {
-    this.loadMenuItems();
+    this.store.dispatch(MenuItemsActions.loadMenuItems());
+    this.store.dispatch(MenuItemsActions.subscribeToMenuItems());
+
+    this.subscriptions.add(
+      this.menuItems$.subscribe(items => {
+        this.availableItems = items;
+        this.cdr.markForCheck();
+      })
+    );
     this.setDefaultPickupTime();
   }
 
-  async loadMenuItems() {
-    try {
-      const items = await this.supabase.getMenuItems();
-      this.availableItems = items;
-      this.cdr.markForCheck();
-    } catch (error) {
-      console.error('Error loading menu items:', error);
-      alert('Error al cargar el menú');
-    }
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 
   setDefaultPickupTime() {
@@ -149,56 +159,39 @@ export class PickupRegistrationComponent implements OnInit {
     this.isSubmitting = true;
     this.cdr.markForCheck();
 
-    this.registerOrderInSupabase().finally(() => {
-      this.isSubmitting = false;
-      this.cdr.markForCheck();
+    const orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'> = {
+      order_number: `ORD-${Date.now()}`,
+      customer_name: this.order.customerName,
+      customer_phone: this.order.customerPhone,
+      customer_email: '',
+      order_type: 'pickup',
+      status: 'pending',
+      total_price: this.getTotal(),
+      pickup_time: this.order.pickupTime,
+      notes: this.order.notes
+    };
+
+    const orderItems: Array<Omit<OrderItem, 'id' | 'order_id'>> = this.order.items.map(item => ({
+      menu_item_id: item.id,
+      quantity: item.quantity,
+      unit_price: item.price,
+      subtotal: item.price * item.quantity
+    }));
+
+    this.store.dispatch(OrdersActions.createOrderWithItems({ order: orderData, items: orderItems }));
+
+    this.movements.log({
+      title: 'Nuevo pedido de recogida',
+      description: `Pedido #${orderData.order_number} para ${this.order.customerName}`,
+      section: 'cocina',
+      status: 'success',
+      actor: this.currentUser.name,
+      role: this.currentUser.role
     });
-  }
 
-  private async registerOrderInSupabase() {
-    try {
-      // Create order in Supabase
-      const orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'> = {
-        order_number: `ORD-${Date.now()}`,
-        customer_name: this.order.customerName,
-        customer_phone: this.order.customerPhone,
-        customer_email: '',
-        order_type: 'pickup',
-        status: 'pending',
-        total_price: this.getTotal(),
-        pickup_time: this.order.pickupTime,
-        notes: this.order.notes
-      };
-
-      const newOrder = await this.supabase.createOrder(orderData);
-
-      // Add order items
-      const orderItems: Array<Omit<OrderItem, 'id'>> = this.order.items.map(item => ({
-        order_id: newOrder.id,
-        menu_item_id: item.id,
-        quantity: item.quantity,
-        unit_price: item.price,
-        subtotal: item.price * item.quantity
-      }));
-
-      await this.supabase.addOrderItems(orderItems);
-
-      // Log movement
-      this.movements.log({
-        title: 'Nuevo pedido de recogida',
-        description: `Pedido #${newOrder.order_number} para ${this.order.customerName}`,
-        section: 'cocina',
-        status: 'success',
-        actor: this.currentUser.name,
-        role: this.currentUser.role
-      });
-
-      this.router.navigate(['/recogida']);
-    } catch (error: any) {
-      console.error('Error registering order:', error);
-      const errorMessage = error?.message || error?.toString() || 'Error desconocido';
-      alert(`Error al registrar el pedido:\n${errorMessage}`);
-    }
+    this.isSubmitting = false;
+    this.cdr.markForCheck();
+    this.router.navigate(['/recogida']);
   }
 
   cancel() {

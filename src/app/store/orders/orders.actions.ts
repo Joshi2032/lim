@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { Order } from '../../core/services/supabase.service';
+import { Order, OrderItem } from '../../core/services/supabase.service';
 
 // Load Actions
 export const loadOrders = createAction('[Orders Page] Load Orders');
@@ -40,6 +40,11 @@ export const loadOrdersByStatusSuccess = createAction(
 export const createOrder = createAction(
   '[Orders Page] Create Order',
   props<{ order: Omit<Order, 'id' | 'created_at' | 'updated_at'> }>()
+);
+
+export const createOrderWithItems = createAction(
+  '[Orders Page] Create Order With Items',
+  props<{ order: Omit<Order, 'id' | 'created_at' | 'updated_at'>; items: Array<Omit<OrderItem, 'id' | 'order_id'>> }>()
 );
 
 export const createOrderSuccess = createAction(

@@ -91,12 +91,22 @@ export interface ComboItem {
   created_at?: string;
 }
 
+export interface Position {
+  id: string;
+  name: string;
+  description?: string;
+  display_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Employee {
   id: string;
   auth_user_id?: string;
   email: string;
   full_name: string;
-  role: 'admin' | 'chef' | 'waiter' | 'delivery' | 'cashier';
+  position_id: string;
+  position?: Position;
   phone?: string;
   active: boolean;
   created_at?: string;
@@ -1114,19 +1124,66 @@ export class SupabaseService {
     return channel;
   }
 
+  // ==================== POSITIONS ====================
+
+  async getPositions(): Promise<Position[]> {
+    try {
+      console.log('📋 Fetching positions...');
+      const { data, error } = await supabase
+        .from('positions')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      console.log('✅ Positions fetched:', data?.length || 0);
+      return (data as Position[]) || [];
+    } catch (error) {
+      console.error('❌ Error in getPositions:', error);
+      throw error;
+    }
+  }
+
+  async getPositionByName(positionName: string): Promise<Position | null> {
+    try {
+      const { data, error } = await supabase
+        .from('positions')
+        .select('*')
+        .eq('name', positionName)
+        .single();
+
+      if (error) throw error;
+      return data as Position;
+    } catch (error) {
+      console.error('❌ Error in getPositionByName:', error);
+      return null;
+    }
+  }
+
   // ==================== EMPLOYEES ====================
 
   async getEmployees(): Promise<Employee[]> {
     try {
+      console.log('📋 Fetching employees...');
       const { data, error } = await supabase
         .from('employees')
-        .select('*')
-        .order('full_name');
+        .select(`
+          *,
+          position: positions(
+            id,
+            name,
+            description,
+            display_name,
+            created_at,
+            updated_at
+          )
+        `)
+        .order('full_name', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      console.log('✅ Employees fetched:', data?.length || 0, data);
+      return (data as Employee[]) || [];
     } catch (error) {
-      console.error('Error fetching employees:', error);
+      console.error('❌ Error in getEmployees:', error);
       return [];
     }
   }
@@ -1135,7 +1192,17 @@ export class SupabaseService {
     try {
       const { data, error } = await supabase
         .from('employees')
-        .select('*')
+        .select(`
+          *,
+          position: positions(
+            id,
+            name,
+            description,
+            display_name,
+            created_at,
+            updated_at
+          )
+        `)
         .eq('email', email)
         .eq('active', true)
         .single();
@@ -1146,7 +1213,7 @@ export class SupabaseService {
       }
       return data as Employee;
     } catch (error) {
-      console.error('Error fetching employee by email:', error);
+      console.error('❌ Error in getEmployeeByEmail:', error);
       return null;
     }
   }
@@ -1155,7 +1222,17 @@ export class SupabaseService {
     try {
       const { data, error } = await supabase
         .from('employees')
-        .select('*')
+        .select(`
+          *,
+          position: positions(
+            id,
+            name,
+            description,
+            display_name,
+            created_at,
+            updated_at
+          )
+        `)
         .eq('auth_user_id', authUserId)
         .eq('active', true)
         .single();
@@ -1166,18 +1243,28 @@ export class SupabaseService {
       }
       return data as Employee;
     } catch (error) {
-      console.error('Error fetching employee by auth ID:', error);
+      console.error('❌ Error in getEmployeeByAuthId:', error);
       return null;
     }
   }
 
-  async createEmployee(employeeData: Omit<Employee, 'id' | 'created_at' | 'updated_at'>): Promise<Employee> {
+  async createEmployee(employeeData: Omit<Employee, 'id' | 'created_at' | 'updated_at' | 'position'>): Promise<Employee> {
     try {
       console.log('📝 Creating employee:', employeeData);
       const { data, error } = await supabase
         .from('employees')
         .insert([employeeData])
-        .select()
+        .select(`
+          *,
+          position: positions(
+            id,
+            name,
+            description,
+            display_name,
+            created_at,
+            updated_at
+          )
+        `)
         .single();
 
       if (error) {
@@ -1193,7 +1280,7 @@ export class SupabaseService {
     }
   }
 
-  async updateEmployee(employeeId: string, employeeData: Partial<Omit<Employee, 'id' | 'created_at' | 'updated_at'>>): Promise<void> {
+  async updateEmployee(employeeId: string, employeeData: Partial<Omit<Employee, 'id' | 'created_at' | 'updated_at' | 'position'>>): Promise<void> {
     try {
       console.log('📝 Updating employee:', employeeId, employeeData);
       const { error } = await supabase

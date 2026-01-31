@@ -6,7 +6,7 @@ import { UserFormComponent, UserFormData, RoleOption } from '../../shared/user-f
 import { PageHeaderComponent, PageAction } from '../../shared/page-header/page-header.component';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { MovementsService } from '../../shared/movements/movements.service';
-import { SupabaseService } from '../../core/services/supabase.service';
+import { SupabaseService, Position } from '../../core/services/supabase.service';
 
 export type UserRole = 'duena' | 'encargado' | 'chef' | 'mesero' | 'cajero' | 'repartidor';
 
@@ -15,6 +15,8 @@ export interface UserEmployee {
 	name: string;
 	email: string;
 	phone?: string;
+	positionId: string;
+	positionName?: string;
 	roleId: UserRole;
 	initials: string;
 	status: 'activo' | 'inactivo';
@@ -36,6 +38,7 @@ export class UsersComponent implements OnInit {
   private isSubmitting = false;
   @Input() embedded: boolean = false;
   users: UserEmployee[] = [];
+  positions: Position[] = [];
   cartCount: number = 0;
   showUserFormModal: boolean = false;
   userBeingEdited: UserEmployee | null = null;
@@ -78,8 +81,18 @@ export class UsersComponent implements OnInit {
   ];
 
   ngOnInit() {
+    this.loadPositions();
     this.loadUsersFromSupabase();
     this.updateRoleStats();
+  }
+
+  async loadPositions() {
+    try {
+      this.positions = await this.supabase.getPositions();
+      console.log('✅ Positions loaded:', this.positions);
+    } catch (error) {
+      console.error('❌ Error loading positions:', error);
+    }
   }
 
   async loadUsersFromSupabase() {
@@ -87,8 +100,8 @@ export class UsersComponent implements OnInit {
       console.log('📋 Loading employees from Supabase...');
       const employees = await this.supabase.getEmployees();
       this.users = employees.map(emp => {
-        // Map role from employee role to UserRole
-        const roleMap: Record<string, UserRole> = {
+        // Map position name to UserRole
+        const positionToRoleMap: Record<string, UserRole> = {
           'admin': 'duena',
           'chef': 'chef',
           'waiter': 'mesero',
@@ -96,8 +109,28 @@ export class UsersComponent implements OnInit {
           'cashier': 'cajero'
         };
 
+        const positionName = emp.position?.name || '';
+        const roleId = positionToRoleMap[positionName] || 'mesero';
+
         return {
           id: emp.id,
+          name: emp.full_name,
+          email: emp.email,
+          phone: emp.phone,
+          positionId: emp.position_id,
+          positionName: emp.position?.display_name,
+          roleId: roleId,
+          initials: this.generateInitials(emp.full_name),
+          status: emp.active ? 'activo' : 'inactivo'
+        };
+      });
+      console.log('✅ Employees loaded:', this.users);
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('❌ Error loading employees:', error);
+      alert('Error al cargar empleados: ' + (error as any).message);
+    }
+  }
           name: emp.full_name,
           email: emp.email,
           phone: emp.phone,
@@ -160,8 +193,8 @@ export class UsersComponent implements OnInit {
     try {
       console.log('📝 Creating employee:', formData.name);
 
-      // Map UserRole to Employee role
-      const roleMap: Record<UserRole, string> = {
+      // Obtener la posición por el nombre del rol
+      const positionMap: Record<UserRole, string> = {
         'duena': 'admin',
         'chef': 'chef',
         'mesero': 'waiter',
@@ -170,11 +203,18 @@ export class UsersComponent implements OnInit {
         'encargado': 'admin'
       };
 
+      const positionName = positionMap[formData.roleId as UserRole];
+      const position = await this.supabase.getPositionByName(positionName);
+
+      if (!position) {
+        throw new Error(`Posición "${positionName}" no encontrada`);
+      }
+
       const newEmployee = {
         full_name: formData.name,
         email: formData.email,
         phone: formData.phone || undefined,
-        role: roleMap[formData.roleId as UserRole] as 'admin' | 'chef' | 'waiter' | 'delivery' | 'cashier',
+        position_id: position.id,
         active: true
       };
 
@@ -185,6 +225,8 @@ export class UsersComponent implements OnInit {
         name: createdEmployee.full_name,
         email: createdEmployee.email,
         phone: createdEmployee.phone,
+        positionId: createdEmployee.position_id,
+        positionName: createdEmployee.position?.display_name,
         roleId: formData.roleId as UserRole,
         initials: this.generateInitials(createdEmployee.full_name),
         status: createdEmployee.active ? 'activo' : 'inactivo'
@@ -218,8 +260,8 @@ export class UsersComponent implements OnInit {
     try {
       console.log('✏️ Updating employee:', formData.name);
 
-      // Map UserRole to Employee role
-      const roleMap: Record<UserRole, string> = {
+      // Obtener la posición por el nombre del rol
+      const positionMap: Record<UserRole, string> = {
         'duena': 'admin',
         'chef': 'chef',
         'mesero': 'waiter',
@@ -228,11 +270,18 @@ export class UsersComponent implements OnInit {
         'encargado': 'admin'
       };
 
+      const positionName = positionMap[formData.roleId as UserRole];
+      const position = await this.supabase.getPositionByName(positionName);
+
+      if (!position) {
+        throw new Error(`Posición "${positionName}" no encontrada`);
+      }
+
       const updateData = {
         full_name: formData.name,
         email: formData.email,
         phone: formData.phone || undefined,
-        role: roleMap[formData.roleId as UserRole] as 'admin' | 'chef' | 'waiter' | 'delivery' | 'cashier'
+        position_id: position.id
       };
 
       await this.supabase.updateEmployee(this.userBeingEdited.id, updateData);
@@ -244,6 +293,8 @@ export class UsersComponent implements OnInit {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
+          positionId: position.id,
+          positionName: position.display_name,
           roleId: formData.roleId as UserRole,
           initials: this.generateInitials(formData.name)
         };

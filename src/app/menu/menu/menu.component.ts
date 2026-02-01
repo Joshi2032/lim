@@ -19,6 +19,7 @@ import * as CategoriesActions from '../../store/categories/categories.actions';
 import { selectCategories } from '../../store/categories/categories.selectors';
 import * as CombosActions from '../../store/combos/combos.actions';
 import { selectCombos } from '../../store/combos/combos.selectors';
+import * as OrdersActions from '../../store/orders/orders.actions';
 
 interface Filter {
 	id: string;
@@ -266,6 +267,50 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   toggleCart() {
     this.isCartOpen = !this.isCartOpen;
+  }
+
+  handleCheckout(items: CartItem[]) {
+    if (items.length === 0) return;
+
+    // Calcular total
+    const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    // Crear los items de la orden
+    const orderItems = items.map(item => ({
+      menu_item_id: item.id,
+      quantity: item.quantity,
+      unit_price: item.price,
+      subtotal: item.price * item.quantity,
+      notes: item.variant ? `Variante: ${item.variant.name}` : null
+    }));
+
+    // Crear la orden con tipo 'dine-in' y estado 'pending'
+    this.store.dispatch(OrdersActions.createOrderWithItems({
+      order: {
+        order_number: `ORD-${Date.now()}`,
+        customer_name: 'Cliente en sitio',
+        order_type: 'dine-in',
+        status: 'pending',
+        total_price: total
+      },
+      items: orderItems
+    }));
+
+    // Limpiar el carrito
+    this.cartItems = [];
+    this.cartCount = 0;
+    this.isCartOpen = false;
+    this.cdr.markForCheck();
+
+    // Registrar movimiento
+    this.movements.log({
+      title: 'Pedido creado',
+      description: `Nueva orden creada con ${items.length} items por $${total}`,
+      section: 'menu',
+      status: 'success',
+      actor: 'Usuario',
+      role: 'Sistema'
+    });
   }
 
   handleAddToCart(itemId: string) {

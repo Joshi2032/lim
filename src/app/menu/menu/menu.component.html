@@ -110,6 +110,7 @@
 		[items]="cartItems"
 		(close)="isCartOpen = false"
 		(itemsChange)="cartItems = $event"
+		(checkout)="handleCheckout($event)"
 	/>
 	<app-variant-selector
 		[isOpen]="isVariantSelectorOpen"

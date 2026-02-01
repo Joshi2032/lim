@@ -21,6 +21,7 @@ export class CartComponent {
 
   @Output() close = new EventEmitter<void>();
   @Output() itemsChange = new EventEmitter<CartItem[]>();
+  @Output() checkout = new EventEmitter<CartItem[]>();
 
   get total(): number {
     return this.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -49,5 +50,11 @@ export class CartComponent {
   removeItem(itemId: string) {
     this.items = this.items.filter(i => i.id !== itemId);
     this.itemsChange.emit(this.items);
+  }
+
+  onCheckout() {
+    if (this.items.length > 0) {
+      this.checkout.emit(this.items);
+    }
   }
 }

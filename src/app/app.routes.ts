@@ -3,11 +3,21 @@ import { AppComponent } from './app.component';
 import { AuthLayoutComponent } from './auth/auth-layout.component';
 
 export const routes: Routes = [
+	// Rutas de autenticación (sin sidebar)
+	{
+		path: '',
+		component: AuthLayoutComponent,
+		children: [
+			{ path: 'login', loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent) },
+			{ path: 'register', loadComponent: () => import('./auth/register/register.component').then(m => m.RegisterComponent) },
+			{ path: '', redirectTo: 'login', pathMatch: 'full' }
+		]
+	},
+	// Rutas privadas (con sidebar)
 	{
 		path: '',
 		component: AppComponent,
 		children: [
-			// Rutas privadas (con sidebar)
 			{ path: 'menu', loadComponent: () => import('./menu/menu/menu.component').then(m => m.MenuComponent) },
 			{ path: 'mesas', loadComponent: () => import('./menu/tables/tables.component').then(m => m.TablesComponent) },
 			{ path: 'cocina', loadComponent: () => import('./menu/kitchen/kitchen.component').then(m => m.KitchenComponent) },
@@ -22,14 +32,5 @@ export const routes: Routes = [
 			{ path: 'ingresos', loadComponent: () => import('./owner/income-report/income-report.component').then(m => m.IncomeReportComponent) },
 		]
 	},
-	{
-		path: '',
-		component: AuthLayoutComponent,
-		children: [
-			{ path: 'login', loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent) },
-			{ path: 'register', loadComponent: () => import('./auth/register/register.component').then(m => m.RegisterComponent) },
-		]
-	},
-	{ path: '', redirectTo: 'login', pathMatch: 'full' },
 	{ path: '**', redirectTo: 'login' }
 ];

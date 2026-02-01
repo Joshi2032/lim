@@ -19,7 +19,7 @@ import { CommonModule } from '@angular/common';
       </div>
     </div>
   `,
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['../app.component.scss']
 })
 export class MainLayoutComponent {
   cartCount: number = 0;

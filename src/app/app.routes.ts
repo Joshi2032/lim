@@ -1,10 +1,11 @@
-
 import { Routes } from '@angular/router';
+import { AppComponent } from './app.component';
+import { AuthLayoutComponent } from './auth/auth-layout.component';
 
 export const routes: Routes = [
 	{
 		path: '',
-		component: (await import('./app.component')).AppComponent,
+		component: AppComponent,
 		children: [
 			// Rutas privadas (con sidebar)
 			{ path: 'menu', loadComponent: () => import('./menu/menu/menu.component').then(m => m.MenuComponent) },
@@ -23,7 +24,7 @@ export const routes: Routes = [
 	},
 	{
 		path: '',
-		component: (await import('./auth/auth-layout.component')).AuthLayoutComponent,
+		component: AuthLayoutComponent,
 		children: [
 			{ path: 'login', loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent) },
 			{ path: 'register', loadComponent: () => import('./auth/register/register.component').then(m => m.RegisterComponent) },

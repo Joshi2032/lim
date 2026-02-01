@@ -5,6 +5,7 @@ import { MenuItemCardComponent, MenuItem } from '../menu-item-card/menu-item-car
 import { CartComponent, CartItem } from '../../shared/cart/cart.component';
 import { BadgeComponent } from '../../shared/badge/badge.component';
 import { VariantSelectorComponent } from '../variant-selector/variant-selector.component';
+import { CheckoutModalComponent } from '../checkout-modal/checkout-modal.component';
 import { MovementsService } from '../../shared/movements/movements.service';
 import { Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
@@ -46,7 +47,7 @@ interface Combo {
 
 @Component({
   selector: 'app-menu',
-  imports: [CommonModule, MenuItemCardComponent, FormsModule, CartComponent, BadgeComponent, VariantSelectorComponent, FilterChipsComponent, PageHeaderComponent, SectionHeaderComponent, SearchInputComponent],
+  imports: [CommonModule, MenuItemCardComponent, FormsModule, CartComponent, BadgeComponent, VariantSelectorComponent, CheckoutModalComponent, FilterChipsComponent, PageHeaderComponent, SectionHeaderComponent, SearchInputComponent],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -59,6 +60,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   cartItems: CartItem[] = [];
   isVariantSelectorOpen: boolean = false;
   selectedComboForVariants: { comboId: string; itemId: string; quantity: number } | null = null;
+  isCheckoutModalOpen: boolean = false;
 
   filterOptions: FilterOption[] = [
     { id: 'todos', label: 'Todos' }
@@ -271,6 +273,13 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   handleCheckout(items: CartItem[]) {
     if (items.length === 0) return;
+    // Mostrar el modal de checkout
+    this.isCheckoutModalOpen = true;
+    this.cdr.markForCheck();
+  }
+
+  onCheckoutConfirm({ items, notes }: { items: CartItem[]; notes: string }) {
+    if (items.length === 0) return;
 
     // Calcular total
     const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -291,7 +300,8 @@ export class MenuComponent implements OnInit, OnDestroy {
         customer_name: 'Cliente en sitio',
         order_type: 'dine-in',
         status: 'pending',
-        total_price: total
+        total_price: total,
+        notes: notes || undefined
       },
       items: orderItems
     }));
@@ -300,17 +310,23 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.cartItems = [];
     this.cartCount = 0;
     this.isCartOpen = false;
+    this.isCheckoutModalOpen = false;
     this.cdr.markForCheck();
 
     // Registrar movimiento
     this.movements.log({
       title: 'Pedido creado',
-      description: `Nueva orden creada con ${items.length} items por $${total}`,
+      description: `Nueva orden creada con ${items.length} items por $${total}${notes ? ` - Notas: ${notes}` : ''}`,
       section: 'menu',
       status: 'success',
       actor: 'Usuario',
       role: 'Sistema'
     });
+  }
+
+  onCheckoutCancel() {
+    this.isCheckoutModalOpen = false;
+    this.cdr.markForCheck();
   }
 
   handleAddToCart(itemId: string) {

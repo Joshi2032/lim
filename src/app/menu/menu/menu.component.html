@@ -112,6 +112,12 @@
 		(itemsChange)="cartItems = $event"
 		(checkout)="handleCheckout($event)"
 	/>
+	<app-checkout-modal
+		[isOpen]="isCheckoutModalOpen"
+		[items]="cartItems"
+		(confirm)="onCheckoutConfirm($event)"
+		(cancel)="onCheckoutCancel()"
+	/>
 	<app-variant-selector
 		[isOpen]="isVariantSelectorOpen"
 		[item]="selectedComboForVariants ? (getMenuItemById(selectedComboForVariants.itemId) || null) : null"

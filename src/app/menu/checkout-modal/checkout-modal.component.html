@@ -1,0 +1,40 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Confirmar Pedido</h2>
+      <button class="close-btn" (click)="onCancel()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="items-summary">
+        <h3>Resumen del Pedido</h3>
+        <div class="items-list">
+          <div class="item" *ngFor="let item of items">
+            <span class="item-name">{{ item.name }}</span>
+            <span class="item-qty">x{{ item.quantity }}</span>
+            <span class="item-price">${{ (item.price * item.quantity) | number: '1.2-2' }}</span>
+          </div>
+        </div>
+        <div class="total">
+          <strong>Total:</strong>
+          <strong>${{ total | number: '1.2-2' }}</strong>
+        </div>
+      </div>
+
+      <div class="notes-section">
+        <label for="notes">Notas especiales (opcional)</label>
+        <textarea
+          id="notes"
+          [(ngModel)]="notes"
+          placeholder="Ej: Sin pimienta, sin cebolla, alérgico a mariscos..."
+          rows="4"
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="onCancel()">Cancelar</button>
+      <button class="btn-confirm" (click)="onConfirm()">Procesar Pedido</button>
+    </div>
+  </div>
+</div>

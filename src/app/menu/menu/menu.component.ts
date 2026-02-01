@@ -280,8 +280,7 @@ export class MenuComponent implements OnInit, OnDestroy {
       menu_item_id: item.id,
       quantity: item.quantity,
       unit_price: item.price,
-      subtotal: item.price * item.quantity,
-      notes: item.variant ? `Variante: ${item.variant.name}` : null
+      subtotal: item.price * item.quantity
     }));
 
     // Crear la orden con tipo 'dine-in' y estado 'pending'

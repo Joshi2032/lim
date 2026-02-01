@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CartItem } from '../models/cart.model';
+import { CartItem } from '../../shared/cart/cart.component';
 
 @Component({
   selector: 'app-checkout-modal',

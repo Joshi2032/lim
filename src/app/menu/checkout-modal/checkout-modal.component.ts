@@ -1,16 +1,17 @@
-import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CartItem } from '../../shared/cart/cart.component';
+import { ModalComponent } from '../../shared/modal/modal.component';
 
 @Component({
   selector: 'app-checkout-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalComponent],
   templateUrl: './checkout-modal.component.html',
   styleUrls: ['./checkout-modal.component.scss']
 })
-export class CheckoutModalComponent implements OnInit {
+export class CheckoutModalComponent implements OnInit, OnChanges {
   @Input() isOpen = false;
   @Input() items: CartItem[] = [];
   @Output() confirm = new EventEmitter<{ items: CartItem[]; notes: string }>();

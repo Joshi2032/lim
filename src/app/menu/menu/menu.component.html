@@ -109,7 +109,7 @@
 		[isOpen]="isCartOpen"
 		[items]="cartItems"
 		(close)="isCartOpen = false"
-		(itemsChange)="cartItems = $event"
+		(itemsChange)="onCartItemsChange($event)"
 		(checkout)="handleCheckout($event)"
 	/>
 	<app-checkout-modal

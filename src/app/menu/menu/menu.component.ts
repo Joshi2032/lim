@@ -7,6 +7,7 @@ import { BadgeComponent } from '../../shared/badge/badge.component';
 import { VariantSelectorComponent } from '../variant-selector/variant-selector.component';
 import { CheckoutModalComponent } from '../checkout-modal/checkout-modal.component';
 import { MovementsService } from '../../shared/movements/movements.service';
+import { CartStorageService } from '../../core/services/cart-storage.service';
 import { Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
 import { FilterChipsComponent, FilterOption } from '../../shared/filter-chips/filter-chips.component';
@@ -74,7 +75,8 @@ export class MenuComponent implements OnInit, OnDestroy {
   constructor(
     private movements: MovementsService,
     private store: Store,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private cartStorage: CartStorageService
   ) {
     this.menuItems$ = this.store.select(selectAvailableMenuItems);
     this.categories$ = this.store.select(selectCategories);
@@ -82,6 +84,11 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Cargar carrito desde localStorage
+    this.cartItems = this.cartStorage.loadCart();
+    this.cartCount = this.cartStorage.getCartCount();
+    this.cdr.markForCheck();
+
     this.store.dispatch(MenuItemsActions.loadMenuItems());
     this.store.dispatch(MenuItemsActions.subscribeToMenuItems());
     this.store.dispatch(CategoriesActions.loadCategories());
@@ -271,6 +278,13 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.isCartOpen = !this.isCartOpen;
   }
 
+  onCartItemsChange(items: CartItem[]) {
+    this.cartItems = items;
+    this.cartCount = items.reduce((count, item) => count + item.quantity, 0);
+    this.cartStorage.saveCart(items);
+    this.cdr.markForCheck();
+  }
+
   handleCheckout(items: CartItem[]) {
     if (items.length === 0) return;
     // Mostrar el modal de checkout
@@ -311,6 +325,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.cartCount = 0;
     this.isCartOpen = false;
     this.isCheckoutModalOpen = false;
+    this.cartStorage.clearCart();
     this.cdr.markForCheck();
 
     // Registrar movimiento
@@ -345,6 +360,9 @@ export class MenuComponent implements OnInit, OnDestroy {
       }
       this.cartCount++;
       this.isCartOpen = true;
+
+      // Guardar en localStorage
+      this.cartStorage.saveCart(this.cartItems);
 
       this.movements.log({
         title: 'Producto agregado',

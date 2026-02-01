@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { AppComponent } from './app.component';
 import { AuthLayoutComponent } from './auth/auth-layout.component';
+import { MainLayoutComponent } from './layouts/main-layout.component';
 
 export const routes: Routes = [
 	// Rutas de autenticación (sin sidebar)
@@ -16,7 +16,7 @@ export const routes: Routes = [
 	// Rutas privadas (con sidebar)
 	{
 		path: '',
-		component: AppComponent,
+		component: MainLayoutComponent,
 		children: [
 			{ path: 'menu', loadComponent: () => import('./menu/menu/menu.component').then(m => m.MenuComponent) },
 			{ path: 'mesas', loadComponent: () => import('./menu/tables/tables.component').then(m => m.TablesComponent) },

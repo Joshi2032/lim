@@ -22,7 +22,7 @@ export const createEmployee = createAction(
 
 export const createEmployeeSuccess = createAction(
   '[Employees API] Create Employee Success',
-  props<{ employee: Employee }>()
+  props<{ employee: Employee; temporaryPassword?: string }>()
 );
 
 export const createEmployeeFailure = createAction(

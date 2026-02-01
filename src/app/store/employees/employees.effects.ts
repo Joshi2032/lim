@@ -46,7 +46,13 @@ export class EmployeesEffects {
         ofType(EmployeesActions.createEmployee),
         switchMap(({ employee }) =>
           this.supabase.createEmployee(employee).then(
-            result => EmployeesActions.createEmployeeSuccess({ employee: result }),
+            result => {
+              const temporaryPassword = (result as any).temporaryPassword;
+              return EmployeesActions.createEmployeeSuccess({
+                employee: result,
+                temporaryPassword
+              });
+            },
             error => EmployeesActions.createEmployeeFailure({ error: error.message })
           )
         )

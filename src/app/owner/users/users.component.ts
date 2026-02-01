@@ -9,6 +9,7 @@ import { MovementsService } from '../../shared/movements/movements.service';
 import { Employee } from '../../core/services/supabase.service';
 import { Position as StorePosition } from '../../store/employees/employees.reducer';
 import { Store } from '@ngrx/store';
+import { Actions, ofType } from '@ngrx/effects';
 import { Observable, Subscription } from 'rxjs';
 import * as EmployeesActions from '../../store/employees/employees.actions';
 import { selectEmployees, selectEmployeesLoadingState, selectEmployeesPositions } from '../../store/employees/employees.selectors';
@@ -77,7 +78,8 @@ export class UsersComponent implements OnInit, OnDestroy {
   constructor(
     private movements: MovementsService,
     private cdr: ChangeDetectorRef,
-    private store: Store
+    private store: Store,
+    private actions$: Actions
   ) {
     this.employees$ = this.store.select(selectEmployees);
     this.positions$ = this.store.select(selectEmployeesPositions);
@@ -109,6 +111,17 @@ export class UsersComponent implements OnInit, OnDestroy {
         this.mapEmployeesToUsers(employees);
         this.updateRoleStats();
         this.cdr.markForCheck();
+      })
+    );
+
+    // Escuchar éxito de creación de empleado para mostrar contraseña temporal
+    this.subscriptions.add(
+      this.actions$.pipe(
+        ofType(EmployeesActions.createEmployeeSuccess)
+      ).subscribe(({ temporaryPassword }) => {
+        if (temporaryPassword) {
+          alert(`Usuario creado exitosamente!\n\nContraseña temporal: ${temporaryPassword}\n\nIMPORTANTE: Guarda esta contraseña, no se volverá a mostrar.`);
+        }
       })
     );
   }

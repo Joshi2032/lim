@@ -1314,9 +1314,43 @@ export class SupabaseService {
   async createEmployee(employeeData: Omit<Employee, 'id' | 'created_at' | 'updated_at' | 'position'>): Promise<Employee> {
     try {
       this.log('📝 Creating employee:', employeeData);
+
+      // 1. Generar contraseña temporal
+      const temporaryPassword = this.generateTemporaryPassword();
+
+      // 2. Crear usuario en Authentication
+      this.log('🔐 Creating auth user for:', employeeData.email);
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: employeeData.email,
+        password: temporaryPassword,
+        options: {
+          data: {
+            full_name: employeeData.full_name
+          },
+          emailRedirectTo: undefined // No enviar email de confirmación automáticamente
+        }
+      });
+
+      if (authError) {
+        console.error('❌ Error creating auth user:', authError);
+        throw authError;
+      }
+
+      if (!authData.user) {
+        throw new Error('No se pudo crear el usuario en Authentication');
+      }
+
+      this.log('✅ Auth user created:', authData.user.id);
+
+      // 3. Crear empleado en la tabla con el user_id
+      const employeeWithAuth = {
+        ...employeeData,
+        user_id: authData.user.id
+      };
+
       const { data, error } = await supabase
         .from('employees')
-        .insert([employeeData])
+        .insert([employeeWithAuth])
         .select(`
           *,
           position: positions(
@@ -1332,15 +1366,33 @@ export class SupabaseService {
 
       if (error) {
         console.error('❌ Error creating employee:', error);
+        // Si falla la creación del empleado, intentar eliminar el usuario de auth
+        await supabase.auth.admin.deleteUser(authData.user.id).catch(console.error);
         throw error;
       }
 
       this.log('✅ Employee created:', data);
-      return data as Employee;
+      this.log('🔑 Temporary password:', temporaryPassword, '(Save this!)');
+
+      // Retornar el empleado con la contraseña temporal para mostrarla
+      return {
+        ...data as Employee,
+        temporaryPassword
+      } as any;
     } catch (error) {
       console.error('❌ Error in createEmployee:', error);
       throw error;
     }
+  }
+
+  private generateTemporaryPassword(): string {
+    // Generar contraseña temporal segura (8 caracteres: letras, números y símbolos)
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
   }
 
   async updateEmployee(employeeId: string, employeeData: Partial<Omit<Employee, 'id' | 'created_at' | 'updated_at' | 'position'>>): Promise<void> {

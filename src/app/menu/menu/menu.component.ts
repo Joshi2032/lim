@@ -1,7 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { MenuItemCardComponent, MenuItem } from '../menu-item-card/menu-item-card.component';
 import { CartComponent, CartItem } from '../../shared/cart/cart.component';
 import { BadgeComponent } from '../../shared/badge/badge.component';
@@ -46,7 +45,7 @@ interface Combo {
 
 @Component({
   selector: 'app-menu',
-  imports: [CommonModule, SidebarComponent, MenuItemCardComponent, FormsModule, CartComponent, BadgeComponent, VariantSelectorComponent, FilterChipsComponent, PageHeaderComponent, SectionHeaderComponent, SearchInputComponent],
+  imports: [CommonModule, MenuItemCardComponent, FormsModule, CartComponent, BadgeComponent, VariantSelectorComponent, FilterChipsComponent, PageHeaderComponent, SectionHeaderComponent, SearchInputComponent],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -60,27 +59,8 @@ export class MenuComponent implements OnInit, OnDestroy {
   isVariantSelectorOpen: boolean = false;
   selectedComboForVariants: { comboId: string; itemId: string; quantity: number } | null = null;
 
-  currentUser: User = {
-    name: 'Josue',
-    role: 'Dueña',
-    initials: 'J'
-  };
-
   filterOptions: FilterOption[] = [
     { id: 'todos', label: 'Todos' }
-  ];
-
-  sidebarItems: SidebarMenuItem[] = [
-    { id: 'menu', label: 'Menú', icon: '🍜', route: '/menu', active: true },
-    { id: 'mesas', label: 'Mesas', icon: '🪑', route: '/mesas' },
-    { id: 'cocina', label: 'Cocina', icon: '🍳', route: '/cocina' },
-    { id: 'recogida', label: 'Recogida', icon: '🛍️', route: '/recogida' },
-    { id: 'clientes', label: 'Clientes', icon: '👥', route: '/clientes' },
-    { id: 'entregas', label: 'Entregas', icon: '🚚', route: '/entregas' },
-    { id: 'pedidos', label: 'Pedidos', icon: '🧾', route: '/pedidos' },
-    { id: 'dashboard', label: 'Dashboard', icon: '📊', route: '/dashboard' },
-    { id: 'panel', label: 'Panel de Control', icon: '📈', route: '/panel-control' },
-    { id: 'usuarios', label: 'Usuarios', icon: '👤', route: '/usuarios' }
   ];
 
   menuItems$: Observable<SupabaseMenuItem[]>;
@@ -250,8 +230,8 @@ export class MenuComponent implements OnInit, OnDestroy {
           description: `${combo.name} (${event.item.name} - ${event.variant.name}) x${event.quantity}`,
           section: 'menu',
           status: 'success',
-          actor: this.currentUser.name,
-          role: this.currentUser.role
+          actor: 'Usuario',
+          role: 'Sistema'
         });
       }
     }
@@ -279,17 +259,13 @@ export class MenuComponent implements OnInit, OnDestroy {
       description: `${combo.name} añadido al carrito`,
       section: 'menu',
       status: 'success',
-      actor: this.currentUser.name,
-      role: this.currentUser.role
+      actor: 'Usuario',
+      role: 'Sistema'
     });
   }
 
   toggleCart() {
     this.isCartOpen = !this.isCartOpen;
-  }
-
-  handleLogout() {
-    // Logout logic would go here
   }
 
   handleAddToCart(itemId: string) {
@@ -314,8 +290,8 @@ export class MenuComponent implements OnInit, OnDestroy {
         description: `${item.name} añadido al carrito`,
         section: 'menu',
         status: 'success',
-        actor: this.currentUser.name,
-        role: this.currentUser.role
+        actor: 'Usuario',
+        role: 'Sistema'
       });
 
       this.cdr.markForCheck();

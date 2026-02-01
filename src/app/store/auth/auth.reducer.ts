@@ -27,6 +27,15 @@ export const authReducer = createReducer(
     employee,
     error: null
   })),
+  on(AuthActions.refreshCurrentUserSuccess, (state, { employee }) => ({
+    ...state,
+    employee,
+    error: null
+  })),
+  on(AuthActions.employeeDataUpdated, (state, { employee }) => ({
+    ...state,
+    employee
+  })),
   on(AuthActions.loginFailure, (state, { error }) => ({
     ...state,
     loading: false,

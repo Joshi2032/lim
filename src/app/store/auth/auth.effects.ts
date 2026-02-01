@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { switchMap } from 'rxjs/operators';
+import { Store } from '@ngrx/store';
+import { switchMap, tap } from 'rxjs/operators';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Employee } from '../employees/employees.models';
 import * as AuthActions from './auth.actions';
@@ -9,10 +10,18 @@ import * as AuthActions from './auth.actions';
 export class AuthEffects {
   login$;
   logout$;
+  refreshCurrentUser$;
+  subscribeToEmployeeChanges$;
+  unsubscribeFromEmployeeChanges$;
+  startUserPolling$;
+  stopUserPolling$;
+  initializeAuth$;
+  private pollingInterval: any = null;
 
   constructor(
     private actions$: Actions,
-    private supabase: SupabaseService
+    private supabase: SupabaseService,
+    private store: Store
   ) {
     this.login$ = createEffect(() =>
       this.actions$.pipe(
@@ -33,6 +42,70 @@ export class AuthEffects {
           this.supabase.signOut().then(
             () => AuthActions.logoutSuccess(),
             (error: any) => AuthActions.logoutFailure({ error: error?.message || 'Error al cerrar sesión.' })
+          )
+        )
+      )
+    );
+
+    this.refreshCurrentUser$ = createEffect(() =>
+      this.actions$.pipe(
+        ofType(AuthActions.refreshCurrentUser),
+        switchMap(() =>
+          this.refreshUserData().then(
+            employee => AuthActions.refreshCurrentUserSuccess({ employee }),
+            (error: any) => AuthActions.refreshCurrentUserFailure({ error: error?.message || 'Error al actualizar datos del usuario.' })
+          )
+        )
+      )
+    );
+
+    this.subscribeToEmployeeChanges$ = createEffect(() =>
+      this.actions$.pipe(
+        ofType(AuthActions.loginSuccess),
+        tap(({ employee }) => {
+          this.startPolling(employee.id);
+        })
+      ),
+      { dispatch: false }
+    );
+
+    this.unsubscribeFromEmployeeChanges$ = createEffect(() =>
+      this.actions$.pipe(
+        ofType(AuthActions.logoutSuccess),
+        tap(() => {
+          this.stopPolling();
+        })
+      ),
+      { dispatch: false }
+    );
+
+    this.startUserPolling$ = createEffect(() =>
+      this.actions$.pipe(
+        ofType(AuthActions.startUserPolling),
+        tap(() => {
+          // Efecto secundario, el polling ya está iniciado
+        })
+      ),
+      { dispatch: false }
+    );
+
+    this.stopUserPolling$ = createEffect(() =>
+      this.actions$.pipe(
+        ofType(AuthActions.stopUserPolling),
+        tap(() => {
+          this.stopPolling();
+        })
+      ),
+      { dispatch: false }
+    );
+
+    this.initializeAuth$ = createEffect(() =>
+      this.actions$.pipe(
+        ofType(AuthActions.initializeAuth),
+        switchMap(() =>
+          this.checkExistingSession().then(
+            employee => employee ? AuthActions.loginSuccess({ employee }) : AuthActions.loginFailure({ error: 'No hay sesión activa' }),
+            (error: any) => AuthActions.loginFailure({ error: error?.message || 'Error al verificar sesión.' })
           )
         )
       )
@@ -64,6 +137,73 @@ export class AuthEffects {
       }
     }
 
+    return employee;
+  }
+
+  private async refreshUserData(): Promise<Employee> {
+    const user = await this.supabase.getCurrentUser();
+    if (!user?.email) {
+      throw new Error('No hay usuario autenticado');
+    }
+
+    const employee = await this.supabase.getEmployeeByEmail(user.email);
+    if (!employee) {
+      throw new Error('No se encontraron datos del empleado');
+    }
+
+    return employee;
+  }
+
+  private startPolling(employeeId: string) {
+    // Limpiar polling anterior si existe
+    this.stopPolling();
+
+    console.log('⏱️ Iniciando polling para empleado:', employeeId, '(cada 30 segundos)');
+
+    // Polling cada 30 segundos
+    this.pollingInterval = setInterval(async () => {
+      try {
+        console.log('🔄 Verificando actualizaciones del empleado...');
+        const employee = await this.supabase.getEmployeeByEmail(
+          (await this.supabase.getCurrentUser())?.email || ''
+        );
+
+        if (employee) {
+          console.log('✅ Datos actualizados:', employee);
+          this.store.dispatch(AuthActions.employeeDataUpdated({ employee }));
+        }
+      } catch (error) {
+        console.error('❌ Error en polling:', error);
+      }
+    }, 30000); // 30 segundos
+  }
+
+  private stopPolling() {
+    if (this.pollingInterval) {
+      console.log('⏹️ Deteniendo polling');
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+    }
+  }
+
+  private async checkExistingSession(): Promise<Employee | null> {
+    console.log('🔍 Verificando sesión existente...');
+    const user = await this.supabase.getCurrentUser();
+
+    if (!user?.email) {
+      console.log('⚠️ No hay usuario autenticado');
+      return null;
+    }
+
+    console.log('✅ Usuario encontrado:', user.email);
+    const employee = await this.supabase.getEmployeeByEmail(user.email);
+
+    if (!employee) {
+      console.log('⚠️ No se encontró empleado para:', user.email);
+      return null;
+    }
+
+    console.log('✅ Empleado cargado:', employee);
     return employee;
   }
 }

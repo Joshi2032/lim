@@ -601,6 +601,62 @@ export class SupabaseService {
     return supabase.auth.onAuthStateChange(callback);
   }
 
+  subscribeToEmployeeChanges(employeeId: string, callback: (employee: Employee) => void) {
+    console.log('📡 Creando suscripción para empleado:', employeeId);
+
+    const channel = supabase
+      .channel(`employee-${employeeId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'employees',
+          filter: `id=eq.${employeeId}`
+        },
+        async (payload) => {
+          console.log('🔔 Employee change detected:', payload);
+          // Recargar empleado con relaciones
+          const { data } = await supabase
+            .from('employees')
+            .select(`
+              *,
+              position: positions(
+                id,
+                name,
+                description,
+                display_name,
+                created_at,
+                updated_at
+              )
+            `)
+            .eq('id', employeeId)
+            .single();
+
+          if (data) {
+            console.log('✅ Datos actualizados recibidos:', data);
+            callback(data as Employee);
+          } else {
+            console.log('❌ No se pudieron obtener los datos actualizados');
+          }
+        }
+      )
+      .subscribe((status, err) => {
+        console.log('📡 Estado de suscripción:', status);
+        if (err) {
+          console.error('❌ Error en suscripción:', err);
+        }
+      });
+
+    return channel;
+  }
+
+  unsubscribe(channel: any) {
+    if (channel) {
+      supabase.removeChannel(channel);
+    }
+  }
+
   // ==================== CUSTOMERS ====================
 
   async createOrGetCustomer(phone: string, name?: string, email?: string): Promise<Customer> {

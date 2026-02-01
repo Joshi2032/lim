@@ -3,9 +3,9 @@ import { RouterOutlet } from '@angular/router';
 import { SidebarComponent, MenuItem, User } from '../shared/sidebar/sidebar.component';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
-import { Observable, map } from 'rxjs';
-import { selectAuthEmployee } from '../store/auth/auth.selectors';
-import { Employee } from '../store/employees/employees.models';
+import { Observable } from 'rxjs';
+import { selectCurrentUser } from '../store/auth/auth.selectors';
+import * as AuthActions from '../store/auth/auth.actions';
 
 @Component({
   selector: 'app-main-layout',
@@ -41,24 +41,12 @@ export class MainLayoutComponent implements OnInit {
   constructor(private store: Store) {}
 
   ngOnInit() {
-    this.currentUser$ = this.store.select(selectAuthEmployee).pipe(
-      map((employee: Employee | null) => {
-        if (!employee) return null;
-        return {
-          name: employee.full_name,
-          role: employee.position?.display_name || employee.position?.name || 'Usuario',
-          initials: this.getInitials(employee.full_name)
-        };
-      })
-    );
-  }
+    console.log('🚀 MainLayoutComponent inicializado');
+    this.currentUser$ = this.store.select(selectCurrentUser);
 
-  private getInitials(name: string): string {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+    // Suscribirse para ver los cambios
+    this.currentUser$.subscribe(user => {
+      console.log('👤 Usuario actual en MainLayout:', user);
+    });
   }
 }

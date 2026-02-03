@@ -65,7 +65,7 @@
       <button
         type="submit"
         class="submit-btn"
-        [disabled]="userForm.invalid">
+        [disabled]="!isFormValid">
         {{ getButtonText() }}
       </button>
     </form>

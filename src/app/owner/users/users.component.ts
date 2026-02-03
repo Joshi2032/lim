@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
 import { UserCardComponent } from '../../shared/user-card/user-card.component';
@@ -42,6 +42,7 @@ export interface RoleStat extends RoleOption {
 })
 export class UsersComponent implements OnInit, OnDestroy {
   private isSubmitting = false;
+  @ViewChild(UserFormComponent) userFormComponent!: UserFormComponent;
   @Input() embedded: boolean = false;
   users: UserEmployee[] = [];
   positions: StorePosition[] = [];
@@ -119,9 +120,27 @@ export class UsersComponent implements OnInit, OnDestroy {
       this.actions$.pipe(
         ofType(EmployeesActions.createEmployeeSuccess)
       ).subscribe(({ temporaryPassword }) => {
+        this.isSubmitting = false;
+        if (this.userFormComponent) {
+          this.userFormComponent.isSubmitting = false;
+        }
+        this.showUserFormModal = false;
         if (temporaryPassword) {
           alert(`Usuario creado exitosamente!\n\nContraseña temporal: ${temporaryPassword}\n\nIMPORTANTE: Guarda esta contraseña, no se volverá a mostrar.`);
         }
+      })
+    );
+
+    // Escuchar fallos de creación de empleado
+    this.subscriptions.add(
+      this.actions$.pipe(
+        ofType(EmployeesActions.createEmployeeFailure)
+      ).subscribe(({ error }) => {
+        this.isSubmitting = false;
+        if (this.userFormComponent) {
+          this.userFormComponent.isSubmitting = false;
+        }
+        alert(`Error al crear usuario: ${error}`);
       })
     );
   }
@@ -216,7 +235,11 @@ export class UsersComponent implements OnInit, OnDestroy {
       active: true
     };
 
-    this.store.dispatch(EmployeesActions.createEmployee({ employee: newEmployee }));
+    // Pasar la contraseña del formulario al dispatch
+    this.store.dispatch(EmployeesActions.createEmployee({
+      employee: newEmployee,
+      password: formData.password  // Usar la contraseña ingresada en el formulario
+    }));
 
     this.movements.log({
       title: 'Usuario creado',
@@ -227,8 +250,7 @@ export class UsersComponent implements OnInit, OnDestroy {
       role: this.currentUser.role
     });
 
-    this.isSubmitting = false;
-    this.closeUserForm();
+    // No poner isSubmitting = false aquí, esperar a que llegue la acción de éxito/error
   }
 
   private updateUserInStore(formData: UserFormData) {

@@ -1311,41 +1311,80 @@ export class SupabaseService {
     }
   }
 
-  async createEmployee(employeeData: Omit<Employee, 'id' | 'created_at' | 'updated_at' | 'position'>): Promise<Employee> {
+  private async signUpWithRetry(
+    email: string,
+    password: string,
+    fullName: string,
+    maxRetries: number = 3
+  ) {
+    let lastError: any = null;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: fullName },
+            emailRedirectTo: undefined
+          }
+        });
+
+        if (error) {
+          lastError = error;
+
+          // Si es un error de rate limit, esperar y reintentar
+          if (error.message?.includes('rate limit')) {
+            const delayMs = Math.pow(2, attempt) * 1000; // Exponential backoff: 1s, 2s, 4s
+            this.log(`⏳ Rate limit detectado. Reintentando en ${delayMs}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+            continue;
+          }
+
+          // Otros errores, lanzar inmediatamente
+          throw error;
+        }
+
+        return data;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    // Si se agotaron los reintentos
+    throw lastError || new Error('Error al crear usuario en Authentication');
+  }
+
+  async createEmployee(
+    employeeData: Omit<Employee, 'id' | 'created_at' | 'updated_at' | 'position'>,
+    password?: string
+  ): Promise<Employee> {
     try {
       this.log('📝 Creating employee:', employeeData);
 
-      // 1. Generar contraseña temporal
-      const temporaryPassword = this.generateTemporaryPassword();
+      // Nota: Supabase Auth valida emails únicos automáticamente
+      // No necesitamos validar aquí para evitar problemas de autenticación      // 1. Usar contraseña proporcionada o generar una temporal
+      const userPassword = password || this.generateTemporaryPassword();
+      const isTemporaryPassword = !password;
 
-      // 2. Crear usuario en Authentication
+      // 2. Crear usuario en Authentication (con manejo de rate limit)
       this.log('🔐 Creating auth user for:', employeeData.email);
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: employeeData.email,
-        password: temporaryPassword,
-        options: {
-          data: {
-            full_name: employeeData.full_name
-          },
-          emailRedirectTo: undefined // No enviar email de confirmación automáticamente
-        }
-      });
+      const authData = await this.signUpWithRetry(
+        employeeData.email,
+        userPassword,
+        employeeData.full_name
+      );
 
-      if (authError) {
-        console.error('❌ Error creating auth user:', authError);
-        throw authError;
-      }
-
-      if (!authData.user) {
+      if (!authData?.user) {
         throw new Error('No se pudo crear el usuario en Authentication');
       }
 
       this.log('✅ Auth user created:', authData.user.id);
 
-      // 3. Crear empleado en la tabla con el user_id
+      // 3. Crear empleado en la tabla con el auth_user_id
       const employeeWithAuth = {
         ...employeeData,
-        user_id: authData.user.id
+        auth_user_id: authData.user.id
       };
 
       const { data, error } = await supabase
@@ -1372,12 +1411,16 @@ export class SupabaseService {
       }
 
       this.log('✅ Employee created:', data);
-      this.log('🔑 Temporary password:', temporaryPassword, '(Save this!)');
 
-      // Retornar el empleado con la contraseña temporal para mostrarla
+      // Solo mostrar contraseña si fue generada automáticamente
+      if (isTemporaryPassword) {
+        this.log('🔑 Temporary password:', userPassword, '(Save this!)');
+      }
+
+      // Retornar el empleado con la contraseña solo si fue temporal
       return {
         ...data as Employee,
-        temporaryPassword
+        temporaryPassword: isTemporaryPassword ? userPassword : undefined
       } as any;
     } catch (error) {
       console.error('❌ Error in createEmployee:', error);

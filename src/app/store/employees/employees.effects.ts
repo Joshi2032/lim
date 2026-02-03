@@ -44,8 +44,8 @@ export class EmployeesEffects {
     this.createEmployee$ = createEffect(() =>
       this.actions$.pipe(
         ofType(EmployeesActions.createEmployee),
-        switchMap(({ employee }) =>
-          this.supabase.createEmployee(employee).then(
+        switchMap(({ employee, password }) =>
+          this.supabase.createEmployee(employee, password).then(
             result => {
               const temporaryPassword = (result as any).temporaryPassword;
               return EmployeesActions.createEmployeeSuccess({

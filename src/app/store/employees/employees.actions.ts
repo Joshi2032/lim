@@ -17,7 +17,7 @@ export const loadEmployeesFailure = createAction(
 // Create Employee
 export const createEmployee = createAction(
   '[Create Employee Dialog] Create Employee',
-  props<{ employee: Omit<Employee, 'id' | 'created_at' | 'updated_at'> }>()
+  props<{ employee: Omit<Employee, 'id' | 'created_at' | 'updated_at'>; password?: string }>()
 );
 
 export const createEmployeeSuccess = createAction(

@@ -15,7 +15,8 @@ import * as AuthActions from '../store/auth/auth.actions';
       <app-sidebar
         [menuItems]="sidebarItems"
         [currentUser]="currentUser$ | async"
-        [cartCount]="cartCount">
+        [cartCount]="cartCount"
+        (logout)="onLogout()">
       </app-sidebar>
 
       <div class="app-content">
@@ -48,5 +49,10 @@ export class MainLayoutComponent implements OnInit {
     this.currentUser$.subscribe(user => {
       console.log('👤 Usuario actual en MainLayout:', user);
     });
+  }
+
+  onLogout() {
+    console.log('🔓 Cerrando sesión...');
+    this.store.dispatch(AuthActions.logout());
   }
 }

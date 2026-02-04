@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { switchMap, tap } from 'rxjs/operators';
@@ -21,7 +22,8 @@ export class AuthEffects {
   constructor(
     private actions$: Actions,
     private supabase: SupabaseService,
-    private store: Store
+    private store: Store,
+    private router: Router
   ) {
     this.login$ = createEffect(() =>
       this.actions$.pipe(
@@ -74,6 +76,8 @@ export class AuthEffects {
         ofType(AuthActions.logoutSuccess),
         tap(() => {
           this.stopPolling();
+          console.log('🔓 Sesión cerrada, redirigiendo a login...');
+          this.router.navigate(['/login']);
         })
       ),
       { dispatch: false }

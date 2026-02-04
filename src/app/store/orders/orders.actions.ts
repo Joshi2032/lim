@@ -91,3 +91,8 @@ export const ordersUpdated = createAction(
   '[Orders API] Orders Updated Via Subscription',
   props<{ orders: Order[] }>()
 );
+
+export const orderUpdated = createAction(
+  '[Orders API] Single Order Updated Via Real-time',
+  props<{ order: Order }>()
+);

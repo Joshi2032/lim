@@ -1495,8 +1495,11 @@ export class SupabaseService {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'orders' },
-        () => {
-          this.getOrders().then(callback);
+        (payload) => {
+          this.log('📡 Cambio detectado en órdenes:', payload.eventType, payload.new);
+          // Llamar callback con el cambio específico para optimización
+          // En lugar de traer TODO, solo notificar que hubo un cambio
+          callback([payload.new as Order]);
         }
       )
       .subscribe();
@@ -1510,8 +1513,11 @@ export class SupabaseService {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'orders' },
-        () => {
-          this.getOrdersByType('pickup').then(callback);
+        (payload) => {
+          if (payload.new && (payload.new as Order).order_type === 'pickup') {
+            this.log('📡 Cambio detectado en órdenes de recogida:', payload.eventType);
+            callback([payload.new as Order]);
+          }
         }
       )
       .subscribe();
@@ -1525,8 +1531,9 @@ export class SupabaseService {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'menu_items' },
-        () => {
-          this.getMenuItems().then(callback);
+        (payload) => {
+          this.log('📡 Cambio detectado en menú:', payload.eventType);
+          callback([payload.new as MenuItem]);
         }
       )
       .subscribe();

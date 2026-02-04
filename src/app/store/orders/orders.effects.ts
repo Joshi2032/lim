@@ -118,7 +118,10 @@ export class OrdersEffects {
         ofType(OrdersActions.subscribeToOrders),
         tap(() => {
           this.supabase.subscribeToOrders((orders) => {
-            this.store.dispatch(OrdersActions.ordersUpdated({ orders }));
+            // orders es un array de 1 elemento cuando viene del real-time
+            if (orders.length > 0) {
+              this.store.dispatch(OrdersActions.orderUpdated({ order: orders[0] }));
+            }
           });
         })
       ),

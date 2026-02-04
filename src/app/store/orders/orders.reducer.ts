@@ -7,6 +7,7 @@ import * as OrdersActions from './orders.actions';
 export interface OrdersState extends EntityState<Order> {
   loading: boolean;
   error: string | null;
+  lastUpdated?: number;
 }
 
 // Entity adapter
@@ -93,6 +94,25 @@ export const ordersReducer = createReducer(
   ),
 
   // Real-time updates
+  on(OrdersActions.orderUpdated, (state, { order }) => {
+    // Obtener todas las órdenes actuales como array
+    const currentOrders = Object.values(state.entities).filter((o): o is Order => o !== undefined);
+
+    // Buscar si la orden ya existe
+    const existingIndex = currentOrders.findIndex(o => o.id === order.id);
+
+    let updatedOrders: Order[];
+    if (existingIndex >= 0) {
+      // Actualizar orden existente
+      updatedOrders = [...currentOrders];
+      updatedOrders[existingIndex] = order;
+    } else {
+      // Agregar nueva orden
+      updatedOrders = [order, ...currentOrders];
+    }
+    return ordersAdapter.setAll(updatedOrders, { ...state, loading: false, lastUpdated: Date.now() });
+  }),
+
   on(OrdersActions.ordersUpdated, (state, { orders }) =>
     ordersAdapter.setAll(orders, state)
   )

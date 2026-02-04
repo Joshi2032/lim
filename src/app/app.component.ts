@@ -20,6 +20,9 @@ export class AppComponent implements OnInit {
     // Verificar si hay una sesión activa al cargar la app
     this.store.dispatch(AuthActions.initializeAuth());
 
+    // Cargar órdenes existentes de la BD
+    this.store.dispatch(OrdersActions.loadOrders());
+    
     // Suscribirse a cambios de órdenes en tiempo real globalmente
     this.store.dispatch(OrdersActions.subscribeToOrders());
   }

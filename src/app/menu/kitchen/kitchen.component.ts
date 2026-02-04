@@ -105,7 +105,7 @@ export class KitchenComponent implements OnInit, OnDestroy {
   private mapSupabaseOrdersToOrders(supabaseOrders: SupabaseOrder[]): Order[] {
     return supabaseOrders.map(so => ({
       id: so.id,
-      tableNumber: so.table_number || 0,
+      tableNumber: (so.table_number && so.table_number > 0) ? so.table_number : -1,
       tableName: this.getTableName(so),
       items: [],
       status: this.mapSupabaseStatus(so.status),
@@ -115,14 +115,14 @@ export class KitchenComponent implements OnInit, OnDestroy {
   }
 
   private getTableName(order: SupabaseOrder): string {
-    if (order.order_type === 'dine-in' && order.table_number) {
-      return `Mesa ${order.table_number}`;
+    if (order.order_type === 'dine-in') {
+      return order.table_number && order.table_number > 0 ? `Mesa ${order.table_number}` : 'Comensal';
     } else if (order.order_type === 'pickup') {
-      return `Recogida: ${order.customer_name}`;
+      return `Recogida: ${order.customer_name || 'Sin nombre'}`;
     } else if (order.order_type === 'delivery') {
-      return `Entrega: ${order.customer_name}`;
+      return `Entrega: ${order.customer_name || 'Sin nombre'}`;
     }
-    return order.customer_name;
+    return order.customer_name || 'Pedido';
   }
 
   private mapSupabaseStatus(status: SupabaseOrder['status']): OrderStatus {

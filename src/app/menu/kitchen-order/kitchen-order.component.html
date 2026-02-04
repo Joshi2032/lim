@@ -1,7 +1,7 @@
 <div class="order-card" [class]="'order-' + status">
 	<div class="order-header">
 		<div class="order-table">
-			<span class="table-number">{{ tableNumber }}</span>
+			<span class="table-number" *ngIf="tableNumber > 0">{{ tableNumber }}</span>
 			<span class="table-name">{{ tableName }}</span>
 		</div>
 		<div class="order-time">

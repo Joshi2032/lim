@@ -98,6 +98,8 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.menuItems$.subscribe(items => {
         this.menuItems = items.map(item => this.mapSupabaseItemToLocal(item));
+        // Actualizar precios del carrito con los precios de la BD
+        this.updateCartPrices();
         this.filterItems();
         this.cdr.markForCheck();
       })
@@ -379,6 +381,19 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   getMenuItemById(itemId: string): MenuItem | undefined {
     return this.menuItems.find(item => item.id === itemId);
+  }
+
+  private updateCartPrices() {
+    // Actualizar los precios del carrito con los precios reales de la BD
+    this.cartItems = this.cartItems.map(cartItem => {
+      const menuItem = this.menuItems.find(m => m.id === cartItem.id);
+      return {
+        ...cartItem,
+        price: menuItem?.price ?? cartItem.price
+      };
+    });
+    // Guardar los precios actualizados en localStorage
+    this.cartStorage.saveCart(this.cartItems);
   }
 }
 

@@ -131,6 +131,11 @@ export class SupabaseService {
   private ordersSubject = new BehaviorSubject<Order[]>([]);
   private menuItemsSubject = new BehaviorSubject<MenuItem[]>([]);
 
+  // Exponer el cliente de Supabase para acceso directo
+  get supabase() {
+    return supabase;
+  }
+
   constructor() {}
 
   private log(...args: unknown[]) {
@@ -1362,8 +1367,11 @@ export class SupabaseService {
     try {
       this.log('📝 Creating employee:', employeeData);
 
-      // Nota: Supabase Auth valida emails únicos automáticamente
-      // No necesitamos validar aquí para evitar problemas de autenticación      // 1. Usar contraseña proporcionada o generar una temporal
+      // IMPORTANTE: Guardar la sesión actual del admin/manager
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      this.log('💾 Sesión actual guardada');
+
+      // 1. Usar contraseña proporcionada o generar una temporal
       const userPassword = password || this.generateTemporaryPassword();
       const isTemporaryPassword = !password;
 
@@ -1411,6 +1419,17 @@ export class SupabaseService {
       }
 
       this.log('✅ Employee created:', data);
+
+      // 4. IMPORTANTE: Restaurar la sesión anterior del admin/manager
+      if (currentSession?.access_token) {
+        try {
+          await supabase.auth.setSession(currentSession);
+          this.log('✅ Sesión del admin/manager restaurada');
+        } catch (restoreError) {
+          console.error('⚠️ No se pudo restaurar la sesión anterior:', restoreError);
+          // Continuar de todas formas, la sesión se perdió pero el empleado fue creado
+        }
+      }
 
       // Solo mostrar contraseña si fue generada automáticamente
       if (isTemporaryPassword) {

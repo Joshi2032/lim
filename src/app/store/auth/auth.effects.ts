@@ -192,22 +192,35 @@ export class AuthEffects {
 
   private async checkExistingSession(): Promise<Employee | null> {
     console.log('🔍 Verificando sesión existente...');
-    const user = await this.supabase.getCurrentUser();
 
-    if (!user?.email) {
-      console.log('⚠️ No hay usuario autenticado');
+    try {
+      // Supabase restaura la sesión automáticamente desde localStorage
+      const { data: { session } } = await this.supabase.supabase.auth.getSession();
+
+      if (!session?.user?.email) {
+        console.log('⚠️ No hay sesión activa');
+        return null;
+      }
+
+      console.log('✅ Sesión restaurada para:', session.user.email);
+
+      // Obtener datos del empleado
+      const employee = await this.supabase.getEmployeeByEmail(session.user.email);
+
+      if (!employee) {
+        console.log('⚠️ No se encontró empleado para:', session.user.email);
+        return null;
+      }
+
+      console.log('✅ Empleado cargado:', employee);
+
+      // Iniciar polling para mantener datos actualizados
+      this.startPolling(employee.id);
+
+      return employee;
+    } catch (error) {
+      console.error('❌ Error al verificar sesión:', error);
       return null;
     }
-
-    console.log('✅ Usuario encontrado:', user.email);
-    const employee = await this.supabase.getEmployeeByEmail(user.email);
-
-    if (!employee) {
-      console.log('⚠️ No se encontró empleado para:', user.email);
-      return null;
-    }
-
-    console.log('✅ Empleado cargado:', employee);
-    return employee;
   }
 }

@@ -57,6 +57,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private subscriptions = new Subscription();
   @Input() embedded: boolean = false;
   cartCount: number = 0;
+  deliveryCount: number = 0;
   statCards: StatCardData[] = [];
 
   // Observables del store
@@ -162,6 +163,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
       })
     );
 
+    // Suscribirse a entregas en tiempo real
+    this.subscriptions.add(
+      this.deliveryOrders$.subscribe(orders => {
+        this.deliveryCount = orders.length;
+        this.cdr.markForCheck();
+      })
+    );
+
     // Suscribirse a cambios en tiempo real
     this.store.dispatch(OrdersActions.subscribeToOrders());
   }
@@ -174,13 +183,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const { total, pending, preparing, ready, completed, cancelled, revenue, avgTicket } = stats;
 
     // Contar órdenes activas (no completadas ni canceladas)
-    const activeCount = pending + preparing + ready;
+    // 'preparing' ya incluye pending + preparing en el selector
+    const activeCount = preparing + ready;
 
-    // Obtener conteo de entregas (se actualiza desde el observable)
-    let deliveryCount = 0;
-    this.deliveryOrders$.subscribe(orders => deliveryCount = orders.length).unsubscribe();
-
-    this.updateStatCards(revenue, total, avgTicket, preparing, activeCount, deliveryCount);
+    // deliveryCount ya se actualiza desde la suscripción en ngOnInit
+    this.updateStatCards(revenue, total, avgTicket, preparing, activeCount, this.deliveryCount);
   }
 
   updateStatCards(revenue: number, ordersCount: number, avgTicket: number, kitchenCount: number, activeCount: number, deliveryCount: number) {
@@ -311,6 +318,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       quantity: p.quantity
     }));
 
+    const kitchenActiveCount = this.recentOrders.filter(o => o.status === 'preparando' || o.status === 'pendiente').length;
+
     // Actualizar status cards
     this.statusCards = [
       {
@@ -325,8 +334,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       {
         id: 'kitchen-active',
         title: 'En Cocina',
-        value: this.recentOrders.filter(o => o.status === 'preparando').length,
-        description: 'Preparando',
+        value: kitchenActiveCount,
+        description: 'Órdenes activas',
         icon: '🍳',
         color: 'amber'
       },

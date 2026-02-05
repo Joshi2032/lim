@@ -57,7 +57,7 @@ export const selectOrdersStats = createSelector(
   (orders) => ({
     total: orders.length,
     pending: orders.filter(o => o.status === 'pending').length,
-    preparing: orders.filter(o => o.status === 'preparing').length,
+    preparing: orders.filter(o => o.status === 'pending' || o.status === 'preparing').length,
     ready: orders.filter(o => o.status === 'ready').length,
     completed: orders.filter(o => o.status === 'completed').length,
     cancelled: orders.filter(o => o.status === 'cancelled').length,

@@ -354,6 +354,51 @@ export class SupabaseService {
     }
   }
 
+  async getRevenueByDay(days: number = 7): Promise<Array<{ day: string; label: string; value: number }>> {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('created_at, total_price')
+        .neq('status', 'cancelled')
+        .gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString());
+
+      if (error) throw error;
+
+      console.log('📊 Raw orders fetched:', data?.length || 0, data);
+
+      const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+      const dayLabels = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      const revenueByDate = new Map<string, number>();
+
+      (data || []).forEach((order: any) => {
+        const date = new Date(order.created_at);
+        const dateKey = date.toISOString().split('T')[0];
+        const current = revenueByDate.get(dateKey) || 0;
+        revenueByDate.set(dateKey, current + (order.total_price || 0));
+      });
+
+      const result = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateKey = date.toISOString().split('T')[0];
+        const dayIndex = date.getDay() === 0 ? 6 : date.getDay() - 1;
+
+        result.push({
+          day: dayNames[dayIndex],
+          label: dayLabels[dayIndex],
+          value: Math.round(revenueByDate.get(dateKey) || 0)
+        });
+      }
+
+      console.log('📊 Revenue by day result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error fetching revenue by day:', error);
+      return [];
+    }
+  }
+
   // ==================== MENU ITEMS ====================
 
   async getMenuItems(): Promise<MenuItem[]> {

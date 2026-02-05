@@ -174,6 +174,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Suscribirse a cambios en tiempo real
     this.store.dispatch(OrdersActions.subscribeToOrders());
+
+    // Cargar gráfica de ingresos
+    this.loadChartData();
   }
 
   ngOnDestroy() {
@@ -258,17 +261,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     ];
 
-    // Mock chart data
-    this.chartData = [
-      { day: 'Lun', value: 1000, label: 'Lunes' },
-      { day: 'Mar', value: 1500, label: 'Martes' },
-      { day: 'Mié', value: 5000, label: 'Miércoles' },
-      { day: 'Jue', value: 32000, label: 'Jueves' },
-      { day: 'Vie', value: 45000, label: 'Viernes' },
-      { day: 'Sáb', value: 50000, label: 'Sábado' },
-      { day: 'Dom', value: 35000, label: 'Domingo' }
-    ];
-    this.updateChartGeometry();
+    // Cargar datos reales de ingresos
+    this.loadChartData();
+  }
+
+  async loadChartData() {
+    try {
+      console.log('📊 Cargando datos de ingresos por día...');
+      const revenueData = await this.supabase.getRevenueByDay(7);
+      console.log('📊 Datos obtenidos:', revenueData);
+
+      this.chartData = revenueData;
+      console.log('📊 Chart data actualizado:', this.chartData);
+
+      this.updateChartGeometry();
+      console.log('📊 Chart geometry actualizado');
+
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('❌ Error cargando chart data:', error);
+    }
   }
 
   loadRecentOrders(orders: SupabaseOrder[]) {

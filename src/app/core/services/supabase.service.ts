@@ -399,6 +399,89 @@ export class SupabaseService {
     }
   }
 
+  async getRevenueByWeekOfMonth(): Promise<Array<{ day: string; label: string; value: number }>> {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('created_at, total_price')
+        .neq('status', 'cancelled')
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+
+      if (error) throw error;
+
+      console.log('📊 Raw orders fetched for month:', data?.length || 0);
+
+      const revenueByWeek = new Map<number, number>();
+      const today = new Date();
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+      (data || []).forEach((order: any) => {
+        const date = new Date(order.created_at);
+        if (date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()) {
+          const dayOfMonth = date.getDate();
+          const week = Math.ceil(dayOfMonth / 7);
+          const current = revenueByWeek.get(week) || 0;
+          revenueByWeek.set(week, current + (order.total_price || 0));
+        }
+      });
+
+      const result = [];
+      for (let week = 1; week <= 4; week++) {
+        result.push({
+          day: `S${week}`,
+          label: `Semana ${week}`,
+          value: Math.round(revenueByWeek.get(week) || 0)
+        });
+      }
+
+      console.log('📊 Revenue by week result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error fetching revenue by week:', error);
+      return [];
+    }
+  }
+
+  async getRevenueByMonthOfYear(): Promise<Array<{ day: string; label: string; value: number }>> {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('created_at, total_price')
+        .neq('status', 'cancelled')
+        .gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString());
+
+      if (error) throw error;
+
+      console.log('📊 Raw orders fetched for year:', data?.length || 0);
+
+      const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      const monthLabels = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      const revenueByMonth = new Map<number, number>();
+
+      (data || []).forEach((order: any) => {
+        const date = new Date(order.created_at);
+        const month = date.getMonth();
+        const current = revenueByMonth.get(month) || 0;
+        revenueByMonth.set(month, current + (order.total_price || 0));
+      });
+
+      const result = [];
+      for (let month = 0; month < 12; month++) {
+        result.push({
+          day: monthNames[month],
+          label: monthLabels[month],
+          value: Math.round(revenueByMonth.get(month) || 0)
+        });
+      }
+
+      console.log('📊 Revenue by month result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error fetching revenue by month:', error);
+      return [];
+    }
+  }
+
   // ==================== MENU ITEMS ====================
 
   async getMenuItems(): Promise<MenuItem[]> {

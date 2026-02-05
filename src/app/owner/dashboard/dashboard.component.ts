@@ -275,23 +275,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
   async loadChartData() {
     try {
       console.log('📊 Cargando datos de ingresos para período:', this.selectedPeriod);
-      let days: number;
+      let revenueData: Array<{ day: string; label: string; value: number }> = [];
 
       switch (this.selectedPeriod) {
         case 'week':
-          days = 7;
+          revenueData = await this.supabase.getRevenueByDay(7);
           break;
         case 'month':
-          days = 30;
+          revenueData = await this.supabase.getRevenueByWeekOfMonth();
           break;
         case 'year':
-          days = 365;
+          revenueData = await this.supabase.getRevenueByMonthOfYear();
           break;
         default:
-          days = 7;
+          revenueData = await this.supabase.getRevenueByDay(7);
       }
 
-      const revenueData = await this.supabase.getRevenueByDay(days);
       this.chartData = revenueData;
       console.log('📊 Chart data actualizado:', this.chartData);
 

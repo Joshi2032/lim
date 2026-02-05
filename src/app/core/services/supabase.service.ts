@@ -320,6 +320,40 @@ export class SupabaseService {
     }
   }
 
+  async getTopProductsAllTime(limit: number = 5): Promise<Array<{ id: string; name: string; quantity: number }>> {
+    try {
+      const { data, error } = await supabase
+        .from('order_items')
+        .select('menu_item_id, quantity, menu_items(name)');
+
+      if (error) {
+        console.error('Supabase error fetching top products:', error);
+        throw error;
+      }
+
+      const totals = new Map<string, { id: string; name: string; quantity: number }>();
+
+      (data || []).forEach((row: any) => {
+        const id = row.menu_item_id as string;
+        const name = row.menu_items?.name || 'Producto';
+        const quantity = Number(row.quantity) || 0;
+
+        if (!totals.has(id)) {
+          totals.set(id, { id, name, quantity: 0 });
+        }
+
+        totals.get(id)!.quantity += quantity;
+      });
+
+      return Array.from(totals.values())
+        .sort((a, b) => b.quantity - a.quantity)
+        .slice(0, limit);
+    } catch (error) {
+      console.error('Error computing top products:', error);
+      return [];
+    }
+  }
+
   // ==================== MENU ITEMS ====================
 
   async getMenuItems(): Promise<MenuItem[]> {

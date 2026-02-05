@@ -8,7 +8,7 @@ import { SectionHeaderComponent } from '../../shared/section-header/section-head
 import { DataTableComponent, DataTableColumn } from '../../shared/data-table/data-table.component';
 import { InfoCardsComponent, InfoCard } from '../../shared/info-cards/info-cards.component';
 import { TopProductsChartComponent, TopProduct } from '../../shared/top-products-chart/top-products-chart.component';
-import { Order as SupabaseOrder } from '../../core/services/supabase.service';
+import { Order as SupabaseOrder, SupabaseService } from '../../core/services/supabase.service';
 import * as OrdersActions from '../../store/orders/orders.actions';
 import { selectTodayOrders, selectOrdersStats, selectOrdersByStatus, selectOrdersByType } from '../../store/orders/orders.selectors';
 
@@ -128,7 +128,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private store: Store,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private supabase: SupabaseService
   ) {
     // Inicializar observables del store
     this.todayOrders$ = this.store.select(selectTodayOrders);
@@ -302,14 +303,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   async loadTopProducts(orders: SupabaseOrder[]) {
-    // TODO: Implementar conteo real de productos desde order_items
-    this.topProducts = [
-      { id: '1', name: 'Dragon Roll', quantity: 34, rank: 1 },
-      { id: '2', name: 'Bento Box Deluxe', quantity: 28, rank: 2 },
-      { id: '3', name: 'Sake Frío Premium', quantity: 25, rank: 3 },
-      { id: '4', name: 'Sashimi Mixto', quantity: 22, rank: 4 },
-      { id: '5', name: 'Philadelphia Roll', quantity: 19, rank: 5 }
-    ];
+    const topAllTime = await this.supabase.getTopProductsAllTime(5);
+
+    this.topProducts = topAllTime.map((p, index) => ({
+      id: p.id,
+      name: p.name,
+      quantity: p.quantity,
+      rank: index + 1
+    }));
 
     this.topProductsData = this.topProducts.map(p => ({
       id: p.id,
@@ -343,7 +344,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         id: 'top-product',
         title: 'Top Producto',
         value: this.topProducts[0]?.name || 'N/A',
-        description: this.topProducts[0]?.quantity + ' unidades',
+        description: this.topProducts[0] ? this.topProducts[0].quantity + ' unidades' : '0 unidades',
         icon: '⭐',
         color: 'green'
       },
@@ -356,6 +357,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         color: 'red'
       }
     ];
+
+    this.cdr.markForCheck();
   }
 
   private initializeTableColumns() {

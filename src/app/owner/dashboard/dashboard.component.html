@@ -56,10 +56,10 @@
 		<div class="dashboard-grid">
 			<div class="chart-section">
 				<app-section-header title="Ingresos">
-					<select class="time-filter-select">
-						<option>Esta Semana</option>
-						<option>Mes Actual</option>
-						<option>Último Mes</option>
+					<select class="time-filter-select" [(ngModel)]="selectedPeriod" (change)="onPeriodChange($event)">
+						<option value="week">Esta Semana</option>
+						<option value="month">Este Mes</option>
+						<option value="year">Este Año</option>
 					</select>
 				</app-section-header>
 				<div class="chart-container" (mouseleave)="onChartLeave()">

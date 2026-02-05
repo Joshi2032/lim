@@ -1,5 +1,6 @@
 import { Component, OnInit, Input, TemplateRef, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
 import { SidebarComponent, MenuItem as SidebarMenuItem, User } from '../../shared/sidebar/sidebar.component';
@@ -48,7 +49,7 @@ interface StatCardData {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, StatCardComponent, SectionHeaderComponent, DataTableComponent, InfoCardsComponent, TopProductsChartComponent],
+  imports: [CommonModule, FormsModule, SidebarComponent, StatCardComponent, SectionHeaderComponent, DataTableComponent, InfoCardsComponent, TopProductsChartComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -59,6 +60,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   cartCount: number = 0;
   deliveryCount: number = 0;
   statCards: StatCardData[] = [];
+  selectedPeriod: 'week' | 'month' | 'year' = 'week';
 
   // Observables del store
   todayOrders$: Observable<SupabaseOrder[]>;
@@ -179,6 +181,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadChartData();
   }
 
+  onPeriodChange(event: any) {
+    this.selectedPeriod = event.target.value;
+    this.loadChartData();
+  }
+
   ngOnDestroy() {
     this.subscriptions.unsubscribe();
   }
@@ -267,10 +274,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   async loadChartData() {
     try {
-      console.log('📊 Cargando datos de ingresos por día...');
-      const revenueData = await this.supabase.getRevenueByDay(7);
-      console.log('📊 Datos obtenidos:', revenueData);
+      console.log('📊 Cargando datos de ingresos para período:', this.selectedPeriod);
+      let days: number;
 
+      switch (this.selectedPeriod) {
+        case 'week':
+          days = 7;
+          break;
+        case 'month':
+          days = 30;
+          break;
+        case 'year':
+          days = 365;
+          break;
+        default:
+          days = 7;
+      }
+
+      const revenueData = await this.supabase.getRevenueByDay(days);
       this.chartData = revenueData;
       console.log('📊 Chart data actualizado:', this.chartData);
 

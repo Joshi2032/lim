@@ -320,6 +320,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }));
 
     const kitchenActiveCount = this.recentOrders.filter(o => o.status === 'preparando' || o.status === 'pendiente').length;
+    const revenueToday = orders.reduce((sum, o) => sum + o.total_price, 0);
 
     // Actualizar status cards
     this.statusCards = [
@@ -351,8 +352,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       {
         id: 'revenue-today',
         title: 'Ingresos Hoy',
-        value: '$' + this.recentOrders.reduce((sum, o) => sum + o.total, 0).toLocaleString(),
-        description: this.recentOrders.length + ' transacciones',
+        value: '$' + revenueToday.toLocaleString(),
+        description: orders.length + ' transacciones',
         icon: '💰',
         color: 'red'
       }
@@ -526,7 +527,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   onChartHover(event: MouseEvent, day: string, value: number) {
-    const svg = event.currentTarget as SVGSVGElement;
+    const svg = (event.currentTarget as Element).closest('svg') as SVGSVGElement | null;
+    if (!svg || !svg.viewBox) {
+      return;
+    }
     const containerRect = svg.parentElement?.getBoundingClientRect();
     const viewBox = svg.viewBox.baseVal;
     const scaleX = containerRect ? containerRect.width / viewBox.width : 1;

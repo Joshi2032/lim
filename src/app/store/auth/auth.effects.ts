@@ -168,9 +168,13 @@ export class AuthEffects {
     this.pollingInterval = setInterval(async () => {
       try {
         console.log('🔄 Verificando actualizaciones del empleado...');
-        const employee = await this.supabase.getEmployeeByEmail(
-          (await this.supabase.getCurrentUser())?.email || ''
-        );
+        const email = (await this.supabase.getCurrentUser())?.email;
+        if (!email) {
+          console.log('⚠️ No hay email de sesión, se omite polling');
+          return;
+        }
+
+        const employee = await this.supabase.getEmployeeByEmail(email);
 
         if (employee) {
           console.log('✅ Datos actualizados:', employee);

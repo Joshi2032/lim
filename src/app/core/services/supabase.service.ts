@@ -1292,6 +1292,9 @@ export class SupabaseService {
 
   async getEmployeeByEmail(email: string): Promise<Employee | null> {
     try {
+      if (!email) {
+        return null;
+      }
       const { data, error } = await supabase
         .from('employees')
         .select(`

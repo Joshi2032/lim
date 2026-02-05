@@ -482,6 +482,122 @@ export class SupabaseService {
     }
   }
 
+  // ==================== MOVEMENTS ====================
+
+  async getRecentMovements(limit: number = 20): Promise<Array<{
+    id: string;
+    type: 'order_created' | 'status_changed' | 'delivery_assigned' | 'order_completed';
+    title: string;
+    description: string;
+    section: 'MENÚ' | 'MESAS' | 'COCINA' | 'RECOGIDA' | 'CLIENTES' | 'ENTREGAS' | 'USUARIOS';
+    status: 'PENDIENTE' | 'EN PROGRESO' | 'COMPLETADO' | 'CANCELADO';
+    timestamp: string;
+  }>> {
+    try {
+      const { data: orders, error: ordersError } = await supabase
+        .from('orders')
+        .select('id, order_type, status, created_at, updated_at, table_number, customer_id')
+        .order('updated_at', { ascending: false })
+        .limit(limit);
+
+      if (ordersError) throw ordersError;
+
+      const movements = orders.map(order => {
+        let section: 'MENÚ' | 'MESAS' | 'COCINA' | 'RECOGIDA' | 'CLIENTES' | 'ENTREGAS' | 'USUARIOS';
+        let type: 'order_created' | 'status_changed' | 'delivery_assigned' | 'order_completed';
+        let title: string;
+        let description: string;
+        let status: 'PENDIENTE' | 'EN PROGRESO' | 'COMPLETADO' | 'CANCELADO';
+
+        // Determinar sección y tipo basado en tipo de orden
+        if (order.order_type === 'delivery') {
+          section = 'ENTREGAS';
+        } else if (order.order_type === 'takeaway') {
+          section = 'RECOGIDA';
+        } else {
+          section = 'MESAS';
+        }
+
+        // Determinar tipo y título basado en status
+        switch (order.status) {
+          case 'pending':
+            type = 'order_created';
+            title = 'Nueva Orden Creada';
+            description = order.order_type === 'delivery'
+              ? `Orden de entrega #${order.id.slice(-6).toUpperCase()}`
+              : order.order_type === 'takeaway'
+              ? `Orden para recoger #${order.id.slice(-6).toUpperCase()}`
+              : `Mesa ${order.table_number}: Orden #${order.id.slice(-6).toUpperCase()}`;
+            status = 'PENDIENTE';
+            break;
+          case 'preparing':
+            type = 'status_changed';
+            title = 'En Preparación';
+            description = order.order_type === 'delivery'
+              ? `Preparando orden de entrega #${order.id.slice(-6).toUpperCase()}`
+              : order.order_type === 'takeaway'
+              ? `Preparando para recoger #${order.id.slice(-6).toUpperCase()}`
+              : `Mesa ${order.table_number}: Preparando orden`;
+            status = 'EN PROGRESO';
+            break;
+          case 'ready':
+            type = 'status_changed';
+            title = 'Listo para Servir';
+            description = order.order_type === 'delivery'
+              ? `Lista para entrega #${order.id.slice(-6).toUpperCase()}`
+              : order.order_type === 'takeaway'
+              ? `Lista para recoger #${order.id.slice(-6).toUpperCase()}`
+              : `Mesa ${order.table_number}: Orden lista`;
+            status = 'EN PROGRESO';
+            break;
+          case 'completed':
+            type = 'order_completed';
+            title = 'Orden Completada';
+            description = order.order_type === 'delivery'
+              ? `Entrega completada #${order.id.slice(-6).toUpperCase()}`
+              : order.order_type === 'takeaway'
+              ? `Recogida completada #${order.id.slice(-6).toUpperCase()}`
+              : `Mesa ${order.table_number}: Orden servida`;
+            status = 'COMPLETADO';
+            break;
+          case 'cancelled':
+            type = 'status_changed';
+            title = 'Orden Cancelada';
+            description = `Orden cancelada #${order.id.slice(-6).toUpperCase()}`;
+            status = 'CANCELADO';
+            break;
+          default:
+            type = 'status_changed';
+            title = 'Cambio de Estado';
+            description = `Orden #${order.id.slice(-6).toUpperCase()}`;
+            status = 'EN PROGRESO';
+        }
+
+        return {
+          id: order.id,
+          type,
+          title,
+          description,
+          section,
+          status,
+          timestamp: new Date(order.updated_at).toLocaleString('es-ES', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        };
+      });
+
+      console.log('📋 Movements:', movements);
+      return movements;
+    } catch (error) {
+      console.error('Error fetching movements:', error);
+      return [];
+    }
+  }
+
   // ==================== MENU ITEMS ====================
 
   async getMenuItems(): Promise<MenuItem[]> {

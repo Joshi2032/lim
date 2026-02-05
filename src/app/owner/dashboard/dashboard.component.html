@@ -178,8 +178,92 @@
 	}
 
 	@if (activeTab === 'movimientos') {
-		<div class="tab-content">
-			<p class="coming-soon">Contenido de Movimientos próximamente...</p>
+		<div class="tab-content movements-content">
+			<div class="movements-header">
+				<h3>Historial de Movimientos</h3>
+				<div class="section-filters">
+					<button
+						class="filter-btn"
+						[class.active]="selectedSection === 'TODOS'"
+						(click)="onSectionChange('TODOS')">
+						TODOS
+					</button>
+					<button
+						class="filter-btn"
+						[class.active]="selectedSection === 'MENÚ'"
+						(click)="onSectionChange('MENÚ')">
+						MENÚ
+					</button>
+					<button
+						class="filter-btn"
+						[class.active]="selectedSection === 'MESAS'"
+						(click)="onSectionChange('MESAS')">
+						MESAS
+					</button>
+					<button
+						class="filter-btn"
+						[class.active]="selectedSection === 'COCINA'"
+						(click)="onSectionChange('COCINA')">
+						COCINA
+					</button>
+					<button
+						class="filter-btn"
+						[class.active]="selectedSection === 'RECOGIDA'"
+						(click)="onSectionChange('RECOGIDA')">
+						RECOGIDA
+					</button>
+					<button
+						class="filter-btn"
+						[class.active]="selectedSection === 'ENTREGAS'"
+						(click)="onSectionChange('ENTREGAS')">
+						ENTREGAS
+					</button>
+				</div>
+			</div>
+
+			<div class="movements-table">
+				@if (filteredMovements.length > 0) {
+					<div class="movements-list">
+						@for (movement of filteredMovements; track movement.id) {
+							<div class="movement-item" [class]="'status-' + movement.status.toLowerCase().replace(' ', '-')">
+								<div class="movement-icon">
+									@switch (movement.type) {
+										@case ('order_created') {
+											<span>📝</span>
+										}
+										@case ('status_changed') {
+											<span>🔄</span>
+										}
+										@case ('order_completed') {
+											<span>✅</span>
+										}
+										@default {
+											<span>📌</span>
+										}
+									}
+								</div>
+								<div class="movement-content">
+									<div class="movement-title">{{ movement.title }}</div>
+									<div class="movement-description">{{ movement.description }}</div>
+									<div class="movement-meta">
+										<span class="section-badge" [class]="'section-' + movement.section.toLowerCase()">
+											{{ movement.section }}
+										</span>
+										<span class="status-badge" [class]="'status-' + movement.status.toLowerCase().replace(' ', '-')">
+											{{ movement.status }}
+										</span>
+										<span class="timestamp">{{ movement.timestamp }}</span>
+									</div>
+								</div>
+							</div>
+						}
+					</div>
+				} @else {
+					<div class="no-movements">
+						<p>No hay movimientos en esta sección</p>
+					</div>
+				}
+			</div>
 		</div>
 	}
 

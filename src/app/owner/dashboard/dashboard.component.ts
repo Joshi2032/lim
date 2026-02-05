@@ -101,13 +101,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   tooltipValue = '';
   tooltipDay = '';
   chartContainerRef: any;
-  activeTab: 'resumen' | 'movimientos' | 'usuarios' = 'resumen';
 
   tabs: Array<{id: 'resumen' | 'movimientos' | 'usuarios', label: string, icon: string}> = [
     { id: 'resumen', label: 'Resumen', icon: '📊' },
     { id: 'movimientos', label: 'Movimientos', icon: '🔄' },
     { id: 'usuarios', label: 'Usuarios', icon: '👥' }
   ];
+  activeTab: 'resumen' | 'movimientos' | 'usuarios' = 'resumen';
+  movements: Array<any> = [];
+  selectedSection: 'TODOS' | 'MENÚ' | 'MESAS' | 'COCINA' | 'RECOGIDA' | 'CLIENTES' | 'ENTREGAS' | 'USUARIOS' = 'TODOS';
+  filteredMovements: Array<any> = [];
 
   currentUser: User = {
     name: 'Josue',
@@ -618,6 +621,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   setActiveTab(tabId: 'resumen' | 'movimientos' | 'usuarios') {
     this.activeTab = tabId;
+    if (tabId === 'movimientos') {
+      this.loadMovements();
+    }
+  }
+
+  async loadMovements() {
+    try {
+      this.movements = await this.supabase.getRecentMovements(50);
+      this.filterMovements();
+      this.cdr.markForCheck();
+    } catch (error) {
+      console.error('Error loading movements:', error);
+    }
+  }
+
+  filterMovements() {
+    if (this.selectedSection === 'TODOS') {
+      this.filteredMovements = this.movements;
+    } else {
+      this.filteredMovements = this.movements.filter(m => m.section === this.selectedSection);
+    }
+  }
+
+  onSectionChange(section: string) {
+    this.selectedSection = section as any;
+    this.filterMovements();
+    this.cdr.markForCheck();
   }
 
   private updateChartGeometry() {

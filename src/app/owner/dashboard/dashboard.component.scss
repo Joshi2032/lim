@@ -529,9 +529,208 @@
 	border-radius: 12px;
 }
 
-.recent-orders-section {
-	padding: 24px;
+.movements-content {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.movements-header {
+	h3 {
+		font-size: 20px;
+		font-weight: 600;
+		color: #fff;
+		margin-bottom: 16px;
+	}
+}
+
+.section-filters {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.filter-btn {
+	padding: 8px 16px;
+	background: rgba(255, 255, 255, 0.08);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	color: #fff;
+	border-radius: 8px;
+	cursor: pointer;
+	font-size: 12px;
+	font-weight: 500;
+	transition: all 0.3s ease;
+	white-space: nowrap;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.15);
+		border-color: rgba(255, 255, 255, 0.3);
+	}
+
+	&.active {
+		background: #ef4444;
+		border-color: #dc2626;
+		color: #fff;
+	}
+}
+
+.movements-table {
 	background: rgba(255, 255, 255, 0.02);
 	border: 1px solid rgba(255, 255, 255, 0.1);
 	border-radius: 12px;
+	overflow: hidden;
+}
+
+.movements-list {
+	display: flex;
+	flex-direction: column;
+}
+
+.movement-item {
+	display: flex;
+	gap: 16px;
+	padding: 16px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+	transition: background 0.2s ease;
+
+	&:last-child {
+		border-bottom: none;
+	}
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.04);
+	}
+
+	&.status-pendiente {
+		border-left: 3px solid #f59e0b;
+	}
+
+	&.status-en-progreso {
+		border-left: 3px solid #3b82f6;
+	}
+
+	&.status-completado {
+		border-left: 3px solid #10b981;
+	}
+
+	&.status-cancelado {
+		border-left: 3px solid #ef4444;
+	}
+}
+
+.movement-icon {
+	font-size: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 40px;
+	width: 40px;
+	height: 40px;
+	background: rgba(255, 255, 255, 0.08);
+	border-radius: 8px;
+}
+
+.movement-content {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.movement-title {
+	font-size: 14px;
+	font-weight: 600;
+	color: #fff;
+}
+
+.movement-description {
+	font-size: 13px;
+	color: rgba(255, 255, 255, 0.7);
+}
+
+.movement-meta {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	flex-wrap: wrap;
+	font-size: 11px;
+}
+
+.section-badge {
+	padding: 4px 8px;
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 4px;
+	color: rgba(255, 255, 255, 0.8);
+
+	&.section-mesas {
+		background: rgba(99, 102, 241, 0.2);
+		color: #a5b4fc;
+	}
+
+	&.section-entregas {
+		background: rgba(34, 197, 94, 0.2);
+		color: #86efac;
+	}
+
+	&.section-recogida {
+		background: rgba(168, 85, 247, 0.2);
+		color: #d8b4fe;
+	}
+
+	&.section-cocina {
+		background: rgba(245, 158, 11, 0.2);
+		color: #fcd34d;
+	}
+
+	&.section-menú {
+		background: rgba(59, 130, 246, 0.2);
+		color: #93c5fd;
+	}
+
+	&.section-clientes {
+		background: rgba(236, 72, 153, 0.2);
+		color: #f472b6;
+	}
+}
+
+.status-badge {
+	padding: 4px 8px;
+	border-radius: 4px;
+	font-weight: 500;
+
+	&.status-pendiente {
+		background: rgba(245, 158, 11, 0.2);
+		color: #fcd34d;
+	}
+
+	&.status-en-progreso {
+		background: rgba(59, 130, 246, 0.2);
+		color: #93c5fd;
+	}
+
+	&.status-completado {
+		background: rgba(34, 197, 94, 0.2);
+		color: #86efac;
+	}
+
+	&.status-cancelado {
+		background: rgba(239, 68, 68, 0.2);
+		color: #fca5a5;
+	}
+}
+
+.timestamp {
+	color: rgba(255, 255, 255, 0.5);
+	margin-left: auto;
+}
+
+.no-movements {
+	padding: 48px 24px;
+	text-align: center;
+	color: rgba(255, 255, 255, 0.5);
+	font-size: 14px;
+
+	p {
+		margin: 0;
+	}
 }
